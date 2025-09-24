@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <link rel="icon" type="image/x-icon" href="/nurture_icon.ico">
+    <link rel="icon" type="image/x-icon" href="Assets/nurture_icon.ico">
     <title>Nurture | Meta, Guides, Assets, & Communities</title>
     <style>
         body {
@@ -39,12 +39,8 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
-        .discord-button {
-            background-color: #5865F2;
-        }
-        .kofi-button {
-            background-color: #FF5E5B;
-        }
+        .discord-button { background-color: #5865F2; }
+        .kofi-button { background-color: #FF5E5B; }
         .social-button img {
             height: 40px;
             vertical-align: middle;
@@ -56,30 +52,89 @@
             color: white;
             font-weight: bold;
         }
+        .search-container {
+            text-align: center;
+            margin: 20px auto;
+            width: 80%;
+            max-width: 600px;
+        }
+        .search-input {
+            width: 100%;
+            padding: 12px 20px;
+            font-size: 16px;
+            border: 2px solid #333;
+            border-radius: 25px;
+            background-color: #2a2a35;
+            color: white;
+        }
+        .suggestions {
+            position: absolute;
+            background-color: #2a2a35;
+            width: 80%;
+            max-width: 600px;
+            border-radius: 5px;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+        }
+        .suggestion-item {
+            padding: 10px;
+            color: white;
+            cursor: pointer;
+        }
+        .suggestion-item:hover {
+            background-color: #3a3a45;
+        }
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 20px;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .grid-item {
+            background-color: #2a2a35;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        .grid-item:hover {
+            transform: translateY(-5px);
+        }
+        .grid-item img {
+            width: 100%;
+            height: auto;
+            border-radius: 5px;
+        }
+        .grid-item-title {
+            color: white;
+            margin-top: 10px;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
     <div class="banner">
         <div style="display: flex; justify-content: space-between; align-items: center;">
-            <!-- Left-side stuff -->
             <div>
-                <img src="/nurture_banner.png" alt="Nurture Banner" style="height:90px; vertical-align:left; padding-left: 10px;">
+                <img src="/Assets/nurture_banner.png" alt="Nurture Banner" style="height:90px; vertical-align:left; padding-left: 10px;">
             </div>
-
-            <!-- Right-side stuff -->
             <div>
                 <a href="https://www.discord.gg/nurture" class="social-button discord-button">
-                    <img src="/join_discord.png" alt="Discord Icon" onmouseover="this.style.transform='rotate(5deg)'" onmouseout="this.style.transform='rotate(0deg)'">
+                    <img src="/Assets/join_discord.png" alt="Discord Icon" onmouseover="this.style.transform='rotate(5deg)'" onmouseout="this.style.transform='rotate(0deg)'">
                     <span class="sub-text">Discord</span>
                 </a>
-                
                 <a href="https://wwww.ko-fi.com/sorakoi" class="social-button kofi-button">
-                    <img src="/kofi_icon.png" alt="Ko-fi Icon" onmouseover="this.style.transform='rotate(5deg)'" onmouseout="this.style.transform='rotate(0deg)'">
+                    <img src="/Assets/kofi_icon.png" alt="Ko-fi Icon" onmouseover="this.style.transform='rotate(5deg)'" onmouseout="this.style.transform='rotate(0deg)'">
                     <span class="sub-text">Ko-fi</span>
                 </a>
             </div>
         </div>
     </div>
+
     <div class="about-us" style="text-align: center; padding: 40px; color: white;">
         <h1 style="font-size: 2.5em; margin-bottom: 20px;">
             The UNIVERSAL Gacha Game Hub!
@@ -88,5 +143,81 @@
             Here you can find guides, the latest metas, raw assets, and communities for all your favorite gacha games!
         </p>
     </div>
+
+    <div class="search-container">
+        <input type="text" class="search-input" placeholder="Search games..." id="searchInput">
+        <div class="suggestions" id="suggestions"></div>
+    </div>
+
+    <div class="grid-container" id="gameGrid">
+        <!-- Grid items will be added dynamically -->
+    </div>
+
+    <script>
+        // Sample game data
+        const games = [
+            'Genshin Impact',
+            'Honkai: Star Rail',
+            'Blue Archive',
+            'Fate/Grand Order',
+            'Arknights'
+        ];
+
+        const searchInput = document.getElementById('searchInput');
+        const suggestionsDiv = document.getElementById('suggestions');
+        const gameGrid = document.getElementById('gameGrid');
+
+        // Function to update grid
+        function updateGrid(filteredGames) {
+            gameGrid.innerHTML = ''; // Clear existing grid
+            filteredGames.forEach(game => {
+                const gridItem = document.createElement('div');
+                gridItem.className = 'grid-item';
+                gridItem.innerHTML = `
+                    <img src="/Assets/placeholder.png" alt="${game}">
+                    <div class="grid-item-title">${game}</div>
+                `;
+                gameGrid.appendChild(gridItem);
+            });
+        }
+
+        // Initial grid population
+        updateGrid(games);
+
+        // Search functionality
+        searchInput.addEventListener('input', function() {
+            const value = this.value.toLowerCase();
+            
+            const filtered = games.filter(game => 
+                game.toLowerCase().includes(value)
+            );
+
+            // Update grid with filtered results
+            updateGrid(filtered);
+
+            // Update suggestions
+            suggestionsDiv.innerHTML = '';
+            filtered.forEach(game => {
+                const div = document.createElement('div');
+                div.className = 'suggestion-item';
+                div.textContent = game;
+                div.onclick = () => {
+                    searchInput.value = game;
+                    suggestionsDiv.style.display = 'none';
+                    updateGrid([game]); // Show only the selected game
+                };
+                suggestionsDiv.appendChild(div);
+            });
+
+            suggestionsDiv.style.display = filtered.length ? 'block' : 'none';
+        });
+
+        // Close suggestions when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!suggestionsDiv.contains(e.target) && e.target !== searchInput) {
+                suggestionsDiv.style.display = 'none';
+            }
+        });
+    </script>
 </body>
-</html></a>
+</html>
