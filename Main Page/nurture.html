@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <link rel="icon" type="image/x-icon" href="Assets/nurture_icon.ico">
+    <link rel="icon" type="image/x-icon" href="/Assets/nurture_icon.ico">
     <title>Nurture | Meta, Guides, Assets, & Communities</title>
     <style>
         body {
@@ -136,10 +136,10 @@
     </div>
 
     <div class="about-us" style="text-align: center; padding: 40px; color: white;">
-        <h1 style="font-size: 2.5em; margin-bottom: 20px;">
+        <h1 style="font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 2.5em; margin-bottom: 20px;">
             The UNIVERSAL Gacha Game Hub!
         </h1>
-        <p style="font-size: 1.2em; color: #cccccc;">
+        <p style="font-family:monospace; font-size: 1.2em; color: #cccccc;">
             Here you can find guides, the latest metas, raw assets, and communities for all your favorite gacha games!
         </p>
     </div>
@@ -150,73 +150,224 @@
     </div>
 
     <div class="grid-container" id="gameGrid">
-        <!-- Grid items will be added dynamically -->
-    </div>
+        </div>
 
-    <script>
-        // Sample game data
-        const games = [
-            'Genshin Impact',
-            'Honkai: Star Rail',
-            'Blue Archive',
-            'Fate/Grand Order',
-            'Arknights'
-        ];
+<script>
+        // Database-powered game management (Now falling back to local memory API)
+        let allGames = [];
+        let currentPage = 1;
+        const gamesPerPage = 20;
 
+        // DOM elements
         const searchInput = document.getElementById('searchInput');
-        const suggestionsDiv = document.getElementById('suggestions');
         const gameGrid = document.getElementById('gameGrid');
+        const suggestionsDiv = document.getElementById('suggestions');
 
-        // Function to update grid
-        function updateGrid(filteredGames) {
+        // API base URL
+        const API_BASE = window.location.origin + '/api';
+
+        // Utility functions
+        const debounce = (func, wait) => {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        };
+
+        const showError = (message) => {
+            console.error(message);
+            const errorDiv = document.createElement('div');
+            errorDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #ff5555;
+                color: white;
+                padding: 10px 20px;
+                border-radius: 5px;
+                z-index: 1000;
+            `;
+            errorDiv.textContent = message;
+            document.body.appendChild(errorDiv);
+            
+            setTimeout(() => {
+                errorDiv.remove();
+            }, 5000);
+        };
+
+        // API call function
+        const apiCall = async (endpoint, options = {}) => {
+            try {
+                const response = await fetch(`${API_BASE}${endpoint}`, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    },
+                    ...options
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.error || `HTTP ${response.status}`);
+                }
+
+                return await response.json();
+            } catch (error) {
+                console.error(`API call failed for ${endpoint}:`, error);
+                throw error;
+            }
+        };
+
+        // Load games from local API
+        const loadGames = async (page = 1) => {
+            try {
+                const data = await apiCall(`/games?page=${page}&limit=${gamesPerPage}`);
+                
+                if (data.games) {
+                    allGames = data.games;
+                    updateGrid(allGames);
+                    
+                    if (data.pagination) {
+                        console.log(`Loaded page ${data.pagination.page} of ${data.pagination.pages}`);
+                    }
+                }
+            } catch (error) {
+                showError('Failed to load games. Using offline data.');
+                // Fallback to static games
+                allGames = [
+                    { name: 'Arknights', developer: 'Yostar Limited', banner_url: 'https://play-lh.googleusercontent.com/pBNlu-ZHQlVdfXhzI7TGIjqt_00sAeYFFK6AqTygfF3rwQfoPIkfIz-zROY31POTDKtxqcMDMPaDLJVlwCdc' },
+                    { name: 'Arknights: Endfield', developer: 'Yostar Limited', banner_url: 'https://play-lh.googleusercontent.com/l6FVNa293RykBWy88TqEhUakIcGSC8bRygSnKOBgztln48JX-WzMWnrBAETrKZsxDNC4HhwCsvfle_UI7rBE' },
+                    { name: 'Blue Archive', developer: 'Nexon', banner_url: 'https://play-lh.googleusercontent.com/lrERcCoTm7m8XStnhTHZDVfemQc_vTzCRl4CCBKhvQoBXo-WvmrwiGqONB7daFIJJkT0znGB5EOfgbaNRgiTyQ' },
+                    { name: 'BrownDust2', developer: 'Neowiz', banner_url: 'https://play-lh.googleusercontent.com/EU57oDE8N2ZfMo3ina1NN37ZKhrG5_OJ7a7a2R_DsLLRUHFQJI6vM3e780DCIJ43DpEeUi_r8c82bs7G-a7j' },
+                    { name: 'Genshin Impact', developer: 'miHoYo', banner_url: 'https://play-lh.googleusercontent.com/YQqyKaXX-63krqsfIzUEJWUWLINxcb5tbS6QVySdxbS7eZV7YB2dUjUvX27xA0TIGtfxQ5v-tQjwlT5tTB-O=w280-h280' },
+                    { name: 'Goddess of Victory: NIKKE', developer: 'Shift Up', banner_url: 'https://play-lh.googleusercontent.com/JK5mejs0bVT_9613gCxNfCjRw_m3JiQ4wC8B8Kt471yu7ThFQazVkCLTfPZ81hnenft7ilaE-qSwVGpQT6sEFcY' },
+                    { name: 'Honkai: Star Rail', developer: 'miHoYo', banner_url: 'https://play-lh.googleusercontent.com/aWrGocSA7hEuk1qAPe7L4T57LvLKrwwH26cK2_LOqxRQMQX7j3uHYojC-EKWgYEV2PdrmE0ahqvvhLhXrAGk6Q' },
+                    { name: 'Reverse: 1999', developer: 'Bluepoch Co.,Ltd.', banner_url: 'https://play-lh.googleusercontent.com/35wW4EuYqdU1ItNGOcXQc7elbbEIgk1LCE693GOJrIyc2NLC8dGeMs1fchPepzZim_Sif-Q-aFJhyDqr1JEx' },
+                    { name: 'NTE: Neverness To Everness', developer: 'miHoYo', banner_url: 'https://play-lh.googleusercontent.com/TGl3DdDbi4hty6ooOhEvv_2s5tkpGLbL6derP8y5hK-_Bw--Ve375b08ba9HHQ9ueRpoQ9oye1T_T24BJriLUmw' },
+                    { name: 'Wuthering Waves', developer: 'HK KURO GAMES LIMITED', banner_url: 'https://play-lh.googleusercontent.com/kP-iYZI3TL5GzvDKjtjtu2P_POG8sz7NZaP3hOw3WqDcZeZ7YcAQuY-aH8C_4tAPOk7W9rhi4OSZCWIK_e3FA0s'},
+                ];
+                updateGrid(allGames);
+            }
+        };
+
+        // Search games
+        const searchGames = async (query) => {
+            if (!query || query.length === 0) {
+                updateGrid(allGames);
+                return;
+            }
+
+            if (query.length < 2) {
+                return;
+            }
+
+            try {
+                const results = await apiCall(`/games/search/${encodeURIComponent(query)}`);
+                updateGrid(results);
+            } catch (error) {
+                console.error('Search failed:', error);
+                // Fallback to client-side filtering
+                const filtered = allGames.filter(game => 
+                    game.name.toLowerCase().includes(query.toLowerCase())
+                );
+                updateGrid(filtered);
+            }
+        };
+
+        // Update the game grid
+        function updateGrid(games) {
             gameGrid.innerHTML = ''; // Clear existing grid
-            filteredGames.forEach(game => {
+            
+            if (games.length === 0) {
+                gameGrid.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; color: white; padding: 40px;">
+                        <h3>No games found</h3>
+                        <p>Try adjusting your search terms</p>
+                    </div>
+                `;
+                return;
+            }
+
+            games.forEach(game => {
                 const gridItem = document.createElement('div');
                 gridItem.className = 'grid-item';
+                
+                // Handle both string (old format) and object (new format) games
+                const gameName = typeof game === 'string' ? game : game.name;
+                const iconUrl = typeof game === 'object' && game.banner_url ? game.banner_url : '/Assets/placeholder.png';
+                const developer = typeof game === 'object' && game.developer ? game.developer : '';
+                
                 gridItem.innerHTML = `
-                    <img src="/Assets/placeholder.png" alt="${game}">
-                    <div class="grid-item-title">${game}</div>
+                    <img src="${iconUrl}" alt="${gameName}" loading="lazy" 
+                         onerror="this.src='/Assets/placeholder.png'">
+                    <div class="grid-item-title">${escapeHtml(gameName)}</div>
+                    ${developer ? `<div class="grid-item-dev" style="font-size: 12px; color: #ccc; margin-top: 5px;">${escapeHtml(developer)}</div>` : ''}
                 `;
+                
+                // Add click handler
+                gridItem.onclick = () => {
+                    console.log(`Clicked on ${gameName}${developer ? ` by ${developer}` : ''}`);
+                    // You can add navigation here later
+                };
+                
                 gameGrid.appendChild(gridItem);
             });
         }
 
-        // Initial grid population
-        updateGrid(games);
+        // Escape HTML to prevent XSS
+        const escapeHtml = (text) => {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, (m) => map[m]);
+        };
+
+        // Debounced search function
+        const debouncedSearch = debounce(searchGames, 300);
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            loadGames();
+        });
 
         // Search functionality
         searchInput.addEventListener('input', function() {
-            const value = this.value.toLowerCase();
-            
-            const filtered = games.filter(game => 
-                game.toLowerCase().includes(value)
-            );
+            const query = this.value.trim();
+            debouncedSearch(query);
+        });
 
-            // Update grid with filtered results
-            updateGrid(filtered);
-
-            // Update suggestions
-            suggestionsDiv.innerHTML = '';
-            filtered.forEach(game => {
-                const div = document.createElement('div');
-                div.className = 'suggestion-item';
-                div.textContent = game;
-                div.onclick = () => {
-                    searchInput.value = game;
-                    suggestionsDiv.style.display = 'none';
-                    updateGrid([game]); // Show only the selected game
-                };
-                suggestionsDiv.appendChild(div);
-            });
-
-            suggestionsDiv.style.display = filtered.length ? 'block' : 'none';
+        // Clear search on escape key
+        searchInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                this.value = '';
+                updateGrid(allGames);
+            }
         });
 
         // Close suggestions when clicking outside
         document.addEventListener('click', function(e) {
-            if (!suggestionsDiv.contains(e.target) && e.target !== searchInput) {
+            if (suggestionsDiv && !suggestionsDiv.contains(e.target) && e.target !== searchInput) {
                 suggestionsDiv.style.display = 'none';
             }
+        });
+
+        // Handle network status
+        window.addEventListener('online', () => {
+            console.log('Connection restored');
+            loadGames();
+        });
+
+        window.addEventListener('offline', () => {
+            console.log('Connection lost - using cached data');
         });
     </script>
 </body>
