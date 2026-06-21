@@ -109,10 +109,166 @@
             height: auto;
             border-radius: 5px;
         }
+        
+        /* New Title & Icon Formatting */
+        .title-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 10px;
+            gap: 8px; 
+        }
         .grid-item-title {
             color: white;
-            margin-top: 10px;
             font-size: 14px;
+            margin: 0; 
+        }
+        .info-icon {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            width: 20px;
+            height: 20px;
+            background-color: #3a3a45;
+            color: #aaa;
+            border-radius: 50%;
+            font-size: 12px;
+            font-weight: bold;
+            font-family: monospace;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .info-icon:hover {
+            background-color: #ffc107;
+            color: #000;
+            transform: scale(1.1);
+        }
+
+        /* =========================================
+           MODAL OVERLAY & ANIMATION
+           ========================================= */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(4px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-window {
+            background-color: #1f1f28; 
+            border: 1px solid #3a3a45;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 800px;
+            padding: 24px;
+            position: relative;
+            color: white;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+            
+            /* CSS Variables for Dynamic Origin Animation */
+            --start-x: 0px;
+            --start-y: 20px;
+            
+            /* Start scaled down and translated to the exact card coordinates */
+            transform: translate(var(--start-x), var(--start-y)) scale(0.25);
+            transform-origin: center;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .modal-overlay.active .modal-window {
+            transform: translate(0, 0) scale(1);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 28px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .modal-close:hover {
+            color: #ff5c5c;
+        }
+
+        .modal-title {
+            margin: 0 0 15px 0;
+            font-size: 1.8em;
+            border-bottom: 1px solid #3a3a45;
+            padding-bottom: 10px;
+        }
+
+        .video-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%; 
+            height: 0;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #000;
+        }
+
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .ratings-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .rating-box {
+            background-color: #2a2a35; 
+            padding: 12px;
+            border-radius: 6px;
+            text-align: center;
+            border: 1px solid #3a3a45;
+        }
+
+        .rating-label {
+            font-size: 0.85em;
+            color: #aaa;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .rating-value {
+            font-size: 1.25em;
+            font-weight: bold;
+            color: #ffc107;
+        }
+
+        .rating-box.overall {
+            grid-column: span 3;
+            background: linear-gradient(135deg, #3a3a45 0%, #2a2a35 100%);
+            border: 1px solid #ffc107;
         }
     </style>
 </head>
@@ -150,10 +306,48 @@
     </div>
 
     <div class="grid-container" id="gameGrid">
-        </div>
+    </div>
 
-<script>
-        // Database-powered game management (Now falling back to local memory API)
+    <div id="gameModal" class="modal-overlay">
+        <div class="modal-window" id="modalWindowContent">
+            <button class="modal-close" id="closeModal">×</button>
+            <h2 class="modal-title" id="modalGameTitle">Game Title</h2>
+            
+            <div class="video-container">
+                <iframe id="modalTrailer" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>
+            
+            <div class="ratings-grid">
+                <div class="rating-box">
+                    <div class="rating-label">Age Rating</div>
+                    <div class="rating-value" id="modalAge">-</div>
+                </div>
+                <div class="rating-box">
+                    <div class="rating-label">F2P Rating</div>
+                    <div class="rating-value" id="modalF2P">-</div>
+                </div>
+                <div class="rating-box">
+                    <div class="rating-label">AFK Rating</div>
+                    <div class="rating-value" id="modalAFK">-</div>
+                </div>
+                <div class="rating-box">
+                    <div class="rating-label">Story Rating</div>
+                    <div class="rating-value" id="modalStory">-</div>
+                </div>
+                <div class="rating-box">
+                    <div class="rating-label">Gameplay Rating</div>
+                    <div class="rating-value" id="modalGameplay">-</div>
+                </div>
+                <div class="rating-box overall">
+                    <div class="rating-label">Overall Average Rating</div>
+                    <div class="rating-value" id="modalOverall">-</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Database-powered game management 
         let allGames = [];
         let currentPage = 1;
         const gamesPerPage = 20;
@@ -163,8 +357,23 @@
         const gameGrid = document.getElementById('gameGrid');
         const suggestionsDiv = document.getElementById('suggestions');
 
+        // Modal DOM elements
+        const gameModal = document.getElementById('gameModal');
+        const modalWindowContent = document.getElementById('modalWindowContent');
+        const closeModalBtn = document.getElementById('closeModal');
+        const modalGameTitle = document.getElementById('modalGameTitle');
+        const modalTrailer = document.getElementById('modalTrailer');
+        const modalAge = document.getElementById('modalAge');
+        const modalF2P = document.getElementById('modalF2P');
+        const modalAFK = document.getElementById('modalAFK');
+        const modalStory = document.getElementById('modalStory');
+        const modalGameplay = document.getElementById('modalGameplay');
+        const modalOverall = document.getElementById('modalOverall');
+
         // API base URL
         const API_BASE = window.location.origin + '/api';
+        
+        let currentTrailerId = ''; 
 
         // Utility functions
         const debounce = (func, wait) => {
@@ -231,14 +440,9 @@
                 if (data.games) {
                     allGames = data.games;
                     updateGrid(allGames);
-                    
-                    if (data.pagination) {
-                        console.log(`Loaded page ${data.pagination.page} of ${data.pagination.pages}`);
-                    }
                 }
             } catch (error) {
                 showError('Failed to load games. Using offline data.');
-                // Fallback to static games
                 allGames = [
                     { name: 'Arknights', developer: 'Yostar Limited', banner_url: 'https://play-lh.googleusercontent.com/pBNlu-ZHQlVdfXhzI7TGIjqt_00sAeYFFK6AqTygfF3rwQfoPIkfIz-zROY31POTDKtxqcMDMPaDLJVlwCdc' },
                     { name: 'Arknights: Endfield', developer: 'Yostar Limited', banner_url: 'https://play-lh.googleusercontent.com/l6FVNa293RykBWy88TqEhUakIcGSC8bRygSnKOBgztln48JX-WzMWnrBAETrKZsxDNC4HhwCsvfle_UI7rBE' },
@@ -246,10 +450,22 @@
                     { name: 'BrownDust2', developer: 'Neowiz', banner_url: 'https://play-lh.googleusercontent.com/EU57oDE8N2ZfMo3ina1NN37ZKhrG5_OJ7a7a2R_DsLLRUHFQJI6vM3e780DCIJ43DpEeUi_r8c82bs7G-a7j' },
                     { name: 'Genshin Impact', developer: 'miHoYo', banner_url: 'https://play-lh.googleusercontent.com/YQqyKaXX-63krqsfIzUEJWUWLINxcb5tbS6QVySdxbS7eZV7YB2dUjUvX27xA0TIGtfxQ5v-tQjwlT5tTB-O=w280-h280' },
                     { name: 'Goddess of Victory: NIKKE', developer: 'Shift Up', banner_url: 'https://play-lh.googleusercontent.com/JK5mejs0bVT_9613gCxNfCjRw_m3JiQ4wC8B8Kt471yu7ThFQazVkCLTfPZ81hnenft7ilaE-qSwVGpQT6sEFcY' },
-                    { name: 'Honkai: Star Rail', developer: 'miHoYo', banner_url: 'https://play-lh.googleusercontent.com/aWrGocSA7hEuk1qAPe7L4T57LvLKrwwH26cK2_LOqxRQMQX7j3uHYojC-EKWgYEV2PdrmE0ahqvvhLhXrAGk6Q' },
+                    { 
+                        name: 'Honkai: Star Rail', 
+                        developer: 'miHoYo', 
+                        banner_url: 'https://play-lh.googleusercontent.com/aWrGocSA7hEuk1qAPe7L4T57LvLKrwwH26cK2_LOqxRQMQX7j3uHYojC-EKWgYEV2PdrmE0ahqvvhLhXrAGk6Q',
+                        trailer_id: 'w8v__Mma2w0', 
+                        ratings: { age: 'T', f2p: '4.2/5', afk: '4.0/5', story: '4.8/5', gameplay: '4.5/5', overall: '4.38/5' }
+                    },
                     { name: 'Reverse: 1999', developer: 'Bluepoch Co.,Ltd.', banner_url: 'https://play-lh.googleusercontent.com/35wW4EuYqdU1ItNGOcXQc7elbbEIgk1LCE693GOJrIyc2NLC8dGeMs1fchPepzZim_Sif-Q-aFJhyDqr1JEx' },
-                    { name: 'NTE: Neverness To Everness', developer: 'miHoYo', banner_url: 'https://play-lh.googleusercontent.com/TGl3DdDbi4hty6ooOhEvv_2s5tkpGLbL6derP8y5hK-_Bw--Ve375b08ba9HHQ9ueRpoQ9oye1T_T24BJriLUmw' },
-                    { name: 'Wuthering Waves', developer: 'HK KURO GAMES LIMITED', banner_url: 'https://play-lh.googleusercontent.com/kP-iYZI3TL5GzvDKjtjtu2P_POG8sz7NZaP3hOw3WqDcZeZ7YcAQuY-aH8C_4tAPOk7W9rhi4OSZCWIK_e3FA0s'},
+                    { name: 'NTE: Neverness To Everness', developer: 'Hotta Studio', banner_url: 'https://play-lh.googleusercontent.com/TGl3DdDbi4hty6ooOhEvv_2s5tkpGLbL6derP8y5hK-_Bw--Ve375b08ba9HHQ9ueRpoQ9oye1T_T24BJriLUmw' },
+                    { 
+                        name: 'Wuthering Waves', 
+                        developer: 'HK KURO GAMES LIMITED', 
+                        banner_url: 'https://play-lh.googleusercontent.com/kP-iYZI3TL5GzvDKjtjtu2P_POG8sz7NZaP3hOw3WqDcZeZ7YcAQuY-aH8C_4tAPOk7W9rhi4OSZCWIK_e3FA0s',
+                        trailer_id: 'Tf0pE_Yy7G8',
+                        ratings: { age: 'T', f2p: '3.8/5', afk: '2.5/5', story: '3.5/5', gameplay: '4.9/5', overall: '3.68/5' }
+                    },
                 ];
                 updateGrid(allGames);
             }
@@ -261,17 +477,12 @@
                 updateGrid(allGames);
                 return;
             }
-
-            if (query.length < 2) {
-                return;
-            }
+            if (query.length < 2) return;
 
             try {
                 const results = await apiCall(`/games/search/${encodeURIComponent(query)}`);
                 updateGrid(results);
             } catch (error) {
-                console.error('Search failed:', error);
-                // Fallback to client-side filtering
                 const filtered = allGames.filter(game => 
                     game.name.toLowerCase().includes(query.toLowerCase())
                 );
@@ -279,9 +490,61 @@
             }
         };
 
-        // Update the game grid
+        // Modal Logic
+        function openGameModal(game, cardElement) {
+            const rect = cardElement.getBoundingClientRect();
+            const cardCenterX = rect.left + rect.width / 2;
+            const cardCenterY = rect.top + rect.height / 2;
+            const viewportCenterX = window.innerWidth / 2;
+            const viewportCenterY = window.innerHeight / 2;
+            
+            const deltaX = cardCenterX - viewportCenterX;
+            const deltaY = cardCenterY - viewportCenterY;
+            
+            modalWindowContent.style.setProperty('--start-x', `${deltaX}px`);
+            modalWindowContent.style.setProperty('--start-y', `${deltaY}px`);
+
+            modalGameTitle.textContent = game.name || 'Unknown Game';
+            
+            if (game.trailer_id && currentTrailerId !== game.trailer_id) {
+                modalTrailer.src = `https://www.youtube.com/embed/${game.trailer_id}?autoplay=1`;
+                currentTrailerId = game.trailer_id;
+            } else if (!game.trailer_id) {
+                modalTrailer.src = ''; 
+                currentTrailerId = '';
+            }
+            
+            modalAge.textContent = game.ratings?.age || 'N/A';
+            modalF2P.textContent = game.ratings?.f2p || 'N/A';
+            modalAFK.textContent = game.ratings?.afk || 'N/A';
+            modalStory.textContent = game.ratings?.story || 'N/A';
+            modalGameplay.textContent = game.ratings?.gameplay || 'N/A';
+            modalOverall.textContent = game.ratings?.overall || 'N/A';
+            
+            gameModal.classList.add('active');
+        }
+
+        function closeGameModal() {
+            gameModal.classList.remove('active');
+            setTimeout(() => { 
+                modalTrailer.src = ''; 
+                currentTrailerId = '';
+            }, 400); 
+        }
+
+        // Close when clicking the "X"
+        closeModalBtn.addEventListener('click', closeGameModal);
+
+        // Close when clicking the dark background overlay
+        gameModal.addEventListener('click', function(e) {
+            if (e.target === gameModal) {
+                closeGameModal();
+            }
+        });
+
+        // Grid Rendering
         function updateGrid(games) {
-            gameGrid.innerHTML = ''; // Clear existing grid
+            gameGrid.innerHTML = ''; 
             
             if (games.length === 0) {
                 gameGrid.innerHTML = `
@@ -297,7 +560,6 @@
                 const gridItem = document.createElement('div');
                 gridItem.className = 'grid-item';
                 
-                // Handle both string (old format) and object (new format) games
                 const gameName = typeof game === 'string' ? game : game.name;
                 const iconUrl = typeof game === 'object' && game.banner_url ? game.banner_url : '/Assets/placeholder.png';
                 const developer = typeof game === 'object' && game.developer ? game.developer : '';
@@ -305,47 +567,53 @@
                 gridItem.innerHTML = `
                     <img src="${iconUrl}" alt="${gameName}" loading="lazy" 
                          onerror="this.src='/Assets/placeholder.png'">
-                    <div class="grid-item-title">${escapeHtml(gameName)}</div>
+                    <div class="title-wrapper">
+                        <div class="grid-item-title">${escapeHtml(gameName)}</div>
+                        <div class="info-icon" title="View Game Details">i</div>
+                    </div>
                     ${developer ? `<div class="grid-item-dev" style="font-size: 12px; color: #ccc; margin-top: 5px;">${escapeHtml(developer)}</div>` : ''}
                 `;
                 
-                // Add click handler
-                gridItem.onclick = () => {
-                    console.log(`Clicked on ${gameName}${developer ? ` by ${developer}` : ''}`);
-                    // You can add navigation here later
-                };
+                // CLICK "i" ICON: Open Modal and prevent the main card click
+                const infoBtn = gridItem.querySelector('.info-icon');
+                infoBtn.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Stops the click from triggering the sub-page navigation
+                    openGameModal(typeof game === 'object' ? game : { name: gameName }, gridItem);
+                });
+                
+                // CLICK CARD: Independent navigation
+                gridItem.addEventListener('click', () => {
+                    console.log(`Navigating to sub-page for ${gameName}...`);
+                    // window.location.href = `/games/${gameName.toLowerCase().replace(/\s+/g, '-')}`;
+                });
                 
                 gameGrid.appendChild(gridItem);
             });
         }
 
-        // Escape HTML to prevent XSS
+        // Properly escaped to avoid breaking the script
         const escapeHtml = (text) => {
             const map = {
                 '&': '&amp;',
                 '<': '&lt;',
                 '>': '&gt;',
                 '"': '&quot;',
-                "'": '&#039;'
+                "'": '&#39;'
             };
             return text.replace(/[&<>"']/g, (m) => map[m]);
         };
 
-        // Debounced search function
         const debouncedSearch = debounce(searchGames, 300);
 
-        // Initialize when page loads
+        // Event Listeners
         document.addEventListener('DOMContentLoaded', () => {
             loadGames();
         });
 
-        // Search functionality
         searchInput.addEventListener('input', function() {
-            const query = this.value.trim();
-            debouncedSearch(query);
+            debouncedSearch(this.value.trim());
         });
 
-        // Clear search on escape key
         searchInput.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 this.value = '';
@@ -353,22 +621,13 @@
             }
         });
 
-        // Close suggestions when clicking outside
         document.addEventListener('click', function(e) {
             if (suggestionsDiv && !suggestionsDiv.contains(e.target) && e.target !== searchInput) {
                 suggestionsDiv.style.display = 'none';
             }
         });
 
-        // Handle network status
-        window.addEventListener('online', () => {
-            console.log('Connection restored');
-            loadGames();
-        });
-
-        window.addEventListener('offline', () => {
-            console.log('Connection lost - using cached data');
-        });
+        window.addEventListener('online', () => loadGames());
     </script>
 </body>
 </html>
