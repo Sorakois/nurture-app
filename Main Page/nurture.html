@@ -4,12 +4,45 @@
     <meta charset="UTF-8">
     <link rel="icon" type="image/x-icon" href="/Assets/nurture_icon.ico">
     <title>Nurture | Meta, Guides, Assets, & Communities</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
     <style>
         body {
             margin: 0;
             font-family: Arial, sans-serif;
-            background-color: #1f1f28;
+            background-color: transparent; /* Set to transparent so the animated background shows */
         }
+
+        /* =========================================
+           ANIMATED BACKGROUND STYLES
+           ========================================= */
+        .background-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            justify-content: center;
+            overflow: hidden;
+            background: #1f1f28; /* Your original dark theme color */
+            z-index: -1;         /* Pins it behind all site content */
+            pointer-events: none; /* Prevents it from blocking clicks/hovers */
+        }
+        .background-container svg {
+            position: absolute;
+            height: 100%;
+            width: 100%;
+        }
+        .lines { opacity: 0.05; }
+        .line { fill-rule: evenodd; clip-rule: evenodd; fill: #4C3A90; }
+        .lights { opacity: 0.9; }
+        .light { fill-rule: evenodd; clip-rule: evenodd; fill: #7A6BB5; }
+
+        /* =========================================
+           MAIN LAYOUT STYLES
+           ========================================= */
         .banner {
             background-color: #16161c;
             color: white;
@@ -273,6 +306,50 @@
     </style>
 </head>
 <body>
+    
+    <div class="background-container">
+        <svg id="lines" class="background__lights" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" viewBox="0 0 1920 1080" xml:space="preserve" preserveAspectRatio="none">
+            <g class="lines">
+                <rect class="line" x="1253.6" width="4.5" height="1080"></rect>
+                <rect class="line" x="873.3" width="1.8" height="1080"></rect>
+                <rect class="line" x="1100" width="1.8" height="1080"></rect>
+                <rect class="line" x="1547.1" width="4.5" height="1080"></rect>
+                <rect class="line" x="615" width="4.5" height="1080"></rect>
+                <rect class="line" x="684.6" width="1.8" height="1080"></rect>
+                <rect class="line" x="1369.4" width="1.8" height="1080"></rect>
+                <rect class="line" x="1310.2" width="0.9" height="1080"></rect>
+                <rect class="line" x="1233.4" width="0.9" height="1080"></rect>
+                <rect class="line" x="124.2" width="0.9" height="1080"></rect>
+                <rect class="line" x="1818.4" width="4.5" height="1080"></rect>
+                <rect class="line" x="70.3" width="4.5" height="1080"></rect>
+                <rect class="line" x="1618.6" width="1.8" height="1080"></rect>
+                <rect class="line" x="455.9" width="1.8" height="1080"></rect>
+                <rect class="line" x="328.7" width="1.8" height="1080"></rect>
+                <rect class="line" x="300.8" width="4.6" height="1080"></rect>
+                <rect class="line" x="1666.4" width="0.9" height="1080"></rect>
+            </g>
+            <g class="lights">
+                <path class="light1 light" d="M619.5,298.4H615v19.5h4.5V298.4z M619.5,674.8H615v9.8h4.5V674.8z M619.5,135.1H615v5.6h4.5V135.1z M619.5,55.5H615v68.7h4.5V55.5z"></path>
+                <path class="light2 light" d="M1258.2,531.9h-4.5v8.1h4.5V531.9z M1258.2,497.9h-4.5v17.9h4.5V497.9z M1258.2,0h-4.5v25.3h4.5V0z M1258.2,252.2h-4.5v42.4h4.5V252.2z"></path>
+                <path class="light3 light" d="M875.1,123.8h-1.8v4h1.8V123.8z M875.1,289.4h-1.8v24.1h1.8V289.4z M875.1,0h-1.8v31.4h1.8V0z M875.1,50.2h-1.8v11.5h1.8V50.2z"></path>
+                <path class="light4 light" d="M1101.8,983.8h-1.8v8.2h1.8V983.8z M1101.8,1075.9h-1.8v4.1h1.8V1075.9z M1101.8,873.7h-1.8v4.2h1.8V873.7z M1101.8,851h-1.8v18.2h1.8V851z"></path>
+                <path class="light5 light" d="M686.4,822.7h-1.8v3.8h1.8V822.7z M686.4,928.4h-1.8v23h1.8V928.4z M686.4,1043.8h-1.8v36.2h1.8V1043.8z"></path>
+                <path class="light6 light" d="M1551.6,860.9h-4.4v-34.1h4.4V860.9z M1551.6,533.5h-4.4v-13.9h4.4V533.5z M1551.6,1080h-4.4v-89.1h4.4V1080z"></path>
+                <path class="light7 light" d="M1311.1,707.7h-0.9V698h0.9V707.7z M1311.1,436.8h-0.9v-58.9h0.9V436.8z M1311.1,140.7h-0.9V48h0.9V140.7z"></path>
+                <path class="light8 light" d="M125.1,514.5h-0.9v-9.7h0.9V514.5z M125.1,243.6h-0.9v-58.9h0.9V243.6z"></path>
+                <path class="light9 light" d="M305.4,806.7h-4.6v-42.5h4.6V806.7z M305.4,398.5h-4.6v-17.3h4.6V398.5z M305.4,1080h-4.6V968.8h4.6V1080z"></path>
+                <path class="light10 light" d="M1822.9,170.7h-4.5v13.7h4.5V170.7z M1822.9,435.1h-4.5v6.8h4.5V435.1z M1822.9,55.9h-4.5v4h4.5V55.9z M1822.9,0h-4.5v48.3h4.5V0z"></path>
+                <path class="light11 light" d="M1666.4,331.5h0.9v9.7h-0.9V331.5z M1666.4,602.4h0.9v58.9h-0.9V602.4z M1666.4,898.5h0.9v92.7h-0.9V898.5z"></path>
+                <path class="light12 light" d="M1620.4,200.7h-1.8v6.4h1.8V200.7z M1620.4,469.1h-1.8v39h1.8V469.1z M1620.4,0h-1.8v51h1.8V0z M1620.4,81.3h-1.8V100h1.8V81.3z"></path>
+                <path class="light13 light" d="M74.8,201h-4.5v16.2h4.5V201z M74.8,512.3h-4.5v8.1h4.5V512.3z M74.8,65.8h-4.5v4.6h4.5V65.8z M74.8,0h-4.5v56.8h4.5V0z"></path>
+                <path class="light14 light" d="M1371.2,655.3h-1.8v6.3h1.8V655.3z M1371.2,829.7h-1.8v37.9h1.8V829.7z M1371.2,1020.3h-1.8v59.7h1.8V1020.3z"></path>
+                <path class="light15 light" d="M1234.3,898.1h-0.9v-4.9h0.9V898.1z M1234.3,762.5h-0.9v-29.5h0.9V762.5z M1234.3,614.4h-0.9v-46.4h0.9V614.4z"></path>
+                <path class="light16 light" d="M457.7,1010.8h-1.8v-18.1h1.8V1010.8z M457.7,507.5h-1.8V398h1.8V507.5z"></path>
+                <path class="light17 light" d="M330.5,170.7h-1.8v13.7h1.8V170.7z M330.5,435.1h-1.8v6.8h1.8V435.1z M330.5,55.9h-1.8v4h1.8V55.9z M330.5,0h-1.8v48.3h1.8V0z"></path>
+            </g>
+        </svg>
+    </div>
+
     <div class="banner">
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <div>
@@ -347,7 +424,31 @@
     </div>
 
     <script>
-        // Database-powered game management 
+        // =========================================
+        // BACKGROUND ANIMATION LOGIC (GSAP 3)
+        // =========================================
+        function animateWithRandomNumber(myClass, from, to) {
+            gsap.fromTo(myClass, 
+                { y: from }, 
+                { 
+                    duration: Math.floor((Math.random() * 20) + 1), 
+                    y: to, 
+                    ease: "none", 
+                    onComplete: animateWithRandomNumber, 
+                    onCompleteParams: [myClass, from, to] 
+                }
+            );
+        }
+
+        const itemsDown = [".light4", ".light5", ".light6", ".light7", ".light8", ".light11", ".light12", ".light13", ".light14", ".light15", ".light16"];
+        itemsDown.forEach(e => animateWithRandomNumber(e, -1080, 1080));
+        
+        const itemsUp = [".light1", ".light2", ".light3", ".light9", ".light10", ".light17"];
+        itemsUp.forEach(e => animateWithRandomNumber(e, 1080, -1080));
+
+        // =========================================
+        // APP LOGIC & DATABASE
+        // =========================================
         let allGames = [];
         let currentPage = 1;
         const gamesPerPage = 20;
@@ -444,30 +545,170 @@
             } catch (error) {
                 showError('Failed to load games. Using offline data.');
                 allGames = [
-                    { name: 'Arknights', developer: 'Yostar Limited', banner_url: 'https://play-lh.googleusercontent.com/pBNlu-ZHQlVdfXhzI7TGIjqt_00sAeYFFK6AqTygfF3rwQfoPIkfIz-zROY31POTDKtxqcMDMPaDLJVlwCdc' },
-                    { name: 'Arknights: Endfield', developer: 'Yostar Limited', banner_url: 'https://play-lh.googleusercontent.com/l6FVNa293RykBWy88TqEhUakIcGSC8bRygSnKOBgztln48JX-WzMWnrBAETrKZsxDNC4HhwCsvfle_UI7rBE' },
-                    { name: 'Blue Archive', developer: 'Nexon', banner_url: 'https://play-lh.googleusercontent.com/lrERcCoTm7m8XStnhTHZDVfemQc_vTzCRl4CCBKhvQoBXo-WvmrwiGqONB7daFIJJkT0znGB5EOfgbaNRgiTyQ' },
-                    { name: 'BrownDust2', developer: 'Neowiz', banner_url: 'https://play-lh.googleusercontent.com/EU57oDE8N2ZfMo3ina1NN37ZKhrG5_OJ7a7a2R_DsLLRUHFQJI6vM3e780DCIJ43DpEeUi_r8c82bs7G-a7j' },
-                    { name: 'CookieRun: Kingdom', developer: 'Devsisters, Studio Kingdom ', banner_url: 'https://play-lh.googleusercontent.com/J1zzZf_Clyg51sikuBbfTMD_sGVK64Ki5vyVtn3MmkUUzQ-AxKWq2-WuVDnpkrpai6Icun3wXspttadNAxy4djI' },
-                    { name: 'Genshin Impact', developer: 'miHoYo', banner_url: 'https://play-lh.googleusercontent.com/YQqyKaXX-63krqsfIzUEJWUWLINxcb5tbS6QVySdxbS7eZV7YB2dUjUvX27xA0TIGtfxQ5v-tQjwlT5tTB-O=w280-h280' },
-                    { name: 'Goddess of Victory: NIKKE', developer: 'Shift Up', banner_url: 'https://play-lh.googleusercontent.com/JK5mejs0bVT_9613gCxNfCjRw_m3JiQ4wC8B8Kt471yu7ThFQazVkCLTfPZ81hnenft7ilaE-qSwVGpQT6sEFcY' },
+                    { 
+                        name: 'Arknights', 
+                        developer: 'Yostar Limited', 
+                        banner_url: 'https://play-lh.googleusercontent.com/pBNlu-ZHQlVdfXhzI7TGIjqt_00sAeYFFK6AqTygfF3rwQfoPIkfIz-zROY31POTDKtxqcMDMPaDLJVlwCdc' 
+                    },
+                    { 
+                        name: 'Arknights: Endfield', 
+                        developer: 'Yostar Limited', 
+                        banner_url: 'https://play-lh.googleusercontent.com/l6FVNa293RykBWy88TqEhUakIcGSC8bRygSnKOBgztln48JX-WzMWnrBAETrKZsxDNC4HhwCsvfle_UI7rBE' 
+                    },
+                    { 
+                        name: 'Azur Lane', 
+                        developer: 'Yostar Limited', 
+                        banner_url: 'https://play-lh.googleusercontent.com/3Yg8H1F9bsSTJI4-DQhJJYYokT3kEUaNG5h2JBP4Qxbzter1Q9iu3nsvepVZzMpX-VpSEgZc-UbS34TwBybQsWg' 
+                    },
+                    { 
+                        name: 'Blue Archive', 
+                        developer: 'Nexon', 
+                        banner_url: 'https://play-lh.googleusercontent.com/lrERcCoTm7m8XStnhTHZDVfemQc_vTzCRl4CCBKhvQoBXo-WvmrwiGqONB7daFIJJkT0znGB5EOfgbaNRgiTyQ' 
+                    },
+                    { 
+                        name: 'BrownDust2', 
+                        developer: 'Neowiz', 
+                        banner_url: 'https://play-lh.googleusercontent.com/EU57oDE8N2ZfMo3ina1NN37ZKhrG5_OJ7a7a2R_DsLLRUHFQJI6vM3e780DCIJ43DpEeUi_r8c82bs7G-a7j' 
+                    },
+                    { 
+                        name: 'CookieRun: Kingdom', 
+                        developer: 'Devsisters, Studio Kingdom', 
+                        banner_url: 'https://play-lh.googleusercontent.com/J1zzZf_Clyg51sikuBbfTMD_sGVK64Ki5vyVtn3MmkUUzQ-AxKWq2-WuVDnpkrpai6Icun3wXspttadNAxy4djI' 
+                    },
+                    { 
+                        name: 'DRAGON BALL LEGENDS', 
+                        developer: 'Bandi Namco Entertainment Inc.', 
+                        banner_url: 'https://play-lh.googleusercontent.com/Zqvwnsz7ANajlLQH20py4NrBL5sLVM6KPq40FWSi2XCuSgThtq6l9noPTkixk4NHn_OWw7-9buk5kdhU0jTq6A' 
+                    },
+                    { 
+                        name: 'DRAGON BALL Z DOKKAN BATTLE', 
+                        developer: 'Bandi Namco Entertainment Inc.', 
+                        banner_url: 'https://play-lh.googleusercontent.com/Ocriolf6VBkbevJE5xWma3bD3suVqdWQGjlbrITwutUtTxzQlBtbWko5qOBWR-tK6qEwXm9YKoQuE3A6dRZE' 
+                    },
+                    { 
+                        name: 'Genshin Impact', 
+                        developer: 'COGNOSPHERE PTE. LTD.', 
+                        banner_url: 'https://play-lh.googleusercontent.com/YQqyKaXX-63krqsfIzUEJWUWLINxcb5tbS6QVySdxbS7eZV7YB2dUjUvX27xA0TIGtfxQ5v-tQjwlT5tTB-O' 
+                    },
+                    { 
+                        name: 'Fate/Grand Order', 
+                        developer: 'Aniplex Inc.', 
+                        banner_url: 'https://play-lh.googleusercontent.com/pTlA4kXv97Yo6rfV408vK6PNbcYQ667FeOdtzZm8mFnWkp_hB4yVhFDNNwRNX14icPefOY2SGlEiXMR4uAhU-uE' 
+                    },
+                    { 
+                        name: 'Gakuen iDOLM@STER', 
+                        developer: 'Bandai Namco Entertainment Inc.', 
+                        banner_url: 'https://play-lh.googleusercontent.com/ch_SGwCMoLElrzColmSthRPYxzv608YoyBx4tXY3ciM8Bg4fLxKhRHdeoqPSbygFruy62D9p5EdGAwLW8KGTfwI' 
+                    },
+                    { 
+                        name: 'Goddess of Victory: NIKKE', 
+                        developer: 'Shift Up', 
+                        banner_url: 'https://play-lh.googleusercontent.com/JK5mejs0bVT_9613gCxNfCjRw_m3JiQ4wC8B8Kt471yu7ThFQazVkCLTfPZ81hnenft7ilaE-qSwVGpQT6sEFcY' 
+                    },
                     { 
                         name: 'Honkai: Star Rail', 
-                        developer: 'miHoYo', 
+                        developer: 'COGNOSPHERE PTE. LTD.', 
                         banner_url: 'https://play-lh.googleusercontent.com/aWrGocSA7hEuk1qAPe7L4T57LvLKrwwH26cK2_LOqxRQMQX7j3uHYojC-EKWgYEV2PdrmE0ahqvvhLhXrAGk6Q',
-                        trailer_id: 'w8v__Mma2w0', 
-                        ratings: { age: 'T', f2p: '4.2/5', afk: '4.0/5', story: '4.8/5', gameplay: '4.5/5', overall: '4.38/5' }
+                        trailer_id: 'DxOPkAWGFkI', 
+                        ratings: { age: 'T', f2p: '/5', afk: '/5', story: '/5', gameplay: '/5', overall: '/5' }
                     },
-                    { name: 'Reverse: 1999', developer: 'Bluepoch Co.,Ltd.', banner_url: 'https://play-lh.googleusercontent.com/35wW4EuYqdU1ItNGOcXQc7elbbEIgk1LCE693GOJrIyc2NLC8dGeMs1fchPepzZim_Sif-Q-aFJhyDqr1JEx' },
-                    { name: 'NTE: Neverness To Everness', developer: 'Hotta Studio', banner_url: 'https://play-lh.googleusercontent.com/TGl3DdDbi4hty6ooOhEvv_2s5tkpGLbL6derP8y5hK-_Bw--Ve375b08ba9HHQ9ueRpoQ9oye1T_T24BJriLUmw' },
+                    { 
+                        name: 'Hatsune Miku: Colorful Stage', 
+                        developer: 'SEGA CORPORATION', 
+                        banner_url: 'https://play-lh.googleusercontent.com/qOlyZn7X2wya9VvLtHYqvTUvzsjd-YzzDNx4R3ERbpMmCUsH4XTz8zW7-5VkPkLoZGzF5nJTBFb6UjAayOMwIg' 
+                    },
+                    { 
+                        name: 'Infinity Nikki', 
+                        developer: 'InFold Pte. Ltd.', 
+                        banner_url: 'https://play-lh.googleusercontent.com/IiJq-jpMJdD9P-oKatVL25vaaoyYSdUU-bYfomTQJ9qcdlpRMX7Eo_UkkGtvTkP13f473jYfV4q52H4n3b20SQ' 
+                    },
+                    { 
+                        name: 'Jujutsu Kaisen Phantom Parade', 
+                        developer: 'BILIBILI', 
+                        banner_url: 'https://play-lh.googleusercontent.com/TzQIQ1BlBWMe1kwISA0WyGN1rm59tszIDY5pMnsOw2ztsb3BHj0yIfEQfxrMz9LkFbKS5Bf6fzN8_Y9-HFNd' 
+                    },
+                    { 
+                        name: 'Love and Deepspace', 
+                        developer: 'InFold Pte. Ltd.', 
+                        banner_url: 'https://play-lh.googleusercontent.com/4InqsO3goITLvfm9t2f2SMpSyrzfV7sUgxTmWWQkypBPResa-wBK5x1I-U3cHTgP90hqlOectpgfXqiA_8h_PXY' 
+                    },
+                    { 
+                        name: 'MementoMori', 
+                        developer: 'Bank of Innovation, Inc.', 
+                        banner_url: 'https://play-lh.googleusercontent.com/HG9W8SRyTeeLPFrrS17a06d5ANgakJbHomr73o3l6I23YAiIFL399Y1_Q-2FDBO_zxqETTkphFhE-uTeuD2nH6w' 
+                    },
+                    { 
+                        name: 'MONGIL: STAR DIVE', 
+                        developer: 'Netmarble', 
+                        banner_url: 'https://play-lh.googleusercontent.com/cjDSyrhTFt_cq5wO3GOtDOWoiGO2vfxKxRcSUT66Cx8eo-JhYC6FAdvreQIFTXjN9--gWGA46LMJZ9kPRFjFiA' 
+                    },
+                    { 
+                        name: 'NTE: Neverness To Everness', 
+                        developer: 'Hotta Studio', 
+                        banner_url: 'https://play-lh.googleusercontent.com/TGl3DdDbi4hty6ooOhEvv_2s5tkpGLbL6derP8y5hK-_Bw--Ve375b08ba9HHQ9ueRpoQ9oye1T_T24BJriLUmw' 
+                    },
+                    { 
+                        name: 'ONE PIECE Bounty Rush', 
+                        developer: 'Bandai Namco Entertainment Inc.', 
+                        banner_url: 'https://play-lh.googleusercontent.com/XxOoOoHB2BGc7q-P2p2StRdmitM6V23QWTeIv8e0Pn_XrbFc_VzDZ5gZ9A7WWTNu4ZYLA4uyaWkcki81RjhtOzo' 
+                    },
+                    { 
+                        name: 'ONE PIECE TREASURE CRUISE-RPG', 
+                        developer: 'Bandai Namco Entertainment Inc.', 
+                        banner_url: 'https://play-lh.googleusercontent.com/bUqx24WUpn27RXnsVXdBkVkzOb22EeXQmBPBMdKHF34LkPOlwV3j-G0y5fJ4BQf7xvFKWbjZOyw9D7J1dClc' 
+                    },
+                    { 
+                        name: 'Pokémon TCG Pocket - Card Game', 
+                        developer: 'The Pokémon Company', 
+                        banner_url: 'https://play-lh.googleusercontent.com/qdEdyVc19jfittS0bnDUnXLRM7jOPZzfHXEYoChPWOtzMrtwU6t3ZVm_FQ7wbeDYFlqLBuWCDK0Q6c1nEwYKTA'
+                    },
+                    { 
+                        name: 'Reverse: 1999', 
+                        developer: 'Bluepoch Co.,Ltd.', 
+                        banner_url: 'https://play-lh.googleusercontent.com/35wW4EuYqdU1ItNGOcXQc7elbbEIgk1LCE693GOJrIyc2NLC8dGeMs1fchPepzZim_Sif-Q-aFJhyDqr1JEx' 
+                    },
+                    { 
+                        name: 'Summoners War', 
+                        developer: 'Com2uS', 
+                        banner_url: 'https://play-lh.googleusercontent.com/MUCpc9V1KmbWYb2Cv6p3aSVyzBo-uuG_iMPWY0vZSRh9cpDadSM07vaWHJXE6Yrpxj-wH1y55mO6Bo6B3_2k' 
+                    },
+                    { 
+                        name: 'The Battle Cats', 
+                        developer: 'PONOS Corporation', 
+                        banner_url: 'https://play-lh.googleusercontent.com/DUQGeq2u_7Xpk5sQUsIdEr8sfHTm_zHOT_B5WgfkqPrOIr9lND5MjwrqC-UHlH-RpzTsN8mUvVgy5XvcqIQg' 
+                    },
+                    { 
+                        name: 'The Seven Deadly Sins', 
+                        developer: 'Netmarble', 
+                        banner_url: 'https://play-lh.googleusercontent.com/YRj12QsKKdEj296m54iz832vAjYZ2WNaaRM9RHXhQZD6BkmNVyGwEehPU_4OV7pii-UTxpqHHhWB6I3GXeiq5-k' 
+                    },
+                    { 
+                        name: 'The Seven Deadly Sins: Origin', 
+                        developer: 'Netmarble', 
+                        banner_url: 'https://play-lh.googleusercontent.com/dSO5yDCNRCzgBMkhFNzCbInuEsg-jpjFQq2rXR7JrqHxj1YvBV-nHiqNYPXiGpxU1Ix-5xSi94pnqSYhdrj7' 
+                    },
+                    { 
+                        name: 'Trickal:Chibi Go', 
+                        developer: 'BILIBILI', 
+                        banner_url: 'https://play-lh.googleusercontent.com/KWpg_uQFkimNnWcoc_jK_-R20TcosCSIOBSeDGk5KG9RK0QecNg4DZOJfygcJg63th-OlwPrPau5FVmA-QfLzw' 
+                    },
                     { 
                         name: 'Wuthering Waves', 
                         developer: 'HK KURO GAMES LIMITED', 
                         banner_url: 'https://play-lh.googleusercontent.com/kP-iYZI3TL5GzvDKjtjtu2P_POG8sz7NZaP3hOw3WqDcZeZ7YcAQuY-aH8C_4tAPOk7W9rhi4OSZCWIK_e3FA0s',
                         trailer_id: 'Tf0pE_Yy7G8',
-                        ratings: { age: 'T', f2p: '3.8/5', afk: '2.5/5', story: '3.5/5', gameplay: '4.9/5', overall: '3.68/5' }
+                        ratings: { age: 'T', f2p: '/5', afk: '/5', story: '/5', gameplay: '5', overall: '/5' }
                     },
-                    { name: 'Umamusume: Pretty Derby', developer: 'Cygames, Inc.', banner_url: 'https://play-lh.googleusercontent.com/yN6cCSP7UB_2bsvlCxrtv-FUpEt1IvEFwr0Ucb3wr39QsAd5PLsueSVXuCinDbE4rifhMlX4YNtpLpkGnpsLhCQ' },
+                    { 
+                        name: 'Umamusume: Pretty Derby', 
+                        developer: 'Cygames, Inc.', 
+                        banner_url: 'https://play-lh.googleusercontent.com/yN6cCSP7UB_2bsvlCxrtv-FUpEt1IvEFwr0Ucb3wr39QsAd5PLsueSVXuCinDbE4rifhMlX4YNtpLpkGnpsLhCQ' 
+                    },
+                    { 
+                        name: 'Zenless Zone Zero', 
+                        developer: 'COGNOSPHERE PTE. LTD.', 
+                        banner_url: 'https://play-lh.googleusercontent.com/-ZZaqZBQ7EBjH4j0hyHX-0Fu0jUtnoOc-LwydvgQmsXWBZLxyAhxPcmIakzZB7NFurlK4Mj0pbvYe0pHYSuv4p8'
+                    },
                 ];
                 updateGrid(allGames);
             }
@@ -593,13 +834,13 @@
             });
         }
 
-        // Properly escaped to avoid breaking the script
+        // Fixed HTML Escape function to prevent JS Syntax errors
         const escapeHtml = (text) => {
             const map = {
-                '&': '&amp;',
-                '<': '&lt;',
-                '>': '&gt;',
-                '"': '&quot;',
+                '&': '&',
+                '<': '<',
+                '>': '>',
+                '"': '"',
                 "'": '&#39;'
             };
             return text.replace(/[&<>"']/g, (m) => map[m]);
