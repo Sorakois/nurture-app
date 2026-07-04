@@ -1,0 +1,212 @@
+[
+  { 
+    "id": "arknights",
+    "name": "Arknights", 
+    "developer": "Yostar Limited", 
+    "banner_url": "https://play-lh.googleusercontent.com/pBNlu-ZHQlVdfXhzI7TGIjqt_00sAeYFFK6AqTygfF3rwQfoPIkfIz-zROY31POTDKtxqcMDMPaDLJVlwCdc" 
+  },
+  { 
+    "id": "arknights-endfield",
+    "name": "Arknights: Endfield", 
+    "developer": "Yostar Limited", 
+    "banner_url": "https://play-lh.googleusercontent.com/l6FVNa293RykBWy88TqEhUakIcGSC8bRygSnKOBgztln48JX-WzMWnrBAETrKZsxDNC4HhwCsvfle_UI7rBE" 
+  },
+  { 
+    "id": "azur-lane",
+    "name": "Azur Lane", 
+    "developer": "Yostar Limited", 
+    "banner_url": "https://play-lh.googleusercontent.com/3Yg8H1F9bsSTJI4-DQhJJYYokT3kEUaNG5h2JBP4Qxbzter1Q9iu3nsvepVZzMpX-VpSEgZc-UbS34TwBybQsWg" 
+  },
+  { 
+    "id": "blue-archive",
+    "name": "Blue Archive", 
+    "developer": "Nexon", 
+    "banner_url": "https://play-lh.googleusercontent.com/lrERcCoTm7m8XStnhTHZDVfemQc_vTzCRl4CCBKhvQoBXo-WvmrwiGqONB7daFIJJkT0znGB5EOfgbaNRgiTyQ" 
+  },
+  { 
+    "id": "browndust2",
+    "name": "BrownDust2", 
+    "developer": "Neowiz", 
+    "banner_url": "https://play-lh.googleusercontent.com/EU57oDE8N2ZfMo3ina1NN37ZKhrG5_OJ7a7a2R_DsLLRUHFQJI6vM3e780DCIJ43DpEeUi_r8c82bs7G-a7j" 
+  },
+  { 
+    "id": "cookierun-kingdom",
+    "name": "CookieRun: Kingdom", 
+    "developer": "Devsisters", 
+    "banner_url": "https://play-lh.googleusercontent.com/J1zzZf_Clyg51sikuBbfTMD_sGVK64Ki5vyVtn3MmkUUzQ-AxKWq2-WuVDnpkrpai6Icun3wXspttadNAxy4djI" 
+  },
+  { 
+    "id": "dragon-ball-legends",
+    "name": "DRAGON BALL LEGENDS", 
+    "developer": "Bandi Namco Entertainment Inc.", 
+    "banner_url": "https://play-lh.googleusercontent.com/Zqvwnsz7ANajlLQH20py4NrBL5sLVM6KPq40FWSi2XCuSgThtq6l9noPTkixk4NHn_OWw7-9buk5kdhU0jTq6A" 
+  },
+  { 
+    "id": "dragon-ball-z-dokkan-battle",
+    "name": "DRAGON BALL Z DOKKAN BATTLE", 
+    "developer": "Bandi Namco Entertainment Inc.", 
+    "banner_url": "https://play-lh.googleusercontent.com/Ocriolf6VBkbevJE5xWma3bD3suVqdWQGjlbrITwutUtTxzQlBtbWko5qOBWR-tK6qEwXm9YKoQuE3A6dRZE" 
+  },
+  { 
+    "id": "genshin-impact",
+    "name": "Genshin Impact", 
+    "developer": "COGNOSPHERE PTE. LTD.", 
+    "banner_url": "https://play-lh.googleusercontent.com/YQqyKaXX-63krqsfIzUEJWUWLINxcb5tbS6QVySdxbS7eZV7YB2dUjUvX27xA0TIGtfxQ5v-tQjwlT5tTB-O" 
+  },
+  { 
+    "id": "fate-grand-order",
+    "name": "Fate/Grand Order", 
+    "developer": "Aniplex Inc.", 
+    "banner_url": "https://play-lh.googleusercontent.com/pTlA4kXv97Yo6rfV408vK6PNbcYQ667FeOdtzZm8mFnWkp_hB4yVhFDNNwRNX14icPefOY2SGlEiXMR4uAhU-uE" 
+  },
+  { 
+    "id": "gakuen-idolmaster",
+    "name": "Gakuen iDOLM@STER", 
+    "developer": "Bandai Namco Entertainment Inc.", 
+    "banner_url": "https://play-lh.googleusercontent.com/ch_SGwCMoLElrzColmSthRPYxzv608YoyBx4tXY3ciM8Bg4fLxKhRHdeoqPSbygFruy62D9p5EdGAwLW8KGTfwI" 
+  },
+  { 
+    "id": "goddess-of-victory-nikke",
+    "name": "Goddess of Victory: NIKKE", 
+    "developer": "Shift Up", 
+    "banner_url": "https://play-lh.googleusercontent.com/JK5mejs0bVT_9613gCxNfCjRw_m3JiQ4wC8B8Kt471yu7ThFQazVkCLTfPZ81hnenft7ilaE-qSwVGpQT6sEFcY" 
+  },
+  { 
+    "id": "honkai-star-rail",
+    "name": "Honkai: Star Rail", 
+    "developer": "COGNOSPHERE PTE. LTD.", 
+    "banner_url": "https://play-lh.googleusercontent.com/aWrGocSA7hEuk1qAPe7L4T57LvLKrwwH26cK2_LOqxRQMQX7j3uHYojC-EKWgYEV2PdrmE0ahqvvhLhXrAGk6Q",
+    "trailer_id": "DxOPkAWGFkI", 
+    "ratings": { 
+      "age": "T", 
+      "f2p": "/5", 
+      "afk": "/5", 
+      "story": "/5", 
+      "gameplay": "/5", 
+      "overall": "/5" 
+    }
+  },
+  { 
+    "id": "hatsune-miku-colorful-stage",
+    "name": "Hatsune Miku: Colorful Stage", 
+    "developer": "SEGA CORPORATION", 
+    "banner_url": "https://play-lh.googleusercontent.com/qOlyZn7X2wya9VvLtHYqvTUvzsjd-YzzDNx4R3ERbpMmCUsH4XTz8zW7-5VkPkLoZGzF5nJTBFb6UjAayOMwIg" 
+  },
+  { 
+    "id": "infinity-nikki",
+    "name": "Infinity Nikki", 
+    "developer": "InFold Pte. Ltd.", 
+    "banner_url": "https://play-lh.googleusercontent.com/IiJq-jpMJdD9P-oKatVL25vaaoyYSdUU-bYfomTQJ9qcdlpRMX7Eo_UkkGtvTkP13f473jYfV4q52H4n3b20SQ" 
+  },
+  { 
+    "id": "jujutsu-kaisen-phantom-parade",
+    "name": "Jujutsu Kaisen Phantom Parade", 
+    "developer": "BILIBILI", 
+    "banner_url": "https://play-lh.googleusercontent.com/TzQIQ1BlBWMe1kwISA0WyGN1rm59tszIDY5pMnsOw2ztsb3BHj0yIfEQfxrMz9LkFbKS5Bf6fzN8_Y9-HFNd" 
+  },
+  { 
+    "id": "love-and-deepspace",
+    "name": "Love and Deepspace", 
+    "developer": "InFold Pte. Ltd.", 
+    "banner_url": "https://play-lh.googleusercontent.com/4InqsO3goITLvfm9t2f2SMpSyrzfV7sUgxTmWWQkypBPResa-wBK5x1I-U3cHTgP90hqlOectpgfXqiA_8h_PXY" 
+  },
+  { 
+    "id": "mementomori",
+    "name": "MementoMori", 
+    "developer": "Bank of Innovation, Inc.", 
+    "banner_url": "https://play-lh.googleusercontent.com/HG9W8SRyTeeLPFrrS17a06d5ANgakJbHomr73o3l6I23YAiIFL399Y1_Q-2FDBO_zxqETTkphFhE-uTeuD2nH6w" 
+  },
+  { 
+    "id": "mongil-star-dive",
+    "name": "MONGIL: STAR DIVE", 
+    "developer": "Netmarble", 
+    "banner_url": "https://play-lh.googleusercontent.com/cjDSyrhTFt_cq5wO3GOtDOWoiGO2vfxKxRcSUT66Cx8eo-JhYC6FAdvreQIFTXjN9--gWGA46LMJZ9kPRFjFiA" 
+  },
+  { 
+    "id": "nte-neverness-to-everness",
+    "name": "NTE: Neverness To Everness", 
+    "developer": "Hotta Studio", 
+    "banner_url": "https://play-lh.googleusercontent.com/TGl3DdDbi4hty6ooOhEvv_2s5tkpGLbL6derP8y5hK-_Bw--Ve375b08ba9HHQ9ueRpoQ9oye1T_T24BJriLUmw" 
+  },
+  { 
+    "id": "one-piece-bounty-rush",
+    "name": "ONE PIECE Bounty Rush", 
+    "developer": "Bandai Namco Entertainment Inc.", 
+    "banner_url": "https://play-lh.googleusercontent.com/XxOoOoHB2BGc7q-P2p2StRdmitM6V23QWTeIv8e0Pn_XrbFc_VzDZ5gZ9A7WWTNu4ZYLA4uyaWkcki81RjhtOzo" 
+  },
+  { 
+    "id": "one-piece-treasure-cruise-rpg",
+    "name": "ONE PIECE TREASURE CRUISE-RPG", 
+    "developer": "Bandai Namco Entertainment Inc.", 
+    "banner_url": "https://play-lh.googleusercontent.com/bUqx24WUpn27RXnsVXdBkVkzOb22EeXQmBPBMdKHF34LkPOlwV3j-G0y5fJ4BQf7xvFKWbjZOyw9D7J1dClc" 
+  },
+  { 
+    "id": "pokemon-tcg-pocket-card-game",
+    "name": "Pokémon TCG Pocket - Card Game", 
+    "developer": "The Pokémon Company", 
+    "banner_url": "https://play-lh.googleusercontent.com/qdEdyVc19jfittS0bnDUnXLRM7jOPZzfHXEYoChPWOtzMrtwU6t3ZVm_FQ7wbeDYFlqLBuWCDK0Q6c1nEwYKTA"
+  },
+  { 
+    "id": "reverse-1999",
+    "name": "Reverse: 1999", 
+    "developer": "Bluepoch Co.,Ltd.", 
+    "banner_url": "https://play-lh.googleusercontent.com/35wW4EuYqdU1ItNGOcXQc7elbbEIgk1LCE693GOJrIyc2NLC8dGeMs1fchPepzZim_Sif-Q-aFJhyDqr1JEx" 
+  },
+  { 
+    "id": "summoners-war",
+    "name": "Summoners War", 
+    "developer": "Com2uS", 
+    "banner_url": "https://play-lh.googleusercontent.com/MUCpc9V1KmbWYb2Cv6p3aSVyzBo-uuG_iMPWY0vZSRh9cpDadSM07vaWHJXE6Yrpxj-wH1y55mO6Bo6B3_2k" 
+  },
+  { 
+    "id": "the-battle-cats",
+    "name": "The Battle Cats", 
+    "developer": "PONOS Corporation", 
+    "banner_url": "https://play-lh.googleusercontent.com/DUQGeq2u_7Xpk5sQUsIdEr8sfHTm_zHOT_B5WgfkqPrOIr9lND5MjwrqC-UHlH-RpzTsN8mUvVgy5XvcqIQg" 
+  },
+  { 
+    "id": "the-seven-deadly-sins",
+    "name": "The Seven Deadly Sins", 
+    "developer": "Netmarble", 
+    "banner_url": "https://play-lh.googleusercontent.com/YRj12QsKKdEj296m54iz832vAjYZ2WNaaRM9RHXhQZD6BkmNVyGwEehPU_4OV7pii-UTxpqHHhWB6I3GXeiq5-k" 
+  },
+  { 
+    "id": "the-seven-deadly-sins-origin",
+    "name": "The Seven Deadly Sins: Origin", 
+    "developer": "Netmarble", 
+    "banner_url": "https://play-lh.googleusercontent.com/dSO5yDCNRCzgBMkhFNzCbInuEsg-jpjFQq2rXR7JrqHxj1YvBV-nHiqNYPXiGpxU1Ix-5xSi94pnqSYhdrj7" 
+  },
+  { 
+    "id": "trickal-chibi-go",
+    "name": "Trickal:Chibi Go", 
+    "developer": "BILIBILI", 
+    "banner_url": "https://play-lh.googleusercontent.com/KWpg_uQFkimNnWcoc_jK_-R20TcosCSIOBSeDGk5KG9RK0QecNg4DZOJfygcJg63th-OlwPrPau5FVmA-QfLzw" 
+  },
+  { 
+    "id": "wuthering-waves",
+    "name": "Wuthering Waves", 
+    "developer": "HK KURO GAMES LIMITED", 
+    "banner_url": "https://play-lh.googleusercontent.com/kP-iYZI3TL5GzvDKjtjtu2P_POG8sz7NZaP3hOw3WqDcZeZ7YcAQuY-aH8C_4tAPOk7W9rhi4OSZCWIK_e3FA0s",
+    "trailer_id": "Tf0pE_Yy7G8",
+    "ratings": { 
+      "age": "T", 
+      "f2p": "/5", 
+      "afk": "/5", 
+      "story": "/5", 
+      "gameplay": "5", 
+      "overall": "/5" 
+    }
+  },
+  { 
+    "id": "umamusume-pretty-derby",
+    "name": "Umamusume: Pretty Derby", 
+    "developer": "Cygames, Inc.", 
+    "banner_url": "https://play-lh.googleusercontent.com/yN6cCSP7UB_2bsvlCxrtv-FUpEt1IvEFwr0Ucb3wr39QsAd5PLsueSVXuCinDbE4rifhMlX4YNtpLpkGnpsLhCQ" 
+  },
+  { 
+    "id": "zenless-zone-zero",
+    "name": "Zenless Zone Zero", 
+    "developer": "COGNOSPHERE PTE. LTD.", 
+    "banner_url": "https://play-lh.googleusercontent.com/-ZZaqZBQ7EBjH4j0hyHX-0Fu0jUtnoOc-LwydvgQmsXWBZLxyAhxPcmIakzZB7NFurlK4Mj0pbvYe0pHYSuv4p8"
+  }
+]

@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/x-icon" href="/Assets/nurture_icon.ico">
+    <title>Nurture | Game Hub</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+    <style>
+        body { margin: 0; font-family: Arial, sans-serif; background-color: transparent; color: white; }
+
+        /* === BACKGROUND & BANNER STYLES (Copied from nurture.html) === */
+        .background-container {
+            position: fixed; top: 0; left: 0; height: 100vh; width: 100vw;
+            display: flex; justify-content: center; overflow: hidden;
+            background: #1f1f28; z-index: -1; pointer-events: none;
+        }
+        .background-container svg { position: absolute; height: 100%; width: 100%; }
+        .lines { opacity: 0.05; }
+        .line { fill-rule: evenodd; clip-rule: evenodd; fill: #4C3A90; }
+        .lights { opacity: 0.9; }
+        .light { fill-rule: evenodd; clip-rule: evenodd; fill: #7A6BB5; }
+
+        .banner { background-color: #16161c; color: white; padding: 8px; text-align: center; font-size: 2em; font-weight: bold; }
+        .social-button { display: inline-flex; align-items: center; padding: 8px 16px; border-radius: 20px; text-decoration: none; margin: 0 5px; transition: transform 0.3s ease, box-shadow 0.3s ease; }
+        .social-button:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); }
+        .discord-button { background-color: #5865F2; }
+        .kofi-button { background-color: #FF5E5B; }
+        .social-button img { height: 40px; vertical-align: middle; margin-right: 8px; transition: transform 0.3s ease; }
+        .sub-text { font-size: 0.9em; color: white; font-weight: bold; }
+
+        /* === GAME LAYOUT STYLES === */
+        .game-layout { max-width: 1200px; margin: 40px auto; padding: 0 20px; }
+        .game-header { display: flex; align-items: center; gap: 20px; background-color: #2a2a35; padding: 30px; border-radius: 12px 12px 0 0; border: 1px solid #3a3a45; border-bottom: none; }
+        .game-header img { width: 120px; height: 120px; border-radius: 12px; object-fit: cover; }
+        .game-title { font-size: 2.5em; margin: 0 0 10px 0; }
+        .game-dev { color: #aaa; font-family: monospace; font-size: 1.1em; margin: 0; }
+
+        .sub-nav { display: flex; background-color: #1f1f28; border: 1px solid #3a3a45; border-radius: 0 0 12px 12px; overflow: hidden; }
+        .sub-nav a { flex: 1; text-align: center; padding: 15px 20px; color: #aaa; text-decoration: none; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; transition: all 0.2s ease; border-right: 1px solid #3a3a45; }
+        .sub-nav a:last-child { border-right: none; }
+        .sub-nav a:hover { background-color: #2a2a35; color: white; }
+        .sub-nav a.active { background-color: #4C3A90; color: white; box-shadow: inset 0 -4px 0 #7A6BB5; }
+
+        .content-area { background-color: #2a2a35; border: 1px solid #3a3a45; border-radius: 12px; padding: 40px; margin-top: 20px; min-height: 400px; }
+    </style>
+</head>
+<body>
+    
+    <div class="background-container">
+        <svg id="lines" class="background__lights" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" viewBox="0 0 1920 1080" xml:space="preserve" preserveAspectRatio="none">
+            <g class="lines">
+                <rect class="line" x="1253.6" width="4.5" height="1080"></rect>
+                <rect class="line" x="873.3" width="1.8" height="1080"></rect>
+                <rect class="line" x="1100" width="1.8" height="1080"></rect>
+                <rect class="line" x="1547.1" width="4.5" height="1080"></rect>
+                <rect class="line" x="615" width="4.5" height="1080"></rect>
+                <rect class="line" x="684.6" width="1.8" height="1080"></rect>
+                <rect class="line" x="1369.4" width="1.8" height="1080"></rect>
+                <rect class="line" x="1310.2" width="0.9" height="1080"></rect>
+                <rect class="line" x="1233.4" width="0.9" height="1080"></rect>
+                <rect class="line" x="124.2" width="0.9" height="1080"></rect>
+                <rect class="line" x="1818.4" width="4.5" height="1080"></rect>
+                <rect class="line" x="70.3" width="4.5" height="1080"></rect>
+                <rect class="line" x="1618.6" width="1.8" height="1080"></rect>
+                <rect class="line" x="455.9" width="1.8" height="1080"></rect>
+                <rect class="line" x="328.7" width="1.8" height="1080"></rect>
+                <rect class="line" x="300.8" width="4.6" height="1080"></rect>
+                <rect class="line" x="1666.4" width="0.9" height="1080"></rect>
+            </g>
+            <g class="lights">
+                <path class="light1 light" d="M619.5,298.4H615v19.5h4.5V298.4z M619.5,674.8H615v9.8h4.5V674.8z M619.5,135.1H615v5.6h4.5V135.1z M619.5,55.5H615v68.7h4.5V55.5z"></path>
+                <path class="light2 light" d="M1258.2,531.9h-4.5v8.1h4.5V531.9z M1258.2,497.9h-4.5v17.9h4.5V497.9z M1258.2,0h-4.5v25.3h4.5V0z M1258.2,252.2h-4.5v42.4h4.5V252.2z"></path>
+                <path class="light3 light" d="M875.1,123.8h-1.8v4h1.8V123.8z M875.1,289.4h-1.8v24.1h1.8V289.4z M875.1,0h-1.8v31.4h1.8V0z M875.1,50.2h-1.8v11.5h1.8V50.2z"></path>
+                <path class="light4 light" d="M1101.8,983.8h-1.8v8.2h1.8V983.8z M1101.8,1075.9h-1.8v4.1h1.8V1075.9z M1101.8,873.7h-1.8v4.2h1.8V873.7z M1101.8,851h-1.8v18.2h1.8V851z"></path>
+                <path class="light5 light" d="M686.4,822.7h-1.8v3.8h1.8V822.7z M686.4,928.4h-1.8v23h1.8V928.4z M686.4,1043.8h-1.8v36.2h1.8V1043.8z"></path>
+                <path class="light6 light" d="M1551.6,860.9h-4.4v-34.1h4.4V860.9z M1551.6,533.5h-4.4v-13.9h4.4V533.5z M1551.6,1080h-4.4v-89.1h4.4V1080z"></path>
+                <path class="light7 light" d="M1311.1,707.7h-0.9V698h0.9V707.7z M1311.1,436.8h-0.9v-58.9h0.9V436.8z M1311.1,140.7h-0.9V48h0.9V140.7z"></path>
+                <path class="light8 light" d="M125.1,514.5h-0.9v-9.7h0.9V514.5z M125.1,243.6h-0.9v-58.9h0.9V243.6z"></path>
+                <path class="light9 light" d="M305.4,806.7h-4.6v-42.5h4.6V806.7z M305.4,398.5h-4.6v-17.3h4.6V398.5z M305.4,1080h-4.6V968.8h4.6V1080z"></path>
+                <path class="light10 light" d="M1822.9,170.7h-4.5v13.7h4.5V170.7z M1822.9,435.1h-4.5v6.8h4.5V435.1z M1822.9,55.9h-4.5v4h4.5V55.9z M1822.9,0h-4.5v48.3h4.5V0z"></path>
+                <path class="light11 light" d="M1666.4,331.5h0.9v9.7h-0.9V331.5z M1666.4,602.4h0.9v58.9h-0.9V602.4z M1666.4,898.5h0.9v92.7h-0.9V898.5z"></path>
+                <path class="light12 light" d="M1620.4,200.7h-1.8v6.4h1.8V200.7z M1620.4,469.1h-1.8v39h1.8V469.1z M1620.4,0h-1.8v51h1.8V0z M1620.4,81.3h-1.8V100h1.8V81.3z"></path>
+                <path class="light13 light" d="M74.8,201h-4.5v16.2h4.5V201z M74.8,512.3h-4.5v8.1h4.5V512.3z M74.8,65.8h-4.5v4.6h4.5V65.8z M74.8,0h-4.5v56.8h4.5V0z"></path>
+                <path class="light14 light" d="M1371.2,655.3h-1.8v6.3h1.8V655.3z M1371.2,829.7h-1.8v37.9h1.8V829.7z M1371.2,1020.3h-1.8v59.7h1.8V1020.3z"></path>
+                <path class="light15 light" d="M1234.3,898.1h-0.9v-4.9h0.9V898.1z M1234.3,762.5h-0.9v-29.5h0.9V762.5z M1234.3,614.4h-0.9v-46.4h0.9V614.4z"></path>
+                <path class="light16 light" d="M457.7,1010.8h-1.8v-18.1h1.8V1010.8z M457.7,507.5h-1.8V398h1.8V507.5z"></path>
+                <path class="light17 light" d="M330.5,170.7h-1.8v13.7h1.8V170.7z M330.5,435.1h-1.8v6.8h1.8V435.1z M330.5,55.9h-1.8v4h1.8V55.9z M330.5,0h-1.8v48.3h1.8V0z"></path>
+            </g>
+        </svg>
+    </div>
+
+    <div class="banner">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <a href="/">
+                    <img src="/Assets/nurture_banner.png" alt="Nurture Banner" style="height:90px; vertical-align:left; padding-left: 10px;">
+                </a>
+            </div>
+            <div>
+                <a href="https://www.discord.gg/5ypRXPXuX8" class="social-button discord-button">
+                    <img src="/Assets/join_discord.png" alt="Discord Icon" onmouseover="this.style.transform='rotate(5deg)'" onmouseout="this.style.transform='rotate(0deg)'">
+                    <span class="sub-text">Discord</span>
+                </a>
+                <a href="https://ko-fi.com/sorakoi" class="social-button kofi-button">
+                    <img src="/Assets/kofi_icon.png" alt="Ko-fi Icon" onmouseover="this.style.transform='rotate(5deg)'" onmouseout="this.style.transform='rotate(0deg)'">
+                    <span class="sub-text">Ko-fi</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="game-layout">
+        <a href="/" style="color: #aaa; text-decoration: none; display: inline-block; margin-bottom: 20px;">
+            ← Back to All Games
+        </a>
+
+        <div class="game-header">
+            <img src="/Assets/placeholder.png" alt="Game Icon" id="gameIcon">
+            <div>
+                <h1 class="game-title" id="gameTitle">Loading...</h1>
+                <p class="game-dev" id="gameDev">-</p>
+            </div>
+        </div>
+
+        <div class="sub-nav" id="tabMenu">
+            </div>
+
+        <div class="content-area" id="dynamicContent">
+            <h2>Loading content...</h2>
+        </div>
+    </div>
+
+    <script>
+        // BACKGROUND ANIMATION LOGIC
+        function animateWithRandomNumber(myClass, from, to) {
+            gsap.fromTo(myClass, 
+                { y: from }, 
+                { 
+                    duration: Math.floor((Math.random() * 20) + 1), 
+                    y: to, 
+                    ease: "none", 
+                    onComplete: animateWithRandomNumber, 
+                    onCompleteParams: [myClass, from, to] 
+                }
+            );
+        }
+
+        const itemsDown = [".light4", ".light5", ".light6", ".light7", ".light8", ".light11", ".light12", ".light13", ".light14", ".light15", ".light16"];
+        itemsDown.forEach(e => animateWithRandomNumber(e, -1080, 1080));
+        
+        const itemsUp = [".light1", ".light2", ".light3", ".light9", ".light10", ".light17"];
+        itemsUp.forEach(e => animateWithRandomNumber(e, 1080, -1080));
+
+        // =========================================
+        // PAGE DATA LOGIC (Fluid SPA-style Tabs)
+        // =========================================
+        
+        let gameData = null; // Store the fetched game data so we don't re-fetch it
+        
+        // 1. Parse the initial URL
+        const pathParts = window.location.pathname.split('/').filter(p => p);
+        const gameId = pathParts[1];
+        let currentSection = pathParts[2] || 'overview';
+
+        const sections = [
+            { id: 'overview', label: 'Overview' },
+            { id: 'guides', label: 'Guides' },
+            { id: 'assets', label: 'Raw Assets' },
+            { id: 'communities', label: 'Communities' },
+            { id: 'mods', label: 'Mods' }
+        ];
+
+        const tabMenu = document.getElementById('tabMenu');
+        const contentArea = document.getElementById('dynamicContent');
+        
+        // 2. Render the Tabs dynamically
+        function renderTabs() {
+            tabMenu.innerHTML = ''; // Clear existing tabs
+            
+            sections.forEach(sec => {
+                const link = document.createElement('a');
+                const url = sec.id === 'overview' ? `/games/${gameId}` : `/games/${gameId}/${sec.id}`;
+                link.href = url;
+                link.textContent = sec.label;
+                
+                if (sec.id === currentSection) {
+                    link.classList.add('active');
+                }
+                
+                // --- THE MAGIC: Intercept the click ---
+                link.addEventListener('click', (e) => {
+                    e.preventDefault(); // Stop the browser from hard-reloading
+                    if (currentSection === sec.id) return; // Do nothing if clicking the active tab
+
+                    currentSection = sec.id;
+                    
+                    // Update the address bar URL silently
+                    window.history.pushState({}, '', url); 
+                    
+                    // Instantly update the UI
+                    renderTabs(); 
+                    renderContent(); 
+                });
+                
+                tabMenu.appendChild(link);
+            });
+        }
+
+        // 3. Render the Content Area instantly
+        function renderContent() {
+            if (!gameData) return;
+            
+            document.title = `Nurture | ${gameData.name} - ${currentSection.toUpperCase()}`;
+            
+            // Fade out slightly for a smooth transition (optional flair)
+            contentArea.style.opacity = 0.5;
+            
+            setTimeout(() => {
+                switch(currentSection) {
+                    case 'guides':
+                        contentArea.innerHTML = `<h2>Guides for ${gameData.name}</h2><p>List of guides goes here.</p>`;
+                        break;
+                    case 'assets':
+                        contentArea.innerHTML = `<h2>Raw Assets</h2><p>Download sprites and audio for ${gameData.name} here.</p>`;
+                        break;
+                    case 'communities':
+                        contentArea.innerHTML = `<h2>Communities</h2><p>Discord and Reddit links for ${gameData.name}.</p>`;
+                        break;
+                    case 'mods':
+                        contentArea.innerHTML = `<h2>Mods</h2><p>Community mods repository.</p>`;
+                        break;
+                    default:
+                        contentArea.innerHTML = `
+                            <h2>Overview</h2>
+                            <p>Age Rating: ${gameData.ratings?.age || 'N/A'}</p>
+                            <p>F2P Friendly: ${gameData.ratings?.f2p || 'N/A'}</p>
+                            <p>Story: ${gameData.ratings?.story || 'N/A'}</p>
+                        `;
+                }
+                contentArea.style.opacity = 1;
+            }, 50); // Tiny delay makes the swap feel intentional
+        }
+
+        // 4. Handle Browser Back/Forward Buttons
+        window.addEventListener('popstate', () => {
+            const parts = window.location.pathname.split('/').filter(p => p);
+            currentSection = parts[2] || 'overview';
+            renderTabs();
+            renderContent();
+        });
+
+        // 5. Initial Page Load Fetch (Only happens ONCE per game)
+        async function initPage() {
+            try {
+                const response = await fetch(`/api/games/${gameId}`);
+                
+                if (!response.ok) throw new Error('Game not found');
+                
+                gameData = await response.json(); // Save data to our global variable
+
+                // Fill in the static header info once
+                document.getElementById('gameTitle').textContent = gameData.name;
+                document.getElementById('gameDev').textContent = gameData.developer;
+                document.getElementById('gameIcon').src = gameData.banner_url || '/Assets/placeholder.png';
+                
+                // Add a CSS transition to the content area for the fade effect
+                contentArea.style.transition = 'opacity 0.2s ease';
+                
+                renderTabs();
+                renderContent();
+
+            } catch (error) {
+                console.error("Failed to load page data:", error);
+                contentArea.innerHTML = `<h2>Error loading game data.</h2>`;
+            }
+        }
+
+        // Boot it up
+        initPage();
+    </script>
+</body>
+</html>

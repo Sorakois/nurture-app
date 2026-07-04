@@ -15,13 +15,16 @@ app.use(helmet({
         directives: {
             defaultSrc: ["'self'"],
             styleSrc: ["'self'", "'unsafe-inline'"],
-            scriptSrc: ["'self'", "'unsafe-inline'"],
-            imgSrc: ["'self'", "data:", "https:"],
+            // Allow GSAP to load from cdnjs
+            scriptSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com"],
+            // Allow images from https and http (for your googleusercontent placeholders)
+            imgSrc: ["'self'", "data:", "https:", "http:"],
             connectSrc: ["'self'"],
             fontSrc: ["'self'"],
             objectSrc: ["'none'"],
             mediaSrc: ["'self'"],
-            frameSrc: ["'none'"],
+            // Allow YouTube iframes for game trailers
+            frameSrc: ["'self'", "https://www.youtube.com"],
         },
     },
     crossOriginEmbedderPolicy: false
@@ -46,14 +49,8 @@ app.use('/Assets', express.static(path.join(__dirname, 'Assets'), {
     etag: true
 }));
 
-// Local In-Memory Database Replacement
-const validGames = [
-    { id: 1, name: 'Genshin Impact', developer: 'miHoYo', banner_url: '/Assets/placeholder.png' },
-    { id: 2, name: 'Goddess of Victory: NIKKE', developer: 'Shift Up', banner_url: '/Assets/placeholder.png' },
-    { id: 3, name: 'BrownDust2', developer: 'Neowiz', banner_url: '/Assets/placeholder.png' },
-    { id: 4, name: 'Honkai: Star Rail', developer: 'miHoYo', banner_url: '/Assets/placeholder.png' },
-    { id: 5, name: 'Blue Archive', developer: 'Nexon', banner_url: '/Assets/placeholder.png' }
-];
+// Import the game database
+const validGames = require('./data/games.json');
 
 // Input validation
 const validateInput = {
@@ -84,15 +81,12 @@ app.get('/api/games', (req, res) => {
     });
 });
 
-// Get game by TITLE
-app.get('/api/games/:title', (req, res) => {
-    const gameTitle = decodeURIComponent(req.params.title);
+// Get game by ID
+app.get('/api/games/:id', (req, res) => {
+    const gameId = req.params.id; // e.g., 'honkai-star-rail'
     
-    if (!validateInput.isValidGameName(gameTitle)) {
-        return res.status(400).json({ error: 'Invalid game title' });
-    }
-
-    const game = validGames.find(g => g.name.toLowerCase() === gameTitle.toLowerCase());
+    // Search the database using the new ID field
+    const game = validGames.find(g => g.id === gameId);
 
     if (!game) {
         return res.status(404).json({ error: 'Game not found' });
@@ -131,6 +125,13 @@ app.get('/api/health', (req, res) => {
 // Serve main HTML file
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'Main Page', 'nurture.html'));
+});
+
+// Route for individual game pages and their sub-sections
+app.get('/games/:gameId/:section?', (req, res) => {
+    // We serve the same HTML shell for all game pages and sub-sections.
+    // The frontend JS will figure out what to display based on the URL.
+    res.sendFile(path.join(__dirname, 'Main Page', 'game.html'));
 });
 
 // 404 handler
