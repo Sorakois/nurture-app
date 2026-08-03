@@ -104,14 +104,29 @@
     ],
     "communities": [
       {
-        "name": "HSR maincord",
+        "name": "OFFICIAL HSR Discord",
         "platform": "Discord",
-        "url": "https://discord.gg/hsr"
+        "url": "https://discord.gg/honkaistarrail"
       },
       {
-        "name": "HSR reddit",
+        "name": "Nurture Discord - Best place for personalized help!",
+        "platform": "Nurture",
+        "url": "https://discord.gg/G5vSJ4XY8B"
+      },
+      {
+        "name": "HSR Main Reddit",
         "platform": "Reddit",
-        "url": "https://reddit.com/r/hsr"
+        "url": "https://reddit.com/r/HonkaiStarRail"
+      },      
+      {
+        "name": "HSR Leaks Reddit",
+        "platform": "Reddit",
+        "url": "https://www.reddit.com/r/HonkaiStarRail_leaks/"
+      },
+      {
+        "name": "Fribbel's Discord",
+        "platform": "Discord",
+        "url": "https://discord.gg/kDAsjk4F57"
       }
     ],
     "mods": [
