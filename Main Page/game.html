@@ -43,6 +43,84 @@
         .sub-nav a.active { background-color: #4C3A90; color: white; box-shadow: inset 0 -4px 0 #7A6BB5; }
 
         .content-area { background-color: #2a2a35; border: 1px solid #3a3a45; border-radius: 12px; padding: 40px; margin-top: 20px; min-height: 400px; }
+        
+        /* === FILTER BAR STYLES === */
+        .filter-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            background-color: #1f1f28;
+            color: #aaa;
+            border: 1px solid #3a3a45;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .filter-btn:hover {
+            background-color: #2a2a35;
+            color: white;
+        }
+
+        .filter-btn.active {
+            background-color: #7A6BB5;
+            color: white;
+            border-color: #7A6BB5;
+        }
+
+        /* === CARD ITEM STYLES === */
+        .item-card {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background-color: #1f1f28;
+            border: 1px solid #3a3a45;
+            padding: 16px 20px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            text-decoration: none;
+            color: white;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .item-card:hover {
+            transform: translateX(4px);
+            border-color: #7A6BB5;
+        }
+
+        .item-icon {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+            flex-shrink: 0;
+            /* Make icons black/white */
+            /* filter: brightness(0) invert(1) opacity(0.85); */
+        }
+
+        .item-details {
+            flex-grow: 1;
+        }
+
+        .item-title {
+            font-size: 1.05em;
+            font-weight: bold;
+            color: #9d8ec7;
+            margin: 0 0 4px 0;
+        }
+
+        .item-meta {
+            font-size: 0.85em;
+            color: #888;
+            margin: 0;
+        }
+
     </style>
 </head>
 <body>
@@ -188,7 +266,7 @@
                     link.classList.add('active');
                 }
                 
-                // --- THE MAGIC: Intercept the click ---
+                // Intercept the click ---
                 link.addEventListener('click', (e) => {
                     e.preventDefault(); // Stop the browser from hard-reloading
                     if (currentSection === sec.id) return; // Do nothing if clicking the active tab
@@ -207,39 +285,142 @@
             });
         }
 
-        // 3. Render the Content Area instantly
+        let activeFilter = 'All';
+
+        // 1. Icon Resolver (Maps platforms/types to icon URLs)
+        function getItemIcon(item, section) {
+            if (section === 'communities') {
+                const platform = (item.platform || '').toLowerCase();
+                if (platform.includes('discord')) return 'https://cdn.simpleicons.org/discord/5865F2';
+                if (platform.includes('reddit')) return 'https://cdn.simpleicons.org/reddit/FF4500';
+                if (platform.includes('youtube')) return 'https://cdn.simpleicons.org/youtube/FF0000';
+                if (platform.includes('twitter') || platform.includes('x')) return 'https://cdn.simpleicons.org/x/000000';
+                
+                // if (platform.includes('discord')) return '/Assets/my_custom_discord.png';
+                // if (platform.includes('reddit')) return '/Assets/reddit_logo_colored.png';
+            }
+            
+            // Default fallback icons by section
+            const defaultIcons = {
+                guides: 'https://api.iconify.design/fluent-emoji:blue-book.svg',
+                assets: 'https://api.iconify.design/fluent-emoji:open-file-folder.svg',
+                communities: 'https://api.iconify.design/fluent-emoji:people-hugging.svg',
+                mods: 'https://api.iconify.design/fluent-emoji:puzzle-piece.svg'
+            };
+
+            return defaultIcons[section] || '/Assets/placeholder.png';
+        }
+
+        // 2. Filter Bar Component Renderer
+        function buildFilterBar(items, categoryKey, onSelect) {
+            if (!items || items.length === 0) return '';
+
+            // Extract unique categories dynamically
+            const categories = ['All', ...new Set(items.map(item => item[categoryKey]).filter(Boolean))];
+            
+            if (categories.length <= 1) return ''; // Don't show filters if there's only 1 category
+
+            setTimeout(() => {
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        activeFilter = e.target.dataset.category;
+                        renderContent();
+                    });
+                });
+            }, 0);
+
+            return `
+                <div class="filter-bar">
+                    ${categories.map(cat => `
+                        <button class="filter-btn ${activeFilter === cat ? 'active' : ''}" data-category="${cat}">
+                            ${cat}
+                        </button>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        // 3. Main Content Renderer
         function renderContent() {
             if (!gameData) return;
             
             document.title = `Nurture | ${gameData.name} - ${currentSection.toUpperCase()}`;
-            
-            // Fade out slightly for a smooth transition (optional flair)
             contentArea.style.opacity = 0.5;
             
             setTimeout(() => {
-                switch(currentSection) {
-                    case 'guides':
-                        contentArea.innerHTML = `<h2>Guides for ${gameData.name}</h2><p>List of guides goes here.</p>`;
-                        break;
-                    case 'assets':
-                        contentArea.innerHTML = `<h2>Raw Assets</h2><p>Download sprites and audio for ${gameData.name} here.</p>`;
-                        break;
-                    case 'communities':
-                        contentArea.innerHTML = `<h2>Communities</h2><p>Discord and Reddit links for ${gameData.name}.</p>`;
-                        break;
-                    case 'mods':
-                        contentArea.innerHTML = `<h2>Mods</h2><p>Community mods repository.</p>`;
-                        break;
-                    default:
-                        contentArea.innerHTML = `
-                            <h2>Overview</h2>
-                            <p>Age Rating: ${gameData.ratings?.age || 'N/A'}</p>
-                            <p>F2P Friendly: ${gameData.ratings?.f2p || 'N/A'}</p>
-                            <p>Story: ${gameData.ratings?.story || 'N/A'}</p>
+                if (currentSection === 'overview') {
+                    let overviewHtml = `
+                        <h2>Overview</h2>
+                        <!-- Note the white-space: pre-wrap; added below -->
+                        <p style="line-height: 1.6; color: #ddd; white-space: pre-wrap;">${gameData.overview_text || 'No overview available for this game yet.'}</p>
+                    `;
+
+                    // Dynamically inject the new player video if the game has one
+                    if (gameData.new_player_video_id) {
+                        overviewHtml += `
+                            <h3 style="margin-top: 40px; border-bottom: 1px solid #3a3a45; padding-bottom: 10px;">New Player Guide</h3>
+                            <div style="position: relative; width: 100%; padding-bottom: 56.25%; height: 0; border-radius: 8px; overflow: hidden; background: #000; margin-top: 20px;">
+                                <iframe 
+                                    src="https://www.youtube.com/embed/${gameData.new_player_video_id}" 
+                                    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;"
+                                    allow="accelerometer; autoplay; clipboard-encrypted-media; gyroscope; picture-in-picture" 
+                                    referrerpolicy="strict-origin-when-cross-origin"
+                                    allowfullscreen>
+                                </iframe>
+                            </div>
                         `;
+                    }
+
+                    contentArea.innerHTML = overviewHtml;
+                    contentArea.style.opacity = 1;
+                    return;
                 }
+
+                // Configuration mapping for dynamic sections
+                const sectionConfig = {
+                    guides: { title: 'Guides', data: gameData.guides, catKey: 'category', metaKey: 'author', metaPrefix: 'By ' },
+                    assets: { title: 'Raw Assets', data: gameData.assets, catKey: 'type', metaKey: 'type', metaPrefix: 'Format: ' },
+                    communities: { title: 'Communities', data: gameData.communities, catKey: 'platform', metaKey: 'platform', metaPrefix: 'Platform: ' },
+                    mods: { title: 'Mods', data: gameData.mods, catKey: 'author', metaKey: 'version', metaPrefix: 'Version: ' }
+                };
+
+                const config = sectionConfig[currentSection];
+
+                if (!config || !config.data || config.data.length === 0) {
+                    contentArea.innerHTML = `<h2>${config?.title || 'Section'}</h2><p style="color: #aaa;">No items found.</p>`;
+                    contentArea.style.opacity = 1;
+                    return;
+                }
+
+                // Apply Category Filter
+                const filteredData = activeFilter === 'All' 
+                    ? config.data 
+                    : config.data.filter(item => item[config.catKey] === activeFilter);
+
+                // Generate Filter Bar HTML
+                const filterHtml = buildFilterBar(config.data, config.catKey);
+
+                // Generate Cards List HTML
+                const cardsHtml = filteredData.map(item => `
+                    <a href="${item.url || item.download_url || '#'}" target="_blank" class="item-card">
+                        <img src="${getItemIcon(item, currentSection)}" class="item-icon" alt="icon" onerror="this.src='/Assets/placeholder.png'">
+                        <div class="item-details">
+                            <div class="item-title">${item.title || item.name}</div>
+                            <div class="item-meta">${config.metaPrefix}${item[config.metaKey]}</div>
+                        </div>
+                    </a>
+                `).join('');
+
+                contentArea.innerHTML = `
+                    <h2>${config.title}</h2>
+                    ${filterHtml}
+                    <div class="items-list">
+                        ${cardsHtml || '<p style="color: #888;">No items match this filter.</p>'}
+                    </div>
+                `;
+                
                 contentArea.style.opacity = 1;
-            }, 50); // Tiny delay makes the swap feel intentional
+            }, 50);
         }
 
         // 4. Handle Browser Back/Forward Buttons

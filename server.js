@@ -24,7 +24,7 @@ app.use(helmet({
             objectSrc: ["'none'"],
             mediaSrc: ["'self'"],
             // Allow YouTube iframes for game trailers
-            frameSrc: ["'self'", "https://www.youtube.com"],
+            frameSrc: ["'self'", "https://www.youtube.com", "https://www.youtube-nocookie.com"],
         },
     },
     crossOriginEmbedderPolicy: false

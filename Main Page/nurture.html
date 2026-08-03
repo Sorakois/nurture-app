@@ -391,7 +391,7 @@
             <h2 class="modal-title" id="modalGameTitle">Game Title</h2>
             
             <div class="video-container">
-                <iframe id="modalTrailer" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                <iframe id="modalTrailer" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
             </div>
             
             <div class="ratings-grid">
@@ -584,7 +584,7 @@
             modalGameTitle.textContent = game.name || 'Unknown Game';
             
             if (game.trailer_id && currentTrailerId !== game.trailer_id) {
-                modalTrailer.src = `https://www.youtube.com/embed/${game.trailer_id}?autoplay=1`;
+                modalTrailer.src = `https://www.youtube-nocookie.com/embed/${game.trailer_id}?autoplay=1`;
                 currentTrailerId = game.trailer_id;
             } else if (!game.trailer_id) {
                 modalTrailer.src = ''; 

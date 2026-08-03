@@ -76,15 +76,52 @@
     "name": "Honkai: Star Rail", 
     "developer": "COGNOSPHERE PTE. LTD.", 
     "banner_url": "https://play-lh.googleusercontent.com/aWrGocSA7hEuk1qAPe7L4T57LvLKrwwH26cK2_LOqxRQMQX7j3uHYojC-EKWgYEV2PdrmE0ahqvvhLhXrAGk6Q",
-    "trailer_id": "DxOPkAWGFkI", 
+    "trailer_id": "xT88aPknvag", 
     "ratings": { 
       "age": "T", 
-      "f2p": "/5", 
-      "afk": "/5", 
-      "story": "/5", 
-      "gameplay": "/5", 
-      "overall": "/5" 
-    }
+      "f2p": "4/5", 
+      "afk": "5/5", 
+      "story": "4/5", 
+      "gameplay": "5/5", 
+      "overall": "4.5/5" 
+    },
+    "overview_text": "Honkai: Star Rail follows the gameplay style of classic Japanese role-playing games where players build up a lineup of characters and control a team of up to four in turn-based combat.\n\nElements of open-world and dungeon exploration are present, with multiple mechanics including the gacha system, carried over (with slight differences) from Genshin Impact. Instead of exploring one large map, players explore smaller, self-contained areas on each world, which contain treasure chests, puzzles, and other interactable elements.",
+    "new_player_video_id": "RPdufDCjK3E",
+    "guides": [
+      {
+        "title": "HSR Guide",
+        "author": "TBA",
+        "url": "https://example.com/hsr-guide",
+        "category": "Meta"
+      }
+    ],
+    "assets": [
+      {
+        "title": "HSR raw assets here",
+        "type": "zip archive",
+        "download_url": "https://example.com/hsr-raw-assets"
+      }
+    ],
+    "communities": [
+      {
+        "name": "HSR maincord",
+        "platform": "Discord",
+        "url": "https://discord.gg/hsr"
+      },
+      {
+        "name": "HSR reddit",
+        "platform": "Reddit",
+        "url": "https://reddit.com/r/hsr"
+      }
+    ],
+    "mods": [
+      {
+        "title": "SRMI",
+        "author": "TBA",
+        "version": "1.0.0",
+        "download_url": "https://example.com/srmi"
+      }
+    ]
   },
   { 
     "id": "hatsune-miku-colorful-stage",
