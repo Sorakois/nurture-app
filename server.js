@@ -15,15 +15,12 @@ app.use(helmet({
         directives: {
             defaultSrc: ["'self'"],
             styleSrc: ["'self'", "'unsafe-inline'"],
-            // Allow GSAP to load from cdnjs
             scriptSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com"],
-            // Allow images from https and http (for your googleusercontent placeholders)
             imgSrc: ["'self'", "data:", "https:", "http:"],
             connectSrc: ["'self'"],
             fontSrc: ["'self'"],
             objectSrc: ["'none'"],
             mediaSrc: ["'self'"],
-            // Allow YouTube iframes for game trailers
             frameSrc: ["'self'", "https://www.youtube.com", "https://www.youtube-nocookie.com"],
         },
     },
@@ -43,14 +40,30 @@ app.use(limiter);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Serve static files from your existing structure
+// Serve static files
 app.use('/Assets', express.static(path.join(__dirname, 'Assets'), {
     maxAge: '1d',
     etag: true
 }));
 
 // Import the game database
-const validGames = require('./data/games.json');
+const rawGames = require('./data/games.json');
+
+// Helper to check if a game has extended data
+const hasGameData = (game) => {
+    return !!(game.overview_text || game.guides || game.assets || game.communities || game.mods || game.trailer_id || game.ratings);
+};
+
+// Sort games: "Has Data" first, then Alphabetically
+const validGames = rawGames.sort((a, b) => {
+    const aData = hasGameData(a);
+    const bData = hasGameData(b);
+    
+    if (aData && !bData) return -1;
+    if (!aData && bData) return 1;
+    
+    return a.name.localeCompare(b.name);
+});
 
 // Input validation
 const validateInput = {
@@ -83,9 +96,8 @@ app.get('/api/games', (req, res) => {
 
 // Get game by ID
 app.get('/api/games/:id', (req, res) => {
-    const gameId = req.params.id; // e.g., 'honkai-star-rail'
+    const gameId = req.params.id; 
     
-    // Search the database using the new ID field
     const game = validGames.find(g => g.id === gameId);
 
     if (!game) {
@@ -129,8 +141,6 @@ app.get('/', (req, res) => {
 
 // Route for individual game pages and their sub-sections
 app.get('/games/:gameId/:section?', (req, res) => {
-    // We serve the same HTML shell for all game pages and sub-sections.
-    // The frontend JS will figure out what to display based on the URL.
     res.sendFile(path.join(__dirname, 'Main Page', 'game.html'));
 });
 

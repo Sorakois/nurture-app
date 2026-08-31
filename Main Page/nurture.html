@@ -11,12 +11,9 @@
         body {
             margin: 0;
             font-family: Arial, sans-serif;
-            background-color: transparent; /* Set to transparent so the animated background shows */
+            background-color: transparent; 
         }
 
-        /* =========================================
-           ANIMATED BACKGROUND STYLES
-           ========================================= */
         .background-container {
             position: fixed;
             top: 0;
@@ -26,9 +23,9 @@
             display: flex;
             justify-content: center;
             overflow: hidden;
-            background: #1f1f28; /* Your original dark theme color */
-            z-index: -1;         /* Pins it behind all site content */
-            pointer-events: none; /* Prevents it from blocking clicks/hovers */
+            background: #1f1f28; 
+            z-index: -1;         
+            pointer-events: none; 
         }
         .background-container svg {
             position: absolute;
@@ -40,9 +37,6 @@
         .lights { opacity: 0.9; }
         .light { fill-rule: evenodd; clip-rule: evenodd; fill: #7A6BB5; }
 
-        /* =========================================
-           MAIN LAYOUT STYLES
-           ========================================= */
         .banner {
             background-color: #16161c;
             color: white;
@@ -132,7 +126,7 @@
             padding: 15px;
             text-align: center;
             cursor: pointer;
-            transition: transform 0.3s ease;
+            transition: transform 0.3s ease, filter 0.3s ease, opacity 0.3s ease;
         }
         .grid-item:hover {
             transform: translateY(-5px);
@@ -143,7 +137,15 @@
             border-radius: 5px;
         }
         
-        /* New Title & Icon Formatting */
+        .grid-item.no-data {
+            filter: grayscale(100%);
+            opacity: 0.4;
+        }
+        .grid-item.no-data:hover {
+            transform: none; 
+            opacity: 0.6;
+        }
+
         .title-wrapper {
             display: flex;
             justify-content: center;
@@ -176,10 +178,18 @@
             color: #000;
             transform: scale(1.1);
         }
+        
+        /* Disabled state for info icon */
+        .info-icon.disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+        .info-icon.disabled:hover {
+            background-color: #3a3a45;
+            color: #aaa;
+            transform: none;
+        }
 
-        /* =========================================
-           MODAL OVERLAY & ANIMATION
-           ========================================= */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -214,11 +224,9 @@
             color: white;
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
             
-            /* CSS Variables for Dynamic Origin Animation */
             --start-x: 0px;
             --start-y: 20px;
             
-            /* Start scaled down and translated to the exact card coordinates */
             transform: translate(var(--start-x), var(--start-y)) scale(0.25);
             transform-origin: center;
             transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
@@ -424,9 +432,7 @@
     </div>
 
     <script>
-        // =========================================
         // BACKGROUND ANIMATION LOGIC (GSAP 3)
-        // =========================================
         function animateWithRandomNumber(myClass, from, to) {
             gsap.fromTo(myClass, 
                 { y: from }, 
@@ -446,19 +452,43 @@
         const itemsUp = [".light1", ".light2", ".light3", ".light9", ".light10", ".light17"];
         itemsUp.forEach(e => animateWithRandomNumber(e, 1080, -1080));
 
-        // =========================================
         // APP LOGIC & DATABASE
-        // =========================================
         let allGames = [];
         let currentPage = 1;
         const gamesPerPage = 20;
+        let isLoading = false;
+        let isSearching = false;
+        let totalPages = 1;
 
-        // DOM elements
+        const loadGames = async (page = 1, append = false) => {
+            if (isLoading) return; 
+            isLoading = true;
+
+            try {
+                const data = await apiCall(`/games?page=${page}&limit=${gamesPerPage}`);
+                
+                if (data.games) {
+                    totalPages = data.pagination.pages; 
+                    
+                    if (append) {
+                        allGames = [...allGames, ...data.games]; 
+                    } else {
+                        allGames = data.games; 
+                    }
+                    
+                    updateGrid(allGames);
+                }
+            } catch (error) {
+                showError('Failed to load games from the server.');
+            } finally {
+                isLoading = false;
+            }
+        };
+
         const searchInput = document.getElementById('searchInput');
         const gameGrid = document.getElementById('gameGrid');
         const suggestionsDiv = document.getElementById('suggestions');
 
-        // Modal DOM elements
         const gameModal = document.getElementById('gameModal');
         const modalWindowContent = document.getElementById('modalWindowContent');
         const closeModalBtn = document.getElementById('closeModal');
@@ -471,12 +501,9 @@
         const modalGameplay = document.getElementById('modalGameplay');
         const modalOverall = document.getElementById('modalOverall');
 
-        // API base URL
         const API_BASE = window.location.origin + '/api';
-        
         let currentTrailerId = ''; 
 
-        // Utility functions
         const debounce = (func, wait) => {
             let timeout;
             return function executedFunction(...args) {
@@ -510,7 +537,6 @@
             }, 5000);
         };
 
-        // API call function
         const apiCall = async (endpoint, options = {}) => {
             try {
                 const response = await fetch(`${API_BASE}${endpoint}`, {
@@ -533,28 +559,16 @@
             }
         };
 
-        // Load games from local API
-        const loadGames = async (page = 1) => {
-            try {
-                const data = await apiCall(`/games?page=${page}&limit=${gamesPerPage}`);
-                
-                if (data.games) {
-                    allGames = data.games;
-                    updateGrid(allGames);
-                }
-            } catch (error) {
-                showError('Failed to load games from the server.');
-                updateGrid([]); // Load an empty grid
-            }
-        };
-
-        // Search games
         const searchGames = async (query) => {
             if (!query || query.length === 0) {
-                updateGrid(allGames);
+                isSearching = false;
+                currentPage = 1;
+                loadGames(1, false);
                 return;
             }
             if (query.length < 2) return;
+
+            isSearching = true;
 
             try {
                 const results = await apiCall(`/games/search/${encodeURIComponent(query)}`);
@@ -567,7 +581,6 @@
             }
         };
 
-        // Modal Logic
         function openGameModal(game, cardElement) {
             const rect = cardElement.getBoundingClientRect();
             const cardCenterX = rect.left + rect.width / 2;
@@ -609,10 +622,8 @@
             }, 400); 
         }
 
-        // Close when clicking the "X"
         closeModalBtn.addEventListener('click', closeGameModal);
 
-        // Close when clicking the dark background overlay
         gameModal.addEventListener('click', function(e) {
             if (e.target === gameModal) {
                 closeGameModal();
@@ -635,33 +646,37 @@
 
             games.forEach(game => {
                 const gridItem = document.createElement('div');
-                gridItem.className = 'grid-item';
+                
+                // Assess if the game has extra data
+                const hasData = typeof game === 'object' && !!(game.overview_text || game.guides || game.assets || game.communities || game.mods || game.trailer_id || game.ratings);
+                gridItem.className = `grid-item ${hasData ? '' : 'no-data'}`;
                 
                 const gameName = typeof game === 'string' ? game : game.name;
                 const iconUrl = typeof game === 'object' && game.banner_url ? game.banner_url : '/Assets/placeholder.png';
                 const developer = typeof game === 'object' && game.developer ? game.developer : '';
                 
+                // Add the disabled class and update the title conditionally for the info icon
                 gridItem.innerHTML = `
                     <img src="${iconUrl}" alt="${gameName}" loading="lazy" 
                          onerror="this.src='/Assets/placeholder.png'">
                     <div class="title-wrapper">
                         <div class="grid-item-title">${escapeHtml(gameName)}</div>
-                        <div class="info-icon" title="View Game Details">i</div>
+                        <div class="info-icon ${hasData ? '' : 'disabled'}" title="${hasData ? 'View Game Details' : 'No Data Available'}">i</div>
                     </div>
                     ${developer ? `<div class="grid-item-dev" style="font-size: 12px; color: #ccc; margin-top: 5px;">${escapeHtml(developer)}</div>` : ''}
                 `;
                 
-                // CLICK "i" ICON: Open Modal and prevent the main card click
                 const infoBtn = gridItem.querySelector('.info-icon');
                 infoBtn.addEventListener('click', (e) => {
-                    e.stopPropagation(); // Stops the click from triggering the sub-page navigation
-                    openGameModal(typeof game === 'object' ? game : { name: gameName }, gridItem);
+                    e.stopPropagation(); 
+                    // Only open the modal if the game actually has data
+                    if (hasData) {
+                        openGameModal(typeof game === 'object' ? game : { name: gameName }, gridItem);
+                    }
                 });
                 
-                // CLICK CARD: Independent navigation
                 gridItem.addEventListener('click', () => {
-                    // If the game object has an ID, navigate to it!
-                    if (game.id) {
+                    if (game.id && hasData) {
                         window.location.href = `/games/${game.id}`;
                     }
                 });
@@ -670,7 +685,6 @@
             });
         }
 
-        // Fixed HTML Escape function to prevent JS Syntax errors
         const escapeHtml = (text) => {
             const map = {
                 '&': '&',
@@ -684,7 +698,6 @@
 
         const debouncedSearch = debounce(searchGames, 300);
 
-        // Event Listeners
         document.addEventListener('DOMContentLoaded', () => {
             loadGames();
         });
@@ -696,7 +709,9 @@
         searchInput.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 this.value = '';
-                updateGrid(allGames);
+                isSearching = false;
+                currentPage = 1;
+                loadGames(1, false);
             }
         });
 
@@ -707,6 +722,19 @@
         });
 
         window.addEventListener('online', () => loadGames());
+
+        const scrollTrigger = document.createElement('div');
+        scrollTrigger.style.height = '20px';
+        document.body.appendChild(scrollTrigger);
+
+        const observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting && !isLoading && !isSearching && currentPage < totalPages) {
+                currentPage++;
+                loadGames(currentPage, true);
+            }
+        }, { rootMargin: '200px' }); 
+
+        observer.observe(scrollTrigger);
     </script>
 </body>
 </html>
