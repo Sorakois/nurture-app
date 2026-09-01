@@ -272,6 +272,9 @@
                     if (currentSection === sec.id) return; // Do nothing if clicking the active tab
 
                     currentSection = sec.id;
+
+                    // Reset the filter so it doesnt bug out
+                    activeFilter = 'All';
                     
                     // Update the address bar URL silently
                     window.history.pushState({}, '', url); 
@@ -289,19 +292,38 @@
 
         // 1. Icon Resolver (Maps platforms/types to icon URLs)
         function getItemIcon(item, section) {
-            if (section === 'communities') {
-                const platform = (item.platform || '').toLowerCase();
-                if (platform.includes('discord')) return 'https://cdn.simpleicons.org/discord/5865F2';
-                if (platform.includes('reddit')) return 'https://cdn.simpleicons.org/reddit/FF4500';
-                if (platform.includes('youtube')) return 'https://cdn.simpleicons.org/youtube/FF0000';
-                if (platform.includes('twitter') || platform.includes('x')) return 'https://cdn.simpleicons.org/x/000000';
-                if (platform.includes('nurture')) return '/Assets/nurture_icon.png';
-                
-                // if (platform.includes('discord')) return '/Assets/my_custom_discord.png';
-                // if (platform.includes('reddit')) return '/Assets/reddit_logo_colored.png';
-            }
+            // 0. Explicit Custom Icon Override
+            if (item.icon_url) return item.icon_url;
+
+            // 1. Check for specific platforms across ALL sections first
+            const platform = (Array.isArray(item.platform) ? item.platform.join(',') : (item.platform || '')).toLowerCase();
             
-            // Default fallback icons by section
+            // Custom icons for specific websites
+            if (platform.includes('google sheets')) return '/Assets/google_sheets_icon.webp';
+            if (platform.includes('nurture')) return '/Assets/nurture_icon.png';
+            if (platform.includes('fribbels')) return '/Assets/fribbels.webp';
+
+            // Social media icons
+            if (platform.includes('discord')) return 'https://cdn.simpleicons.org/discord/5865F2';
+            if (platform.includes('reddit')) return 'https://cdn.simpleicons.org/reddit/FF4500';
+            if (platform.includes('youtube')) return 'https://cdn.simpleicons.org/youtube/FF0000';
+            if (platform.includes('twitter') || platform.includes('x')) return 'https://cdn.simpleicons.org/x/000000';
+
+            // 2. Dynamic Website Favicon Fetcher
+            // Look for either url or download_url
+            const targetUrl = item.url || item.download_url;
+            
+            if (platform.includes('website') && targetUrl) {
+                try {
+                    // Using Google's modern FaviconV2 API. It accepts the full encoded URL 
+                    // and successfully parses sub-paths (like /hsr-optimizer/) to find the correct icon.
+                    return `https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${encodeURIComponent(targetUrl)}&size=64`;
+                } catch (error) {
+                    console.error("Invalid URL for favicon fetching:", targetUrl);
+                }
+            }
+
+            // 3. Default fallback icons by section
             const defaultIcons = {
                 guides: 'https://api.iconify.design/fluent-emoji:blue-book.svg',
                 assets: 'https://api.iconify.design/fluent-emoji:open-file-folder.svg',
@@ -316,10 +338,29 @@
         function buildFilterBar(items, categoryKey, onSelect) {
             if (!items || items.length === 0) return '';
 
-            // Extract unique categories dynamically
-            const categories = ['All', ...new Set(items.map(item => item[categoryKey]).filter(Boolean))];
+            // Tags that will exist for image sake, but will be ignored for tab-making
+            const ignoredTags = [
+                'nurture',
+                'google sheets'
+            ];
+
+            // Extract unique categories dynamically (handles both arrays and comma strings)
+            let categories = ['All', ...new Set(items.flatMap(item => {
+                const val = item[categoryKey];
+                if (!val) return [];
+                if (Array.isArray(val)) return val;
+                // If the JSON contains a comma-separated string, split it cleanly
+                if (typeof val === 'string' && val.includes(',')) {
+                    return val.split(',').map(s => s.trim());
+                }
+                return [val];
+            }).filter(Boolean))];
             
-            if (categories.length <= 1) return ''; // Don't show filters if there's only 1 category
+            // Now, remove the tags we ignored earlier
+            categories = categories.filter(cat => cat === 'All' || !ignoredTags.map(t => t.toLowerCase()).includes(cat.toLowerCase()));
+
+            // Dont show filters if theres only "All"
+            if (categories.length <= 1) return ''; 
 
             setTimeout(() => {
                 document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -394,23 +435,41 @@
                 }
 
                 // Apply Category Filter
+                // Apply Category Filter
                 const filteredData = activeFilter === 'All' 
                     ? config.data 
-                    : config.data.filter(item => item[config.catKey] === activeFilter);
+                    : config.data.filter(item => {
+                        const val = item[config.catKey];
+                        if (!val) return false;
+                        
+                        if (Array.isArray(val)) {
+                            return val.includes(activeFilter);
+                        }
+                        if (typeof val === 'string' && val.includes(',')) {
+                            return val.split(',').map(s => s.trim()).includes(activeFilter);
+                        }
+                        return val === activeFilter;
+                    });
 
                 // Generate Filter Bar HTML
                 const filterHtml = buildFilterBar(config.data, config.catKey);
 
                 // Generate Cards List HTML
-                const cardsHtml = filteredData.map(item => `
-                    <a href="${item.url || item.download_url || '#'}" target="_blank" class="item-card">
-                        <img src="${getItemIcon(item, currentSection)}" class="item-icon" alt="icon" onerror="this.src='/Assets/placeholder.png'">
-                        <div class="item-details">
-                            <div class="item-title">${item.title || item.name}</div>
-                            <div class="item-meta">${config.metaPrefix}${item[config.metaKey]}</div>
-                        </div>
-                    </a>
-                `).join('');
+                const cardsHtml = filteredData.map(item => {
+                    // Neatly join array tags with a comma and space for the subtitle
+                    let metaVal = item[config.metaKey];
+                    if (Array.isArray(metaVal)) metaVal = metaVal.join(', ');
+
+                    return `
+                        <a href="${item.url || item.download_url || '#'}" target="_blank" class="item-card">
+                            <img src="${getItemIcon(item, currentSection)}" class="item-icon" alt="icon" onerror="this.src='/Assets/placeholder.png'">
+                            <div class="item-details">
+                                <div class="item-title">${item.title || item.name}</div>
+                                <div class="item-meta">${config.metaPrefix}${metaVal}</div>
+                            </div>
+                        </a>
+                    `;
+                }).join('');
 
                 contentArea.innerHTML = `
                     <h2>${config.title}</h2>

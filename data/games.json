@@ -89,17 +89,46 @@
     "new_player_video_id": "RPdufDCjK3E",
     "guides": [
       {
-        "title": "HSR Guide",
-        "author": "TBA",
-        "url": "https://example.com/hsr-guide",
-        "category": "Meta"
+        "title": "Character Build Guide",
+        "author": "DarkAngel, Ataraxia1339, and others",
+        "platform": "Google Sheets",
+        "url": "https://docs.google.com/spreadsheets/u/2/d/e/2PACX-1vRsm60jYo8MdHWimjvY42wE8-j-0NBwG9-KutpNcQbylhhBiKBpGmUm1x3CXExthl2EB438RdMWdeT3/pubhtml#gid=249613050",
+        "category": ["Google Sheets", "Relics"]
+      },
+      {
+        "title": "Fribbels Relic Optimizer",
+        "platform":"Website",
+        "author": "Fribbels",
+        "url": "https://fribbels.github.io/hsr-optimizer/",
+        "category": ["Tools","Relics"]
+      },
+      {
+        "title": "Banner History",
+        "platform":"Website",
+        "author": "Samsara",
+        "url": "https://samsara.pages.dev/5star/hsr-characters",
+        "category": ["Tools"]
+      },
+      {
+        "title": "Team Comps + Calculations",
+        "platform":"Website",
+        "author": "Prydwen",
+        "url": "https://www.prydwen.gg/star-rail/characters",
+        "category": ["Tools", "Relics"]
       }
     ],
     "assets": [
       {
-        "title": "HSR raw assets here",
-        "type": "zip archive",
-        "download_url": "https://example.com/hsr-raw-assets"
+        "title": "Leaked Assets (versioned)",
+        "platform": "Website",
+        "type": ["Images", "Videos"],
+        "download_url": "https://hsr.nanoka.cc/"
+      },
+      {
+        "title": "Datamined Assets (general)",
+        "platform": "Website",
+        "type": ["Images", "Videos"],
+        "download_url": "https://starrail.honeyhunterworld.com/?lang=EN"
       }
     ],
     "communities": [
@@ -110,7 +139,7 @@
       },
       {
         "name": "Nurture Discord - Best place for personalized help!",
-        "platform": "Nurture",
+        "platform": ["Nurture", "Discord"],
         "url": "https://discord.gg/G5vSJ4XY8B"
       },
       {
