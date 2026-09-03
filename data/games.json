@@ -33,7 +33,22 @@
     "id": "cookierun-kingdom",
     "name": "CookieRun: Kingdom", 
     "developer": "Devsisters", 
-    "banner_url": "https://play-lh.googleusercontent.com/J1zzZf_Clyg51sikuBbfTMD_sGVK64Ki5vyVtn3MmkUUzQ-AxKWq2-WuVDnpkrpai6Icun3wXspttadNAxy4djI" 
+    "banner_url": "https://play-lh.googleusercontent.com/J1zzZf_Clyg51sikuBbfTMD_sGVK64Ki5vyVtn3MmkUUzQ-AxKWq2-WuVDnpkrpai6Icun3wXspttadNAxy4djI",
+    "trailer_id": "",
+    "ratings": { 
+      "age": "E", 
+      "f2p": "3/5", 
+      "afk": "3/5", 
+      "story": "3/5", 
+      "gameplay": "3/5", 
+      "overall": "3/5" 
+    },
+    "overview_text": "",
+    "new_player_video_id": "",
+    "guides": [],
+    "assets": [],
+    "communities": [],
+    "mods": []
   },
   { 
     "id": "dragon-ball-legends",
@@ -114,7 +129,7 @@
         "platform":"Website",
         "author": "Prydwen",
         "url": "https://www.prydwen.gg/star-rail/characters",
-        "category": ["Tools", "Relics"]
+        "category": ["Team", "Relics"]
       }
     ],
     "assets": [
@@ -267,16 +282,7 @@
     "id": "wuthering-waves",
     "name": "Wuthering Waves", 
     "developer": "HK KURO GAMES LIMITED", 
-    "banner_url": "https://play-lh.googleusercontent.com/kP-iYZI3TL5GzvDKjtjtu2P_POG8sz7NZaP3hOw3WqDcZeZ7YcAQuY-aH8C_4tAPOk7W9rhi4OSZCWIK_e3FA0s",
-    "trailer_id": "Tf0pE_Yy7G8",
-    "ratings": { 
-      "age": "T", 
-      "f2p": "/5", 
-      "afk": "/5", 
-      "story": "/5", 
-      "gameplay": "5", 
-      "overall": "/5" 
-    }
+    "banner_url": "https://play-lh.googleusercontent.com/kP-iYZI3TL5GzvDKjtjtu2P_POG8sz7NZaP3hOw3WqDcZeZ7YcAQuY-aH8C_4tAPOk7W9rhi4OSZCWIK_e3FA0s"
   },
   { 
     "id": "umamusume-pretty-derby",
