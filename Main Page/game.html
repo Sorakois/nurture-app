@@ -31,10 +31,16 @@
 
         /* === GAME LAYOUT STYLES === */
         .game-layout { max-width: 1200px; margin: 40px auto; padding: 0 20px; }
-        .game-header { display: flex; align-items: center; gap: 20px; background-color: #2a2a35; padding: 30px; border-radius: 12px 12px 0 0; border: 1px solid #3a3a45; border-bottom: none; }
+        .game-header { display: flex; align-items: center; justify-content: space-between; background-color: #2a2a35; padding: 30px; border-radius: 12px 12px 0 0; border: 1px solid #3a3a45; border-bottom: none; }
+        .header-left { display: flex; align-items: center; gap: 20px; }
         .game-header img { width: 120px; height: 120px; border-radius: 12px; object-fit: cover; }
         .game-title { font-size: 2.5em; margin: 0 0 10px 0; }
         .game-dev { color: #aaa; font-family: monospace; font-size: 1.1em; margin: 0; }
+
+        .redeem-btn { display: inline-flex; align-items: center; justify-content: center; background-color: #1f1f28; border: 1px solid #3a3a45; border-radius: 12px; padding: 12px; transition: all 0.2s ease; text-decoration: none; }
+        .redeem-btn:hover { background-color: #7A6BB5; transform: translateY(-3px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); border-color: #9d8ec7; }
+        /* Override the 120px header img rule just for the ticket */
+        .redeem-btn img { width: 40px; height: 40px; object-fit: contain; border-radius: 0; }
 
         .sub-nav { display: flex; background-color: #1f1f28; border: 1px solid #3a3a45; border-radius: 0 0 12px 12px; overflow: hidden; }
         .sub-nav a { flex: 1; text-align: center; padding: 15px 20px; color: #aaa; text-decoration: none; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; transition: all 0.2s ease; border-right: 1px solid #3a3a45; }
@@ -194,11 +200,17 @@
         </a>
 
         <div class="game-header">
-            <img src="/Assets/placeholder.png" alt="Game Icon" id="gameIcon">
-            <div>
-                <h1 class="game-title" id="gameTitle">Loading...</h1>
-                <p class="game-dev" id="gameDev">-</p>
+            <div class="header-left">
+                <img src="/Assets/placeholder.png" alt="Game Icon" id="gameIcon">
+                <div>
+                    <h1 class="game-title" id="gameTitle">Loading...</h1>
+                    <p class="game-dev" id="gameDev">-</p>
+                </div>
             </div>
+
+            <a href="#" target="_blank" id="redeemCodesBtn" class="redeem-btn" style="display: none;" title="Active Redeem Codes">
+                <img src="/Assets/ticket.png" alt="Redeem Codes">
+            </a>
         </div>
 
         <div class="sub-nav" id="tabMenu">
@@ -504,6 +516,15 @@
                 document.getElementById('gameTitle').textContent = gameData.name;
                 document.getElementById('gameDev').textContent = gameData.developer;
                 document.getElementById('gameIcon').src = gameData.banner_url || '/Assets/placeholder.png';
+
+                // Redeem Codes Button Logic
+                const redeemBtn = document.getElementById('redeemCodesBtn');
+                if (gameData.redeem_codes_url) {
+                    redeemBtn.href = gameData.redeem_codes_url;
+                    redeemBtn.style.display = 'inline-flex';
+                } else {
+                    redeemBtn.style.display = 'none';
+                }
                 
                 // Add a CSS transition to the content area for the fade effect
                 contentArea.style.transition = 'opacity 0.2s ease';

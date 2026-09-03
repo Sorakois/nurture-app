@@ -34,7 +34,8 @@
     "name": "CookieRun: Kingdom", 
     "developer": "Devsisters", 
     "banner_url": "https://play-lh.googleusercontent.com/J1zzZf_Clyg51sikuBbfTMD_sGVK64Ki5vyVtn3MmkUUzQ-AxKWq2-WuVDnpkrpai6Icun3wXspttadNAxy4djI",
-    "trailer_id": "",
+    "trailer_id": "Ld2RbEpluAo",
+    "redeem_codes_url":"https://cookierunkingdom.fandom.com/wiki/Coupon_Codes",
     "ratings": { 
       "age": "E", 
       "f2p": "3/5", 
@@ -43,11 +44,120 @@
       "gameplay": "3/5", 
       "overall": "3/5" 
     },
-    "overview_text": "",
-    "new_player_video_id": "",
-    "guides": [],
-    "assets": [],
-    "communities": [],
+    "overview_text": "Cookie Run: Kingdom is set in a world of anthropomorphized cookies, desserts, and other food items. The cast containing both new and returning characters from throughout the Cookie Run series.\n\nThe game is mainly played by building the player's Cookie Kingdom and collecting Cookies through the game's gacha to unlock new Cookies to use in various game modes. The game modes include PvP and Guild systems, various PvE challenges, seasonal and event game modes that add strategy and variety to the team-building mechanics, and Special Episodes that feature side stories, with some that tie into major side characters.",
+    "new_player_video_id": "df4HV8S1Cyw",
+    "guides": [
+        {
+        "title": "Arena Team Comps",
+        "author": "Dreakt + other theorycrafters",
+        "platform": "Website",
+        "url": "https://www.youtube.com/@dreaktcrk/videos",
+        "category": "Arena"
+      },
+      {
+        "title": "Latest AOD Guide",
+        "author": "MOLLY",
+        "platform": "Website",
+        "url": "https://youtu.be/b4lXYlse2e4",
+        "category": "Guild"
+      },
+      {
+        "title": "Latest RVD Guide",
+        "author": "@seafairy on discord",
+        "platform": "Website",
+        "url": "https://imgur.com/a/ComHbjk",
+        "category": "Guild"
+      },
+      {
+        "title": "Latest LA Guide",
+        "author": "@seafairy on discord",
+        "platform": "Website",
+        "url": "https://imgur.com/a/Yj6tBPQ",
+        "category": "Guild"
+      },
+      {
+        "title": "Latest MGOD Guide",
+        "author": "@seafairy on discord",
+        "platform": "Website",
+        "url": "https://imgur.com/a/VIiZsjB",
+        "category": "Guild"
+      },
+      {
+        "title": "Latest Alliance Guide",
+        "author": "PonPonLin",
+        "platform": "Website",
+        "url": "https://www.youtube.com/watch?v=NK8NVgVu2PM",
+        "category": "Alliance"
+      },
+      {
+        "title": "Cookie Chat Best Gifts",
+        "author": "@diceytheliyfan on discord",
+        "platform": "Google Sheets",
+        "url": "https://docs.google.com/spreadsheets/d/1tnaPiP2jf1-k2by-NfgGi_rAoSyWroSmboLsWPP3EiI/edit?gid=464409657#gid=464409657",
+        "category": "Cookie"
+      },
+      {
+        "title": "Lab Tracker",
+        "author": "@michiyom on discord",
+        "platform": "Google Sheets",
+        "url": "https://docs.google.com/spreadsheets/d/1cZPAQyGHJDYNltfFa1JddHJrJAQHCm3i584Y5_2b8XU/edit?gid=175409198#gid=175409198",
+        "category": "Production"
+      }
+
+    ],
+    "assets": [
+      {
+        "title": "Fandom Wiki (all current/live assets)",
+        "platform": "Website",
+        "type": ["Images", "Videos"],
+        "download_url": "https://cookierunkingdom.fandom.com/wiki/Cookie_Run:_Kingdom_Wiki"
+      },
+      {
+        "title": "Official Public Assets",
+        "platform": "Website",
+        "type": ["Images"],
+        "download_url": "https://www.devsisters.com/en/resource"
+      },
+      {
+        "title": "Raw Asset Files (datamined)",
+        "platform": "Website",
+        "type": ["Images"],
+        "download_url": "https://skowt.cc/games/cookie-run"
+      },
+      {
+        "title": "Base images for OC creation",
+        "platform": "Website",
+        "type": ["Images"],
+        "download_url": "https://cookierunocs.fandom.com/wiki/Resources_and_Assets/Kingdom"
+      }
+    ],
+    "communities": [
+      {
+        "name": "OFFICIAL CRK Discord",
+        "platform": "Discord",
+        "url": "https://discord.gg/crkingdomen"
+      },
+      {
+        "name": "Nurture Discord - Best place for personalized help!",
+        "platform": ["Nurture", "Discord"],
+        "url": "https://discord.gg/G5vSJ4XY8B"
+      },
+      {
+        "name": "Theorycrafters",
+        "platform": "Discord",
+        "url": "https://discord.gg/YaRNfyH8QB"
+      },
+      {
+        "name": "Main CR Reddit",
+        "platform": "Reddit",
+        "url": "https://www.reddit.com/r/Cookierun/"
+      },      
+      {
+        "name": "Unofficial CRK Reddit",
+        "platform": "Reddit",
+        "url": "https://www.reddit.com/r/CookieRunKingdoms"
+      }
+    ],
     "mods": []
   },
   { 
@@ -102,6 +212,7 @@
     },
     "overview_text": "Honkai: Star Rail follows the gameplay style of classic Japanese role-playing games where players build up a lineup of characters and control a team of up to four in turn-based combat.\n\nElements of open-world and dungeon exploration are present, with multiple mechanics including the gacha system, carried over (with slight differences) from Genshin Impact. Instead of exploring one large map, players explore smaller, self-contained areas on each world, which contain treasure chests, puzzles, and other interactable elements.",
     "new_player_video_id": "RPdufDCjK3E",
+    "redeem_codes_url":"https://honkai-star-rail.fandom.com/wiki/Redemption_Code",
     "guides": [
       {
         "title": "Character Build Guide",
@@ -129,7 +240,21 @@
         "platform":"Website",
         "author": "Prydwen",
         "url": "https://www.prydwen.gg/star-rail/characters",
-        "category": ["Team", "Relics"]
+        "category": ["Team Building", "Relics"]
+      },
+      {
+        "title": "Team Comps + Calculations",
+        "platform":"Website",
+        "author": "Icy Veins",
+        "url": "https://www.icy-veins.com/honkai-star-rail/",
+        "category": ["Team Building", "Relics"]
+      },
+      {
+        "title": "Tier List",
+        "platform":"Website",
+        "author": "Prydwen",
+        "url": "https://www.prydwen.gg/star-rail/tier-list",
+        "category": "Tier List"
       }
     ],
     "assets": [
@@ -144,6 +269,12 @@
         "platform": "Website",
         "type": ["Images", "Videos"],
         "download_url": "https://starrail.honeyhunterworld.com/?lang=EN"
+      },
+      {
+        "title": "Fandom Wiki (all current/live assets)",
+        "platform": "Website",
+        "type": ["Images", "Videos"],
+        "download_url": "https://honkai-star-rail.fandom.com/wiki/Honkai:_Star_Rail_Wiki"
       }
     ],
     "communities": [
@@ -158,27 +289,42 @@
         "url": "https://discord.gg/G5vSJ4XY8B"
       },
       {
-        "name": "HSR Main Reddit",
+        "name": "Fribbel's Discord",
+        "platform": "Discord",
+        "url": "https://discord.gg/kDAsjk4F57"
+      },
+      {
+        "name": "Main Reddit",
         "platform": "Reddit",
         "url": "https://reddit.com/r/HonkaiStarRail"
       },      
       {
-        "name": "HSR Leaks Reddit",
+        "name": "Leaks Reddit",
         "platform": "Reddit",
         "url": "https://www.reddit.com/r/HonkaiStarRail_leaks/"
-      },
-      {
-        "name": "Fribbel's Discord",
-        "platform": "Discord",
-        "url": "https://discord.gg/kDAsjk4F57"
       }
     ],
     "mods": [
       {
         "title": "SRMI",
-        "author": "TBA",
-        "version": "1.0.0",
-        "download_url": "https://example.com/srmi"
+        "author": "Mod Loader",
+        "platform": "Website",
+        "version": "1.1",
+        "download_url": "https://github.com/SilentNightSound/SR-Model-Importer"
+      },
+      {
+        "title": "XMMI",
+        "author": "Mod Loader",
+        "platform": "Website",
+        "version": "2.2.1",
+        "download_url": "https://github.com/SpectrumQT/XXMI-Launcher"
+      },
+      {
+        "title": "GameBanana",
+        "author": "Individual Mods",
+        "platform": "Website",
+        "version": "1.0",
+        "download_url": "https://gamebanana.com/games/18366"
       }
     ]
   },
