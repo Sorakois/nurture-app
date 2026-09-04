@@ -183,6 +183,24 @@
             .filter-bar {
                 justify-content: center;
             }
+            /* Scale down banner elements */
+            .banner > div > div:last-child {
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+                align-items: flex-end;
+            }
+            .social-button {
+                padding: 6px 12px;
+                margin: 0;
+            }
+            .social-button img {
+                height: 20px; /* Shrunk down from 40px */
+                margin-right: 6px;
+            }
+            .sub-text {
+                font-size: 0.75em;
+            }
         }
 
     </style>
