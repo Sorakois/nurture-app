@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/x-icon" href="/Assets/nurture_icon.ico">
     <title>Nurture | Game Hub</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
@@ -134,6 +135,54 @@
             font-size: 0.85em;
             color: #888;
             margin: 0;
+        }
+
+        /* === MOBILE RESPONSIVENESS === */
+        @media (max-width: 768px) {
+            .game-layout {
+                margin: 20px auto;
+                padding: 0 10px;
+            }
+            
+            /* Stack the header elements vertically */
+            .game-header {
+                flex-direction: column;
+                padding: 20px;
+                text-align: center;
+                gap: 15px;
+            }
+            .header-left {
+                flex-direction: column;
+            }
+            .game-title {
+                font-size: 1.8em;
+            }
+            
+            /* Stretch ticket button */
+            .redeem-btn {
+                width: 100%;
+                box-sizing: border-box;
+            }
+
+            /* Wrap tabs into multiple rows if they don't fit */
+            .sub-nav {
+                flex-wrap: wrap;
+            }
+            .sub-nav a {
+                flex: 1 1 33%;
+                padding: 12px 10px;
+                font-size: 0.8em;
+                border-bottom: 1px solid #3a3a45;
+            }
+
+            .content-area {
+                padding: 20px;
+            }
+            
+            /* Allow filter buttons to wrap nicely */
+            .filter-bar {
+                justify-content: center;
+            }
         }
 
     </style>

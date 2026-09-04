@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/x-icon" href="/Assets/nurture_icon.ico">
     <title>Nurture | Meta, Guides, Assets, & Communities</title>
     
@@ -315,6 +316,42 @@
             grid-column: span 3;
             background: linear-gradient(135deg, #3a3a45 0%, #2a2a35 100%);
             border: 1px solid #ffc107;
+        }
+
+        .grid-item-dev {
+            color: #ccc;
+            margin-top: 5px;
+            font-size: 12px; 
+            transition: font-size 0.2s ease;
+        }
+
+        /* === MOBILE RESPONSIVENESS === */
+        @media (max-width: 768px) {
+            /* Change grid from 5 columns to 2 columns on mobile */
+            .grid-container {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+                padding: 15px;
+            }
+            
+            /* Make game titles larger and developer text smaller */
+            .grid-item-title {
+                font-size: 16px;
+            }
+            .grid-item-dev {
+                font-size: 9px;
+            }
+
+            /* Adjust search bar and banner for small screens */
+            .search-container, .suggestions {
+                width: 95%;
+            }
+            .about-us h1 {
+                font-size: 2em;
+            }
+            .about-us p {
+                font-size: 1em;
+            }
         }
     </style>
 </head>
@@ -668,7 +705,7 @@
                         <div class="grid-item-title">${escapeHtml(gameName)}</div>
                         <div class="info-icon ${hasData ? '' : 'disabled'}" title="${hasData ? 'View Game Details' : 'No Data Available'}">i</div>
                     </div>
-                    ${developer ? `<div class="grid-item-dev" style="font-size: 12px; color: #ccc; margin-top: 5px;">${escapeHtml(developer)}</div>` : ''}
+                    ${developer ? `<div class="grid-item-dev">${escapeHtml(developer)}</div>` : ''}
                 `;
                 
                 const infoBtn = gridItem.querySelector('.info-icon');
