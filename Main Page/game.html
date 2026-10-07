@@ -337,7 +337,7 @@
 
         const sections = [
             { id: 'overview', label: 'Overview' },
-            { id: 'guides', label: 'Guides' },
+            { id: 'guides', label: 'Guides/Tools' },
             { id: 'assets', label: 'Raw Assets' },
             { id: 'communities', label: 'Communities' },
             { id: 'mods', label: 'Mods' }
@@ -514,7 +514,7 @@
 
                 // Configuration mapping for dynamic sections
                 const sectionConfig = {
-                    guides: { title: 'Guides', data: gameData.guides, catKey: 'category', metaKey: 'author', metaPrefix: 'By ' },
+                    guides: { title: 'Guides/Tools', data: gameData.guides, catKey: 'category', metaKey: 'author', metaPrefix: 'By ' },
                     assets: { title: 'Raw Assets', data: gameData.assets, catKey: 'type', metaKey: 'type', metaPrefix: 'Format: ' },
                     communities: { title: 'Communities', data: gameData.communities, catKey: 'platform', metaKey: 'platform', metaPrefix: 'Platform: ' },
                     mods: { title: 'Mods', data: gameData.mods, catKey: 'author', metaKey: 'version', metaPrefix: 'Version: ' }
@@ -565,8 +565,27 @@
                     `;
                 }).join('');
 
+                // Generate Mini-Focus Banner HTML for Guides/Tools
+                let miniFocusHtml = '';
+                if (currentSection === 'guides' && gameData.mini_focuses && gameData.mini_focuses.length > 0) {
+                    miniFocusHtml = `
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 30px;">
+                            ${gameData.mini_focuses.map(focus => `
+                                <a href="${focus.url}" target="_blank" style="display: flex; align-items: center; gap: 15px; background: linear-gradient(135deg, #4C3A90 0%, #2a2a35 100%); padding: 18px; border-radius: 12px; text-decoration: none; border: 1px solid #7A6BB5; transition: transform 0.2s ease, box-shadow 0.2s ease;" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 6px 15px rgba(0,0,0,0.3)';" onmouseout="this.style.transform='none'; this.style.boxShadow='none';">
+                                    <img src="${focus.icon || '/Assets/placeholder.png'}" style="width: 50px; height: 50px; border-radius: 8px; object-fit: cover; border: 1px solid #3a3a45;">
+                                    <div>
+                                        <div style="font-weight: bold; font-size: 1.1em; color: #fff; margin-bottom: 4px;">${focus.title}</div>
+                                        <div style="font-size: 0.85em; color: #ccc; line-height: 1.3;">${focus.description}</div>
+                                    </div>
+                                </a>
+                            `).join('')}
+                        </div>
+                    `;
+                }
+
                 contentArea.innerHTML = `
                     <h2>${config.title}</h2>
+                    ${miniFocusHtml}
                     ${filterHtml}
                     <div class="items-list">
                         ${cardsHtml || '<p style="color: #888;">No items match this filter.</p>'}

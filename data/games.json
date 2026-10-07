@@ -213,6 +213,14 @@
     "overview_text": "Honkai: Star Rail follows the gameplay style of classic Japanese role-playing games where players build up a lineup of characters and control a team of up to four in turn-based combat.\n\nElements of open-world and dungeon exploration are present, with multiple mechanics including the gacha system, carried over (with slight differences) from Genshin Impact. Instead of exploring one large map, players explore smaller, self-contained areas on each world, which contain treasure chests, puzzles, and other interactable elements.",
     "new_player_video_id": "RPdufDCjK3E",
     "redeem_codes_url":"https://honkai-star-rail.fandom.com/wiki/Redemption_Code",
+    "mini_focuses": [
+      {
+        "title": "COMING SOON!",
+        "description": "Sorakoi is working on tools to add! :)",
+        "url": "",
+        "icon": ""
+      }
+    ],
     "guides": [
       {
         "title": "Character Build Guide",
