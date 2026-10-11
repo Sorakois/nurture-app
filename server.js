@@ -189,7 +189,11 @@ app.get('/api/auth/me', async (req, res) => {
 });
 
 app.get('/auth/logout', (req, res) => {
-    res.clearCookie('nurture_session');
+    res.clearCookie('nurture_session', {
+        path: '/',
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production'
+    });
     res.redirect('/');
 });
 

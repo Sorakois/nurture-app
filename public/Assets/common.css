@@ -54,7 +54,7 @@ body {
 .banner {
     background-color: #16161c;
     color: white;
-    padding: 8px;
+    padding: 8px 16px;
     text-align: center;
     font-size: 2em;
     font-weight: bold;
@@ -64,12 +64,14 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    max-width: 1300px;
+    margin: 0 auto;
 }
 
 .banner-actions {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
 }
 
 .social-button {
@@ -78,88 +80,123 @@ body {
     padding: 8px 16px;
     border-radius: 20px;
     text-decoration: none;
-    margin: 0 5px;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
 }
 
 .social-button:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 }
 
 .discord-button {
     background-color: #5865F2;
 }
 
+.discord-button:hover {
+    background-color: #4752c4;
+}
+
+.nurture-discord-button {
+    background-color: #4C3A90;
+    border: 1px solid #7A6BB5;
+}
+
+.nurture-discord-button:hover {
+    background-color: #5c47ac;
+}
+
 .kofi-button {
     background-color: #FF5E5B;
 }
 
+.kofi-button:hover {
+    background-color: #e04f4c;
+}
+
 .social-button img {
-    height: 40px;
-    vertical-align: middle;
+    height: 28px;
+    width: 28px;
+    object-fit: contain;
     margin-right: 8px;
-    transition: transform 0.3s ease;
 }
 
 .sub-text {
-    font-size: 0.9em;
+    font-size: 0.85em;
     color: white;
     font-weight: bold;
+    white-space: nowrap;
 }
 
-.user-badge {
-    display: flex;
+/* User Account Button with Nested Sign Out */
+.user-profile-badge {
+    display: inline-flex;
     align-items: center;
     gap: 10px;
-    background: #2a2a35;
-    padding: 6px 16px 6px 6px;
-    border-radius: 25px;
+    background-color: #2a2a35;
     border: 1px solid #3a3a45;
+    padding: 5px 6px 5px 10px;
+    border-radius: 20px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
-.user-badge img {
+.user-avatar {
     width: 28px;
     height: 28px;
     border-radius: 50%;
     object-fit: cover;
 }
 
-.user-badge-name {
+.user-name {
+    font-size: 0.85em;
     font-weight: bold;
-    font-size: 0.9em;
-    color: white;
+    color: #ffffff;
+    max-width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-.user-logout-link {
-    color: #ff5c5c;
-    font-size: 0.8em;
+.sign-out-btn {
+    background-color: #1f1f28;
+    color: #ff6b6b;
+    border: 1px solid #ff4d4d44;
+    padding: 4px 10px;
+    border-radius: 14px;
+    font-size: 0.75em;
+    font-weight: bold;
     text-decoration: none;
-    margin-left: 5px;
-    font-weight: bold;
+    transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-/* === COMMON MOBILE STYLES === */
+.sign-out-btn:hover {
+    background-color: #ff4d4d;
+    color: #ffffff;
+}
+
+/* Responsive adjustments */
 @media (max-width: 768px) {
-    .banner > div > div:last-child,
     .banner-actions {
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 6px;
         align-items: flex-end;
     }
 
-    .social-button {
-        padding: 6px 12px;
-        margin: 0;
+    .social-button, .user-profile-badge {
+        padding: 5px 10px;
     }
 
-    .social-button img {
+    .social-button img, .user-avatar {
         height: 20px;
-        margin-right: 6px;
+        width: 20px;
     }
 
-    .sub-text {
+    .sub-text, .user-name {
         font-size: 0.75em;
+    }
+
+    .sign-out-btn {
+        padding: 2px 8px;
+        font-size: 0.7em;
     }
 }
