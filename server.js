@@ -4,10 +4,145 @@ const helmet = require('helmet');
 const validator = require('validator');
 const xss = require('xss');
 const path = require('path');
+const mongoose = require('mongoose');
 require('dotenv').config();
 
 const app = express();
 const port = process.env.PORT || 3000;
+
+// MongoDB connection
+mongoose.connect(process.env.MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+}).then(() => {
+    console.log("Connected to MongoDB Atlas");
+}).catch((err) => {
+    console.error("Database connection error:", err);
+});
+
+// Authetication Routes
+const axios = require('axios');
+const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser');
+const User = require('./models/User'); // Import your User model
+
+app.use(cookieParser()); // Allows Express to read incoming cookies
+
+// 1. Send the user to Discord to log in
+app.get('/auth/discord', (req, res) => {
+    const clientId = process.env.DISCORD_CLIENT_ID;
+    const redirectUri = encodeURIComponent(process.env.DISCORD_REDIRECT_URI);
+    // We request 'identify' (for profile data) and 'guilds' (to see their servers)
+    const scopes = 'identify guilds'; 
+    
+    const discordLoginUrl = `https://discord.com/api/oauth2/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${encodeURIComponent(scopes)}`;
+    res.redirect(discordLoginUrl);
+});
+
+// 2. Handle the return from Discord
+app.get('/auth/discord/callback', async (req, res) => {
+    const code = req.query.code;
+    if (!code) return res.status(400).send('No code provided');
+
+    try {
+        // A. Exchange the code for an Access Token
+        const tokenResponse = await axios.post('https://discord.com/api/oauth2/token', new URLSearchParams({
+            client_id: process.env.DISCORD_CLIENT_ID,
+            client_secret: process.env.DISCORD_CLIENT_SECRET,
+            grant_type: 'authorization_code',
+            code: code,
+            redirect_uri: process.env.DISCORD_REDIRECT_URI
+        }).toString(), {
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+        });
+
+        const accessToken = tokenResponse.data.access_token;
+
+        // B. Fetch their basic profile (Identify scope)
+        const userResponse = await axios.get('https://discord.com/api/users/@me', {
+            headers: { Authorization: `Bearer ${accessToken}` }
+        });
+        const discordUser = userResponse.data;
+
+        // C. Fetch their server list (Guilds scope)
+        const guildsResponse = await axios.get('https://discord.com/api/users/@me/guilds', {
+            headers: { Authorization: `Bearer ${accessToken}` }
+        });
+        
+        // D. Check if the Nurture Guild ID exists in their server list
+        const isMember = guildsResponse.data.some(guild => guild.id === process.env.NURTURE_GUILD_ID);
+
+        // E. Save or update the user in MongoDB
+        let user = await User.findOne({ discordId: discordUser.id });
+        if (user) {
+            // Update existing user (their avatar or server status might have changed)
+            user.username = discordUser.username;
+            user.avatar = discordUser.avatar;
+            user.isNurtureMember = isMember;
+            await user.save();
+        } else {
+            // Create a brand new user
+            user = await User.create({
+                discordId: discordUser.id,
+                username: discordUser.username,
+                avatar: discordUser.avatar,
+                isNurtureMember: isMember
+            });
+        }
+
+        // F. Create a secure session token
+        const sessionToken = jwt.sign(
+            { userId: user._id, discordId: user.discordId, isNurtureMember: user.isNurtureMember }, 
+            process.env.JWT_SECRET, 
+            { expiresIn: '7d' } // Session lasts 7 days
+        );
+
+        // G. Store the token in an HttpOnly cookie so the frontend can't be hacked for it
+        res.cookie('nurture_session', sessionToken, { 
+            httpOnly: true, 
+            secure: process.env.NODE_ENV === 'production', // Use secure cookies on the live site
+            maxAge: 7 * 24 * 60 * 60 * 1000 
+        });
+
+        // Redirect back to the homepage
+        res.redirect('/');
+
+    } catch (error) {
+        console.error('OAuth Error:', error.response ? error.response.data : error.message);
+        res.status(500).send('Authentication failed');
+    }
+});
+
+// Check current user session
+app.get('/api/auth/me', async (req, res) => {
+    const token = req.cookies.nurture_session;
+    if (!token) return res.status(401).json({ authenticated: false });
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const user = await User.findById(decoded.userId);
+        
+        if (!user) return res.status(401).json({ authenticated: false });
+
+        res.json({
+            authenticated: true,
+            user: {
+                username: user.username,
+                discordId: user.discordId,
+                avatar: user.avatar,
+                isNurtureMember: user.isNurtureMember
+            }
+        });
+    } catch (err) {
+        res.status(401).json({ authenticated: false });
+    }
+});
+
+// Logout route
+app.get('/auth/logout', (req, res) => {
+    res.clearCookie('nurture_session');
+    res.redirect('/');
+});
 
 // Security middleware
 app.use(helmet({
@@ -149,9 +284,11 @@ app.use('*', (req, res) => {
     res.status(404).json({ error: 'Endpoint not found' });
 });
 
-// Start server
-app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}`);
-    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`Running in local-memory mode (No Database)`);
-});
+// Export the app for Vercel Serverless, but keep listen() for local testing
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(port, () => {
+        console.log(`Server running at http://localhost:${port}`);
+    });
+}
+
+module.exports = app;

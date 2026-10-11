@@ -5,97 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/x-icon" href="/Assets/nurture_icon.ico">
     <title>Nurture | Meta, Guides, Assets, & Communities</title>
+    
+    <link rel="stylesheet" href="/Assets/common.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 
-    <!-- VERCEL TRAFFIC STUFF [non-invasive, privacymaxxing] -->
-     <script>
+    <!-- Vercel Analytics -->
+    <script>
         window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
     </script>
     <script defer src="/_vercel/insights/script.js"></script>
 
     <style>
-        @font-face {
-            font-family: 'CookieRun Regular';
-            src: url('/Assets/CookieRun Regular.otf') format('opentype');
-        }
-        body {
-            margin: 0;
-            font-family: 'CookieRun Regular', Arial, sans-serif;
-            background-color: transparent; 
-            color: white;
-        }
-
-        .background-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            height: 100vh;
-            width: 100vw;
-            display: flex;
-            justify-content: center;
-            overflow: hidden;
-            background: #1f1f28; 
-            z-index: -1;         
-            pointer-events: none; 
-        }
-        .background-container svg {
-            position: absolute;
-            height: 100%;
-            width: 100%;
-        }
-        .lines { opacity: 0.05; }
-        .line { fill-rule: evenodd; clip-rule: evenodd; fill: #4C3A90; }
-        .lights { opacity: 0.9; }
-        .light { fill-rule: evenodd; clip-rule: evenodd; fill: #7A6BB5; }
-
-        .banner {
-            background-color: #16161c;
-            color: white;
-            padding: 8px;
+        .about-us {
             text-align: center;
-            font-size: 2em;
-            font-weight: bold;
-        }
-        .row {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: #f2f2f2;
-            padding: 20px 0;
-            gap: 20px;
-        }
-        .social-button {
-            display: inline-flex;
-            align-items: center;
-            padding: 8px 16px;
-            border-radius: 20px;
-            text-decoration: none;
-            margin: 0 5px;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        .social-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        }
-        .discord-button { background-color: #5865F2; }
-        .kofi-button { background-color: #FF5E5B; }
-        .social-button img {
-            height: 40px;
-            vertical-align: middle;
-            margin-right: 8px;
-            transition: transform 0.3s ease;
-        }
-        .sub-text {
-            font-size: 0.9em;
+            padding: 40px;
             color: white;
-            font-weight: bold;
         }
+
         .search-container {
             text-align: center;
             margin: 20px auto;
             width: 80%;
             max-width: 600px;
         }
+
         .search-input {
             width: 100%;
             padding: 12px 20px;
@@ -104,8 +37,9 @@
             border-radius: 25px;
             background-color: #2a2a35;
             color: white;
-            box-sizing: border-box; /* Stop breaking mobile view!!! :(*/
+            box-sizing: border-box;
         }
+
         .suggestions {
             position: absolute;
             background-color: #2a2a35;
@@ -116,14 +50,17 @@
             overflow-y: auto;
             display: none;
         }
+
         .suggestion-item {
             padding: 10px;
             color: white;
             cursor: pointer;
         }
+
         .suggestion-item:hover {
             background-color: #3a3a45;
         }
+
         .grid-container {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
@@ -132,6 +69,7 @@
             max-width: 1200px;
             margin: 0 auto;
         }
+
         .grid-item {
             background-color: #2a2a35;
             border-radius: 10px;
@@ -140,9 +78,11 @@
             cursor: pointer;
             transition: transform 0.3s ease, filter 0.3s ease, opacity 0.3s ease;
         }
+
         .grid-item:hover {
             transform: translateY(-5px);
         }
+
         .grid-item img {
             width: 100%;
             height: auto;
@@ -153,6 +93,7 @@
             filter: grayscale(100%);
             opacity: 0.4;
         }
+
         .grid-item.no-data:hover {
             transform: none; 
             opacity: 0.6;
@@ -165,11 +106,20 @@
             margin-top: 10px;
             gap: 8px; 
         }
+
         .grid-item-title {
             color: white;
             font-size: 14px;
             margin: 0; 
         }
+
+        .grid-item-dev {
+            color: #ccc;
+            margin-top: 5px;
+            font-size: 12px; 
+            transition: font-size 0.2s ease;
+        }
+
         .info-icon {
             display: inline-flex;
             justify-content: center;
@@ -185,17 +135,18 @@
             cursor: pointer;
             transition: all 0.2s ease;
         }
+
         .info-icon:hover {
             background-color: #ffc107;
             color: #000;
             transform: scale(1.1);
         }
         
-        /* Disabled state for info icon */
         .info-icon.disabled {
             cursor: not-allowed;
             opacity: 0.5;
         }
+
         .info-icon.disabled:hover {
             background-color: #3a3a45;
             color: #aaa;
@@ -214,7 +165,6 @@
             justify-content: center;
             align-items: center;
             z-index: 9999;
-            
             opacity: 0;
             visibility: hidden;
             transition: opacity 0.3s ease, visibility 0.3s ease;
@@ -235,10 +185,8 @@
             position: relative;
             color: white;
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
-            
             --start-x: 0px;
             --start-y: 20px;
-            
             transform: translate(var(--start-x), var(--start-y)) scale(0.25);
             transform-origin: center;
             transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
@@ -324,57 +272,32 @@
             border: 1px solid #ffc107;
         }
 
-        .grid-item-dev {
-            color: #ccc;
-            margin-top: 5px;
-            font-size: 12px; 
-            transition: font-size 0.2s ease;
-        }
-
         /* === MOBILE RESPONSIVENESS === */
         @media (max-width: 768px) {
-            /* Change grid from 5 columns to 2 columns on mobile */
             .grid-container {
                 grid-template-columns: repeat(2, 1fr);
                 gap: 15px;
                 padding: 15px;
             }
             
-            /* Make game titles larger and developer text smaller */
             .grid-item-title {
                 font-size: 16px;
             }
+
             .grid-item-dev {
                 font-size: 9px;
             }
 
-            /* Adjust search bar and banner for small screens */
             .search-container, .suggestions {
                 width: 95%;
             }
+
             .about-us h1 {
                 font-size: 2em;
             }
+
             .about-us p {
                 font-size: 1em;
-            }
-            /* Scale down banner elements */
-            .banner > div > div:last-child {
-                display: flex;
-                flex-direction: column;
-                gap: 8px;
-                align-items: flex-end;
-            }
-            .social-button {
-                padding: 6px 12px;
-                margin: 0;
-            }
-            .social-button img {
-                height: 20px; /* Shrunk down from 40px */
-                margin-right: 6px;
-            }
-            .sub-text {
-                font-size: 0.75em;
             }
         }
     </style>
@@ -425,24 +348,26 @@
     </div>
 
     <div class="banner">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div class="banner-row">
             <div>
-                <img src="/Assets/nurture_banner.png" alt="Nurture Banner" style="height:90px; vertical-align:left; padding-left: 10px;">
+                <a href="/">
+                    <img src="/Assets/nurture_banner.png" alt="Nurture Banner" style="height:90px; vertical-align:left; padding-left: 10px;">
+                </a>
             </div>
-            <div>
-                <a href="https://www.discord.gg/5ypRXPXuX8" class="social-button discord-button">
-                    <img src="/Assets/join_discord.png" alt="Discord Icon" onmouseover="this.style.transform='rotate(5deg)'" onmouseout="this.style.transform='rotate(0deg)'">
-                    <span class="sub-text">Discord</span>
+            <div class="banner-actions" id="authContainer">
+                <a href="/auth/discord" class="social-button discord-button">
+                    <img src="https://cdn.simpleicons.org/discord/ffffff" alt="Discord Icon">
+                    <span class="sub-text">Login</span>
                 </a>
                 <a href="https://ko-fi.com/sorakoi" class="social-button kofi-button">
-                    <img src="/Assets/kofi_icon.png" alt="Ko-fi Icon" onmouseover="this.style.transform='rotate(5deg)'" onmouseout="this.style.transform='rotate(0deg)'">
+                    <img src="/Assets/kofi_icon.png" alt="Ko-fi Icon">
                     <span class="sub-text">Ko-fi</span>
                 </a>
             </div>
         </div>
     </div>
 
-    <div class="about-us" style="text-align: center; padding: 40px; color: white;">
+    <div class="about-us">
         <h1 style="font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 2.5em; margin-bottom: 20px;">
             Nurture
         </h1>
@@ -456,8 +381,7 @@
         <div class="suggestions" id="suggestions"></div>
     </div>
 
-    <div class="grid-container" id="gameGrid">
-    </div>
+    <div class="grid-container" id="gameGrid"></div>
 
     <div id="gameModal" class="modal-overlay">
         <div class="modal-window" id="modalWindowContent">
@@ -497,28 +421,11 @@
         </div>
     </div>
 
+    <!-- Shared Logic -->
+    <script src="/Assets/common.js"></script>
+
+    <!-- Page Specific Script -->
     <script>
-        // BACKGROUND ANIMATION LOGIC (GSAP 3)
-        function animateWithRandomNumber(myClass, from, to) {
-            gsap.fromTo(myClass, 
-                { y: from }, 
-                { 
-                    duration: Math.floor((Math.random() * 20) + 1), 
-                    y: to, 
-                    ease: "none", 
-                    onComplete: animateWithRandomNumber, 
-                    onCompleteParams: [myClass, from, to] 
-                }
-            );
-        }
-
-        const itemsDown = [".light4", ".light5", ".light6", ".light7", ".light8", ".light11", ".light12", ".light13", ".light14", ".light15", ".light16"];
-        itemsDown.forEach(e => animateWithRandomNumber(e, -1080, 1080));
-        
-        const itemsUp = [".light1", ".light2", ".light3", ".light9", ".light10", ".light17"];
-        itemsUp.forEach(e => animateWithRandomNumber(e, 1080, -1080));
-
-        // APP LOGIC & DATABASE
         let allGames = [];
         let currentPage = 1;
         const gamesPerPage = 20;
@@ -535,13 +442,11 @@
                 
                 if (data.games) {
                     totalPages = data.pagination.pages; 
-                    
                     if (append) {
                         allGames = [...allGames, ...data.games]; 
                     } else {
                         allGames = data.games; 
                     }
-                    
                     updateGrid(allGames);
                 }
             } catch (error) {
@@ -696,7 +601,6 @@
             }
         });
 
-        // Grid Rendering
         function updateGrid(games) {
             gameGrid.innerHTML = ''; 
             
@@ -712,8 +616,6 @@
 
             games.forEach(game => {
                 const gridItem = document.createElement('div');
-                
-                // Assess if the game has extra data
                 const hasData = typeof game === 'object' && !!(game.overview_text || game.guides || game.assets || game.communities || game.mods || game.trailer_id || game.ratings);
                 gridItem.className = `grid-item ${hasData ? '' : 'no-data'}`;
                 
@@ -721,10 +623,8 @@
                 const iconUrl = typeof game === 'object' && game.banner_url ? game.banner_url : '/Assets/placeholder.png';
                 const developer = typeof game === 'object' && game.developer ? game.developer : '';
                 
-                // Add the disabled class and update the title conditionally for the info icon
                 gridItem.innerHTML = `
-                    <img src="${iconUrl}" alt="${gameName}" loading="lazy" 
-                         onerror="this.src='/Assets/placeholder.png'">
+                    <img src="${iconUrl}" alt="${gameName}" loading="lazy" onerror="this.src='/Assets/placeholder.png'">
                     <div class="title-wrapper">
                         <div class="grid-item-title">${escapeHtml(gameName)}</div>
                         <div class="info-icon ${hasData ? '' : 'disabled'}" title="${hasData ? 'View Game Details' : 'No Data Available'}">i</div>
@@ -735,7 +635,6 @@
                 const infoBtn = gridItem.querySelector('.info-icon');
                 infoBtn.addEventListener('click', (e) => {
                     e.stopPropagation(); 
-                    // Only open the modal if the game actually has data
                     if (hasData) {
                         openGameModal(typeof game === 'object' ? game : { name: gameName }, gridItem);
                     }
