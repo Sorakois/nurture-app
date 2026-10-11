@@ -1,9 +1,9 @@
 {
   "version": 2,
   "rewrites": [
-    { "source": "/", "destination": "/public/index.html" },
-    { "source": "/games/(.*)", "destination": "/public/game.html" },
-    { "source": "/api/(.*)", "destination": "/server.js" },
-    { "source": "/auth/(.*)", "destination": "/server.js" }
+    { "source": "/", "destination": "/index.html" },
+    { "source": "/favicon.ico", "destination": "/Assets/nurture_icon.ico" },
+    { "source": "/games/:id", "destination": "/game.html" },
+    { "source": "/games/:id/:section", "destination": "/game.html" }
   ]
 }
