@@ -42,16 +42,21 @@ function renderLoggedInUI(container, user) {
         ? `https://cdn.discordapp.com/avatars/${user.discordId}/${user.avatar}.png` 
         : 'https://cdn.discordapp.com/embed/avatars/0.png';
 
+    // Only generate the Discord button HTML if they are NOT in the server
+    const nurtureDiscordButton = user.isNurtureMember ? '' : `
+        <a href="https://discord.gg/nurture" target="_blank" rel="noopener noreferrer" class="social-button nurture-discord-button">
+            <img src="/Assets/nurture_icon.png" alt="Nurture Discord">
+            <span class="sub-text">Nurture Discord</span>
+        </a>
+    `;
+
     container.innerHTML = `
         <div class="user-profile-badge">
             <img src="${avatarUrl}" alt="Avatar" class="user-avatar">
             <span class="user-name">${user.username}</span>
             <a href="/auth/logout" class="sign-out-btn" onclick="clearCachedAuth()">Sign Out</a>
         </div>
-        <a href="https://discord.gg/nurture" target="_blank" rel="noopener noreferrer" class="social-button nurture-discord-button">
-            <img src="/Assets/nurture_icon.png" alt="Nurture Discord">
-            <span class="sub-text">Nurture Discord</span>
-        </a>
+        ${nurtureDiscordButton}
         <a href="https://ko-fi.com/sorakoi" target="_blank" rel="noopener noreferrer" class="social-button kofi-button">
             <img src="/Assets/kofi_icon.png" alt="Ko-fi Icon">
             <span class="sub-text">Ko-fi</span>
