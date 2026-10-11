@@ -3,8 +3,6 @@
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/server.js" },
     { "source": "/auth/(.*)", "destination": "/server.js" },
-    { "source": "/games/(.*)", "destination": "/public/game.html" },
-    { "source": "/", "destination": "/public/index.html" },
-    { "source": "/(.*)", "destination": "/public/$1" }
+    { "source": "/games/(.*)", "destination": "/game.html" }
   ]
-} 
+}
