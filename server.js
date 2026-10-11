@@ -13,10 +13,7 @@ const app = express();
 
 // Serverless-optimized MongoDB connection
 if (mongoose.connection.readyState === 0) {
-    mongoose.connect(process.env.MONGODB_URI, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true
-    }).then(() => {
+    mongoose.connect(process.env.MONGODB_URI).then(() => {
         console.log("Connected to MongoDB Atlas");
     }).catch((err) => {
         console.error("Database connection error:", err);

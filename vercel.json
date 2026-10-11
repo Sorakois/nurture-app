@@ -1,8 +1,9 @@
 {
   "version": 2,
   "rewrites": [
+    { "source": "/", "destination": "/public/index.html" },
+    { "source": "/games/(.*)", "destination": "/public/game.html" },
     { "source": "/api/(.*)", "destination": "/server.js" },
-    { "source": "/auth/(.*)", "destination": "/server.js" },
-    { "source": "/games/(.*)", "destination": "/game.html" }
+    { "source": "/auth/(.*)", "destination": "/server.js" }
   ]
 }
