@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="/Assets/nurture_icon.ico">
+    <title>Nurture | Game Hub</title>
+    
+    <link rel="stylesheet" href="/Assets/common.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+    <!-- Vercel Analytics -->
+    <script>
+        window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+    </script>
+    <script defer src="/_vercel/insights/script.js"></script>
+
+    <style>
+        /* === GAME LAYOUT STYLES === */
+        .game-layout {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .game-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: #2a2a35;
+            padding: 30px;
+            border-radius: 12px 12px 0 0;
+            border: 1px solid #3a3a45;
+            border-bottom: none;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .game-header img#gameIcon {
+            width: 120px;
+            height: 120px;
+            border-radius: 12px;
+            object-fit: cover;
+        }
+
+        .game-title {
+            font-size: 2.5em;
+            margin: 0 0 10px 0;
+        }
+
+        .game-dev {
+            color: #aaa;
+            font-family: monospace;
+            font-size: 1.1em;
+            margin: 0;
+        }
+
+        .redeem-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #1f1f28;
+            border: 1px solid #3a3a45;
+            border-radius: 12px;
+            padding: 12px;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+
+        .redeem-btn:hover {
+            background-color: #7A6BB5;
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            border-color: #9d8ec7;
+        }
+
+        .redeem-btn img {
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
+            border-radius: 0;
+        }
+
+        .sub-nav {
+            display: flex;
+            background-color: #1f1f28;
+            border: 1px solid #3a3a45;
+            border-radius: 0 0 12px 12px;
+            overflow: hidden;
+        }
+
+        .sub-nav a {
+            flex: 1;
+            text-align: center;
+            padding: 15px 20px;
+            color: #aaa;
+            text-decoration: none;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.2s ease;
+            border-right: 1px solid #3a3a45;
+        }
+
+        .sub-nav a:last-child {
+            border-right: none;
+        }
+
+        .sub-nav a:hover {
+            background-color: #2a2a35;
+            color: white;
+        }
+
+        .sub-nav a.active {
+            background-color: #4C3A90;
+            color: white;
+            box-shadow: inset 0 -4px 0 #7A6BB5;
+        }
+
+        .content-area {
+            background-color: #2a2a35;
+            border: 1px solid #3a3a45;
+            border-radius: 12px;
+            padding: 40px;
+            margin-top: 20px;
+            min-height: 400px;
+        }
+        
+        /* === FILTER BAR STYLES === */
+        .filter-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            background-color: #1f1f28;
+            color: #aaa;
+            border: 1px solid #3a3a45;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .filter-btn:hover {
+            background-color: #2a2a35;
+            color: white;
+        }
+
+        .filter-btn.active {
+            background-color: #7A6BB5;
+            color: white;
+            border-color: #7A6BB5;
+        }
+
+        /* === CARD ITEM STYLES === */
+        .item-card {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background-color: #1f1f28;
+            border: 1px solid #3a3a45;
+            padding: 16px 20px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            text-decoration: none;
+            color: white;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .item-card:hover {
+            transform: translateX(4px);
+            border-color: #7A6BB5;
+        }
+
+        .item-icon {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+            flex-shrink: 0;
+        }
+
+        .item-details {
+            flex-grow: 1;
+        }
+
+        .item-title {
+            font-size: 1.05em;
+            font-weight: bold;
+            color: #9d8ec7;
+            margin: 0 0 4px 0;
+        }
+
+        .item-meta {
+            font-size: 0.85em;
+            color: #888;
+            margin: 0;
+        }
+
+        /* === MOBILE RESPONSIVENESS === */
+        @media (max-width: 768px) {
+            .game-layout {
+                margin: 20px auto;
+                padding: 0 10px;
+            }
+            
+            .game-header {
+                flex-direction: column;
+                padding: 20px;
+                text-align: center;
+                gap: 15px;
+            }
+
+            .header-left {
+                flex-direction: column;
+            }
+
+            .game-title {
+                font-size: 1.8em;
+            }
+            
+            .redeem-btn {
+                width: 100%;
+                box-sizing: border-box;
+            }
+
+            .sub-nav {
+                flex-wrap: wrap;
+            }
+
+            .sub-nav a {
+                flex: 1 1 33%;
+                padding: 12px 10px;
+                font-size: 0.8em;
+                border-bottom: 1px solid #3a3a45;
+            }
+
+            .content-area {
+                padding: 20px;
+            }
+            
+            .filter-bar {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    
+    <div class="background-container">
+        <svg id="lines" class="background__lights" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" viewBox="0 0 1920 1080" xml:space="preserve" preserveAspectRatio="none">
+            <g class="lines">
+                <rect class="line" x="1253.6" width="4.5" height="1080"></rect>
+                <rect class="line" x="873.3" width="1.8" height="1080"></rect>
+                <rect class="line" x="1100" width="1.8" height="1080"></rect>
+                <rect class="line" x="1547.1" width="4.5" height="1080"></rect>
+                <rect class="line" x="615" width="4.5" height="1080"></rect>
+                <rect class="line" x="684.6" width="1.8" height="1080"></rect>
+                <rect class="line" x="1369.4" width="1.8" height="1080"></rect>
+                <rect class="line" x="1310.2" width="0.9" height="1080"></rect>
+                <rect class="line" x="1233.4" width="0.9" height="1080"></rect>
+                <rect class="line" x="124.2" width="0.9" height="1080"></rect>
+                <rect class="line" x="1818.4" width="4.5" height="1080"></rect>
+                <rect class="line" x="70.3" width="4.5" height="1080"></rect>
+                <rect class="line" x="1618.6" width="1.8" height="1080"></rect>
+                <rect class="line" x="455.9" width="1.8" height="1080"></rect>
+                <rect class="line" x="328.7" width="1.8" height="1080"></rect>
+                <rect class="line" x="300.8" width="4.6" height="1080"></rect>
+                <rect class="line" x="1666.4" width="0.9" height="1080"></rect>
+            </g>
+            <g class="lights">
+                <path class="light1 light" d="M619.5,298.4H615v19.5h4.5V298.4z M619.5,674.8H615v9.8h4.5V674.8z M619.5,135.1H615v5.6h4.5V135.1z M619.5,55.5H615v68.7h4.5V55.5z"></path>
+                <path class="light2 light" d="M1258.2,531.9h-4.5v8.1h4.5V531.9z M1258.2,497.9h-4.5v17.9h4.5V497.9z M1258.2,0h-4.5v25.3h4.5V0z M1258.2,252.2h-4.5v42.4h4.5V252.2z"></path>
+                <path class="light3 light" d="M875.1,123.8h-1.8v4h1.8V123.8z M875.1,289.4h-1.8v24.1h1.8V289.4z M875.1,0h-1.8v31.4h1.8V0z M875.1,50.2h-1.8v11.5h1.8V50.2z"></path>
+                <path class="light4 light" d="M1101.8,983.8h-1.8v8.2h1.8V983.8z M1101.8,1075.9h-1.8v4.1h1.8V1075.9z M1101.8,873.7h-1.8v4.2h1.8V873.7z M1101.8,851h-1.8v18.2h1.8V851z"></path>
+                <path class="light5 light" d="M686.4,822.7h-1.8v3.8h1.8V822.7z M686.4,928.4h-1.8v23h1.8V928.4z M686.4,1043.8h-1.8v36.2h1.8V1043.8z"></path>
+                <path class="light6 light" d="M1551.6,860.9h-4.4v-34.1h4.4V860.9z M1551.6,533.5h-4.4v-13.9h4.4V533.5z M1551.6,1080h-4.4v-89.1h4.4V1080z"></path>
+                <path class="light7 light" d="M1311.1,707.7h-0.9V698h0.9V707.7z M1311.1,436.8h-0.9v-58.9h0.9V436.8z M1311.1,140.7h-0.9V48h0.9V140.7z"></path>
+                <path class="light8 light" d="M125.1,514.5h-0.9v-9.7h0.9V514.5z M125.1,243.6h-0.9v-58.9h0.9V243.6z"></path>
+                <path class="light9 light" d="M305.4,806.7h-4.6v-42.5h4.6V806.7z M305.4,398.5h-4.6v-17.3h4.6V398.5z M305.4,1080h-4.6V968.8h4.6V1080z"></path>
+                <path class="light10 light" d="M1822.9,170.7h-4.5v13.7h4.5V170.7z M1822.9,435.1h-4.5v6.8h4.5V435.1z M1822.9,55.9h-4.5v4h4.5V55.9z M1822.9,0h-4.5v48.3h4.5V0z"></path>
+                <path class="light11 light" d="M1666.4,331.5h0.9v9.7h-0.9V331.5z M1666.4,602.4h0.9v58.9h-0.9V602.4z M1666.4,898.5h0.9v92.7h-0.9V898.5z"></path>
+                <path class="light12 light" d="M1620.4,200.7h-1.8v6.4h1.8V200.7z M1620.4,469.1h-1.8v39h1.8V469.1z M1620.4,0h-1.8v51h1.8V0z M1620.4,81.3h-1.8V100h1.8V81.3z"></path>
+                <path class="light13 light" d="M74.8,201h-4.5v16.2h4.5V201z M74.8,512.3h-4.5v8.1h4.5V512.3z M74.8,65.8h-4.5v4.6h4.5V65.8z M74.8,0h-4.5v56.8h4.5V0z"></path>
+                <path class="light14 light" d="M1371.2,655.3h-1.8v6.3h1.8V655.3z M1371.2,829.7h-1.8v37.9h1.8V829.7z M1371.2,1020.3h-1.8v59.7h1.8V1020.3z"></path>
+                <path class="light15 light" d="M1234.3,898.1h-0.9v-4.9h0.9V898.1z M1234.3,762.5h-0.9v-29.5h0.9V762.5z M1234.3,614.4h-0.9v-46.4h0.9V614.4z"></path>
+                <path class="light16 light" d="M457.7,1010.8h-1.8v-18.1h1.8V1010.8z M457.7,507.5h-1.8V398h1.8V507.5z"></path>
+                <path class="light17 light" d="M330.5,170.7h-1.8v13.7h1.8V170.7z M330.5,435.1h-1.8v6.8h1.8V435.1z M330.5,55.9h-1.8v4h1.8V55.9z M330.5,0h-1.8v48.3h1.8V0z"></path>
+            </g>
+        </svg>
+    </div>
+
+    <div class="banner">
+        <div class="banner-row">
+            <div>
+                <a href="/">
+                    <img src="/Assets/nurture_banner.png" alt="Nurture Banner" style="height:90px; vertical-align:left; padding-left: 10px;">
+                </a>
+            </div>
+            <div class="banner-actions" id="authContainer">
+                <a href="/auth/discord" class="social-button discord-button">
+                    <img src="https://cdn.simpleicons.org/discord/ffffff" alt="Discord Icon">
+                    <span class="sub-text">Login</span>
+                </a>
+                <a href="https://ko-fi.com/sorakoi" class="social-button kofi-button">
+                    <img src="/Assets/kofi_icon.png" alt="Ko-fi Icon">
+                    <span class="sub-text">Ko-fi</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="game-layout">
+        <a href="/" style="color: #aaa; text-decoration: none; display: inline-block; margin-bottom: 20px;">
+            ← Back to All Games
+        </a>
+
+        <div class="game-header">
+            <div class="header-left">
+                <img src="/Assets/placeholder.png" alt="Game Icon" id="gameIcon">
+                <div>
+                    <h1 class="game-title" id="gameTitle">Loading...</h1>
+                    <p class="game-dev" id="gameDev">-</p>
+                </div>
+            </div>
+
+            <a href="#" target="_blank" id="redeemCodesBtn" class="redeem-btn" style="display: none;" title="Active Redeem Codes">
+                <img src="/Assets/ticket.png" alt="Redeem Codes">
+            </a>
+        </div>
+
+        <div class="sub-nav" id="tabMenu"></div>
+
+        <div class="content-area" id="dynamicContent">
+            <h2>Loading content...</h2>
+        </div>
+    </div>
+
+    <!-- Shared Logic -->
+    <script src="/Assets/common.js"></script>
+
+    <!-- Page Specific Script -->
+    <script>
+        let gameData = null;
+        
+        const pathParts = window.location.pathname.split('/').filter(p => p);
+        const gameId = pathParts[1];
+        let currentSection = pathParts[2] || 'overview';
+
+        const sections = [
+            { id: 'overview', label: 'Overview' },
+            { id: 'guides', label: 'Guides/Tools' },
+            { id: 'assets', label: 'Raw Assets' },
+            { id: 'communities', label: 'Communities' },
+            { id: 'mods', label: 'Mods' }
+        ];
+
+        const tabMenu = document.getElementById('tabMenu');
+        const contentArea = document.getElementById('dynamicContent');
+        let activeFilter = 'All';
+        
+        function renderTabs() {
+            tabMenu.innerHTML = '';
+            
+            sections.forEach(sec => {
+                const link = document.createElement('a');
+                const url = sec.id === 'overview' ? `/games/${gameId}` : `/games/${gameId}/${sec.id}`;
+                link.href = url;
+                link.textContent = sec.label;
+                
+                if (sec.id === currentSection) {
+                    link.classList.add('active');
+                }
+                
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    if (currentSection === sec.id) return;
+
+                    currentSection = sec.id;
+                    activeFilter = 'All';
+                    window.history.pushState({}, '', url); 
+                    renderTabs(); 
+                    renderContent(); 
+                });
+                
+                tabMenu.appendChild(link);
+            });
+        }
+
+        function getItemIcon(item, section) {
+            if (item.icon_url) return item.icon_url;
+
+            const platform = (Array.isArray(item.platform) ? item.platform.join(',') : (item.platform || '')).toLowerCase();
+            
+            if (platform.includes('google sheets')) return '/Assets/google_sheets_icon.webp';
+            if (platform.includes('nurture')) return '/Assets/nurture_icon.png';
+            if (platform.includes('fribbels')) return '/Assets/fribbels.webp';
+
+            if (platform.includes('discord')) return 'https://cdn.simpleicons.org/discord/5865F2';
+            if (platform.includes('reddit')) return 'https://cdn.simpleicons.org/reddit/FF4500';
+            if (platform.includes('youtube')) return 'https://cdn.simpleicons.org/youtube/FF0000';
+            if (platform.includes('twitter') || platform.includes('x')) return 'https://cdn.simpleicons.org/x/000000';
+
+            const targetUrl = item.url || item.download_url;
+            if (platform.includes('website') && targetUrl) {
+                try {
+                    return `https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${encodeURIComponent(targetUrl)}&size=64`;
+                } catch (error) {
+                    console.error("Invalid URL for favicon fetching:", targetUrl);
+                }
+            }
+
+            const defaultIcons = {
+                guides: 'https://api.iconify.design/fluent-emoji:blue-book.svg',
+                assets: 'https://api.iconify.design/fluent-emoji:open-file-folder.svg',
+                communities: 'https://api.iconify.design/fluent-emoji:people-hugging.svg',
+                mods: 'https://api.iconify.design/fluent-emoji:puzzle-piece.svg'
+            };
+
+            return defaultIcons[section] || '/Assets/placeholder.png';
+        }
+
+        function buildFilterBar(items, categoryKey) {
+            if (!items || items.length === 0) return '';
+
+            const ignoredTags = ['nurture', 'google sheets'];
+
+            let categories = ['All', ...new Set(items.flatMap(item => {
+                const val = item[categoryKey];
+                if (!val) return [];
+                if (Array.isArray(val)) return val;
+                if (typeof val === 'string' && val.includes(',')) {
+                    return val.split(',').map(s => s.trim());
+                }
+                return [val];
+            }).filter(Boolean))];
+            
+            categories = categories.filter(cat => cat === 'All' || !ignoredTags.map(t => t.toLowerCase()).includes(cat.toLowerCase()));
+
+            if (categories.length <= 1) return ''; 
+
+            setTimeout(() => {
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        activeFilter = e.target.dataset.category;
+                        renderContent();
+                    });
+                });
+            }, 0);
+
+            return `
+                <div class="filter-bar">
+                    ${categories.map(cat => `
+                        <button class="filter-btn ${activeFilter === cat ? 'active' : ''}" data-category="${cat}">
+                            ${cat}
+                        </button>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function renderContent() {
+            if (!gameData) return;
+            
+            document.title = `Nurture | ${gameData.name} - ${currentSection.toUpperCase()}`;
+            contentArea.style.opacity = 0.5;
+            
+            setTimeout(() => {
+                if (currentSection === 'overview') {
+                    let overviewHtml = `
+                        <h2>Overview</h2>
+                        <p style="line-height: 1.6; color: #ddd; white-space: pre-wrap;">${gameData.overview_text || 'No overview available for this game yet.'}</p>
+                    `;
+
+                    if (gameData.new_player_video_id) {
+                        overviewHtml += `
+                            <h3 style="margin-top: 40px; border-bottom: 1px solid #3a3a45; padding-bottom: 10px;">New Player Guide</h3>
+                            <div style="position: relative; width: 100%; padding-bottom: 56.25%; height: 0; border-radius: 8px; overflow: hidden; background: #000; margin-top: 20px;">
+                                <iframe 
+                                    src="https://www.youtube.com/embed/${gameData.new_player_video_id}" 
+                                    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;"
+                                    allow="accelerometer; autoplay; clipboard-encrypted-media; gyroscope; picture-in-picture" 
+                                    referrerpolicy="strict-origin-when-cross-origin"
+                                    allowfullscreen>
+                                </iframe>
+                            </div>
+                        `;
+                    }
+
+                    contentArea.innerHTML = overviewHtml;
+                    contentArea.style.opacity = 1;
+                    return;
+                }
+
+                const sectionConfig = {
+                    guides: { title: 'Guides/Tools', data: gameData.guides, catKey: 'category', metaKey: 'author', metaPrefix: 'By ' },
+                    assets: { title: 'Raw Assets', data: gameData.assets, catKey: 'type', metaKey: 'type', metaPrefix: 'Format: ' },
+                    communities: { title: 'Communities', data: gameData.communities, catKey: 'platform', metaKey: 'platform', metaPrefix: 'Platform: ' },
+                    mods: { title: 'Mods', data: gameData.mods, catKey: 'author', metaKey: 'version', metaPrefix: 'Version: ' }
+                };
+
+                const config = sectionConfig[currentSection];
+
+                if (!config || !config.data || config.data.length === 0) {
+                    contentArea.innerHTML = `<h2>${config?.title || 'Section'}</h2><p style="color: #aaa;">No items found.</p>`;
+                    contentArea.style.opacity = 1;
+                    return;
+                }
+
+                const filteredData = activeFilter === 'All' 
+                    ? config.data 
+                    : config.data.filter(item => {
+                        const val = item[config.catKey];
+                        if (!val) return false;
+                        
+                        if (Array.isArray(val)) {
+                            return val.includes(activeFilter);
+                        }
+                        if (typeof val === 'string' && val.includes(',')) {
+                            return val.split(',').map(s => s.trim()).includes(activeFilter);
+                        }
+                        return val === activeFilter;
+                    });
+
+                const filterHtml = buildFilterBar(config.data, config.catKey);
+
+                const cardsHtml = filteredData.map(item => {
+                    let metaVal = item[config.metaKey];
+                    if (Array.isArray(metaVal)) metaVal = metaVal.join(', ');
+
+                    return `
+                        <a href="${item.url || item.download_url || '#'}" target="_blank" class="item-card">
+                            <img src="${getItemIcon(item, currentSection)}" class="item-icon" alt="icon" onerror="this.src='/Assets/placeholder.png'">
+                            <div class="item-details">
+                                <div class="item-title">${item.title || item.name}</div>
+                                <div class="item-meta">${config.metaPrefix}${metaVal}</div>
+                            </div>
+                        </a>
+                    `;
+                }).join('');
+
+                let miniFocusHtml = '';
+                if (currentSection === 'guides' && gameData.mini_focuses && gameData.mini_focuses.length > 0) {
+                    miniFocusHtml = `
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 30px;">
+                            ${gameData.mini_focuses.map(focus => `
+                                <a href="${focus.url}" target="_blank" style="display: flex; align-items: center; gap: 15px; background: linear-gradient(135deg, #4C3A90 0%, #2a2a35 100%); padding: 18px; border-radius: 12px; text-decoration: none; border: 1px solid #7A6BB5; transition: transform 0.2s ease, box-shadow 0.2s ease;" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 6px 15px rgba(0,0,0,0.3)';" onmouseout="this.style.transform='none'; this.style.boxShadow='none';">
+                                    <img src="${focus.icon || '/Assets/placeholder.png'}" style="width: 50px; height: 50px; border-radius: 8px; object-fit: cover; border: 1px solid #3a3a45;">
+                                    <div>
+                                        <div style="font-weight: bold; font-size: 1.1em; color: #fff; margin-bottom: 4px;">${focus.title}</div>
+                                        <div style="font-size: 0.85em; color: #ccc; line-height: 1.3;">${focus.description}</div>
+                                    </div>
+                                </a>
+                            `).join('')}
+                        </div>
+                    `;
+                }
+
+                contentArea.innerHTML = `
+                    <h2>${config.title}</h2>
+                    ${miniFocusHtml}
+                    ${filterHtml}
+                    <div class="items-list">
+                        ${cardsHtml || '<p style="color: #888;">No items match this filter.</p>'}
+                    </div>
+                `;
+                
+                contentArea.style.opacity = 1;
+            }, 50);
+        }
+
+        window.addEventListener('popstate', () => {
+            const parts = window.location.pathname.split('/').filter(p => p);
+            currentSection = parts[2] || 'overview';
+            renderTabs();
+            renderContent();
+        });
+
+        async function initPage() {
+            try {
+                const response = await fetch(`/api/games/${gameId}`);
+                if (!response.ok) throw new Error('Game not found');
+                
+                gameData = await response.json();
+
+                document.getElementById('gameTitle').textContent = gameData.name;
+                document.getElementById('gameDev').textContent = gameData.developer;
+                document.getElementById('gameIcon').src = gameData.banner_url || '/Assets/placeholder.png';
+
+                const redeemBtn = document.getElementById('redeemCodesBtn');
+                if (gameData.redeem_codes_url) {
+                    redeemBtn.href = gameData.redeem_codes_url;
+                    redeemBtn.style.display = 'inline-flex';
+                } else {
+                    redeemBtn.style.display = 'none';
+                }
+                
+                contentArea.style.transition = 'opacity 0.2s ease';
+                renderTabs();
+                renderContent();
+
+            } catch (error) {
+                console.error("Failed to load page data:", error);
+                contentArea.innerHTML = `<h2>Error loading game data.</h2>`;
+            }
+        }
+
+        initPage();
+    </script>
+</body>
+</html>
