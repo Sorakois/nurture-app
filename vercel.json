@@ -1,9 +1,9 @@
 {
   "version": 2,
   "rewrites": [
-    { "source": "/", "destination": "/Main Page/nurture.html" },
-    { "source": "/games/:id", "destination": "/Main Page/game.html" },
-    { "source": "/games/:id/:section", "destination": "/Main Page/game.html" },
+    { "source": "/", "destination": "/public/nurture.html" },
+    { "source": "/games/:id", "destination": "/public/game.html" },
+    { "source": "/games/:id/:section", "destination": "/public/game.html" },
     { "source": "/api/(.*)", "destination": "/server.js" },
     { "source": "/auth/(.*)", "destination": "/server.js" }
   ]
