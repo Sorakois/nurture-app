@@ -6,7 +6,10 @@ const mongoose = require('mongoose');
 const axios = require('axios');
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
-const User = require('./models/User'); // Ensure this file exists
+const Game = require('./models/Game');
+const User = require('./models/User');
+const Contribution = require('./models/Contribution');
+const { verifyKeyMiddleware, InteractionType, InteractionResponseType } = require('discord-interactions');
 require('dotenv').config();
 
 const app = express();
@@ -30,66 +33,239 @@ app.use(helmet({
     crossOriginEmbedderPolicy: false
 }));
 
-// Import the game database
-const rawGames = require('./data/games.json');
-
-// Helper to check if a game has extended data
-const hasGameData = (game) => {
-    return !!(game.overview_text || game.guides || game.assets || game.communities || game.mods || game.trailer_id || game.ratings);
-};
-
-const validGames = rawGames.sort((a, b) => {
-    const aData = hasGameData(a);
-    const bData = hasGameData(b);
-    if (aData && !bData) return -1;
-    if (!aData && bData) return 1;
-    return a.name.localeCompare(b.name);
-});
-
 // Input validation
 const validateInput = {
     sanitizeString: (str) => xss(validator.escape(str || '')),
     isValidSearch: (term) => validator.isLength(term || '', { min: 1, max: 100 })
 };
 
+// Helper to check if a game has extended data for sorting
+const hasGameData = (game) => {
+    return !!(game.overview_text || (game.guides && game.guides.length) || (game.assets && game.assets.length) || (game.communities && game.communities.length) || (game.mods && game.mods.length) || game.trailer_id || game.ratings);
+};
+
 // --- API ROUTES ---
 
-app.get('/api/games', (req, res) => {
+app.get('/api/games', async (req, res) => {
     const page = Math.max(1, parseInt(req.query.page) || 1);
     const limit = Math.min(50, parseInt(req.query.limit) || 20);
     const startIndex = (page - 1) * limit;
-    const endIndex = page * limit;
 
-    const paginatedGames = validGames.slice(startIndex, endIndex);
+    try {
+        const allGames = await Game.find({}).lean();
+        
+        // Retain original sorting logic: prioritized games with populated data, then alphabetical
+        allGames.sort((a, b) => {
+            const aData = hasGameData(a);
+            const bData = hasGameData(b);
+            if (aData && !bData) return -1;
+            if (!aData && bData) return 1;
+            return a.name.localeCompare(b.name);
+        });
 
-    res.json({
-        games: paginatedGames,
-        pagination: {
-            page,
-            limit,
-            total: validGames.length,
-            pages: Math.ceil(validGames.length / limit)
-        }
-    });
+        const paginatedGames = allGames.slice(startIndex, startIndex + limit);
+
+        res.json({
+            games: paginatedGames,
+            pagination: {
+                page,
+                limit,
+                total: allGames.length,
+                pages: Math.ceil(allGames.length / limit)
+            }
+        });
+    } catch (err) {
+        console.error("Failed to fetch games:", err);
+        res.status(500).json({ error: "Database error" });
+    }
 });
 
-app.get('/api/games/:id', (req, res) => {
-    const game = validGames.find(g => g.id === req.params.id);
-    if (!game) return res.status(404).json({ error: 'Game not found' });
-    res.json(game);
+app.get('/api/games/:id', async (req, res) => {
+    try {
+        const game = await Game.findOne({ id: req.params.id }).lean();
+        if (!game) return res.status(404).json({ error: 'Game not found' });
+        res.json(game);
+    } catch (err) {
+        console.error("Failed to fetch game:", err);
+        res.status(500).json({ error: "Database error" });
+    }
 });
 
-app.get('/api/games/search/:term', (req, res) => {
+app.get('/api/games/search/:term', async (req, res) => {
     const searchTerm = req.params.term;
     if (!validateInput.isValidSearch(searchTerm)) {
         return res.status(400).json({ error: 'Invalid search term' });
     }
-    const sanitizedTerm = validateInput.sanitizeString(searchTerm).toLowerCase();
-    const results = validGames.filter(game => 
-        game.name.toLowerCase().includes(sanitizedTerm) || 
-        game.developer.toLowerCase().includes(sanitizedTerm)
-    ).slice(0, 10);
-    res.json(results);
+    const sanitizedTerm = validateInput.sanitizeString(searchTerm);
+    
+    try {
+        const results = await Game.find({
+            $or: [
+                { name: { $regex: sanitizedTerm,$options: 'i' } },
+                { developer: { $regex: sanitizedTerm,$options: 'i' } }
+            ]
+        }).limit(10).lean();
+        res.json(results);
+    } catch (err) {
+        console.error("Search error:", err);
+        res.status(500).json({ error: "Database error" });
+    }
+});
+
+// --- DISCORD INTERACTIONS ROUTES ---
+// NOTE: This route MUST use verifyKeyMiddleware before parsing the body
+app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY), async (req, res) => {
+    const interaction = req.body;
+
+    // Handle Discord's mandatory security ping
+    if (interaction.type === InteractionType.PING) {
+        return res.send({ type: InteractionResponseType.PONG });
+    }
+
+    // Handle Button Clicks
+    if (interaction.type === InteractionType.MESSAGE_COMPONENT) {
+        const customId = interaction.data.custom_id; // e.g., "approve_12345"
+        const [action, contributionId] = customId.split('_');
+
+        try {
+            const contribution = await Contribution.findById(contributionId);
+            if (!contribution) {
+                return res.send({
+                    type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+                    data: { content: "Error: Contribution not found in database.", flags: 64 } // Ephemeral
+                });
+            }
+
+            if (action === 'approve') {
+                // TODO: Migrate draft data to the Game document and update User points
+
+                // Update the Discord message to show it was approved
+                return res.send({
+                    type: InteractionResponseType.UPDATE_MESSAGE,
+                    data: {
+                        content: `✅ **Approved by <@${interaction.member.user.id}>**`,
+                        components: [] // Removes the buttons
+                    }
+                });
+            }
+
+            if (action === 'deny') {
+                contribution.status = 'rejected';
+                await contribution.save();
+
+                return res.send({
+                    type: InteractionResponseType.UPDATE_MESSAGE,
+                    data: {
+                        content: `❌ **Denied by <@${interaction.member.user.id}>**`,
+                        components: []
+                    }
+                });
+            }
+
+            if (action === 'tweak') {
+                // Pops up a text input modal right inside Discord for the admin to edit
+                return res.send({
+                    type: InteractionResponseType.MODAL,
+                    data: {
+                        custom_id: `modal_tweak_${contributionId}`,
+                        title: "Tweak Contribution",
+                        components: [{
+                            type: 1,
+                            components: [{
+                                type: 4,
+                                custom_id: "tweaked_data",
+                                label: "Edit the submission JSON:",
+                                style: 2,
+                                min_length: 1,
+                                max_length: 4000,
+                                value: JSON.stringify(contribution.data, null, 2),
+                                required: true
+                            }]
+                        }]
+                    }
+                });
+            }
+        } catch (err) {
+            console.error("Interaction error:", err);
+        }
+    }
+
+    // Handle Modal Submissions (from the Tweak button)
+    if (interaction.type === InteractionType.MODAL_SUBMIT) {
+        const customId = interaction.data.custom_id;
+        
+        if (customId.startsWith('modal_tweak_')) {
+            const contributionId = customId.split('_')[2];
+            const newJsonData = interaction.data.components[0].components[0].value;
+            
+            // TODO: Parse the tweaked JSON, save to Game doc, award points
+
+            return res.send({
+                type: InteractionResponseType.UPDATE_MESSAGE,
+                data: {
+                    content: `✏️ ✅ **Tweaked & Approved by <@${interaction.member.user.id}>**`,
+                    components: []
+                }
+            });
+        }
+    }
+});
+
+// --- CONTRIBUTION ROUTES ---
+
+app.post('/api/contribute', async (req, res) => {
+    const sessionToken = req.cookies.nurture_session;
+    if (!sessionToken) return res.status(401).json({ error: "Must be signed in to contribute." });
+
+    try {
+        const decoded = jwt.verify(sessionToken, process.env.JWT_SECRET);
+        const user = await User.findById(decoded.userId);
+        
+        if (!user) return res.status(401).json({ error: "User not found." });
+
+        const { gameId, itemCategory, actionType, targetIdentifier, data } = req.body;
+
+        // 1. Save draft to MongoDB
+        const newContribution = new Contribution({
+            submitterDiscordId: user.discordId,
+            submitterUsername: user.username,
+            gameId,
+            itemCategory,
+            actionType,
+            targetIdentifier,
+            data
+        });
+        await newContribution.save();
+
+        // 2. Fire serverless HTTP request to Discord to trigger the admin embed
+        const discordPayload = {
+            embeds: [{
+                title: `New Contribution: ${actionType}${itemCategory}`,
+                description: `**From:** ${user.username}\n**Game:** ${gameId || 'N/A'}\n**Target:** ${targetIdentifier || 'N/A'}\n\n\`\`\`json\n${JSON.stringify(data, null, 2).substring(0, 3900)}\n\`\`\``,
+                color: 0x7A6BB5
+            }],
+            components: [{
+                type: 1,
+                components: [
+                    { type: 2, style: 3, label: "Approve", custom_id: `approve_${newContribution._id}` },
+                    { type: 2, style: 1, label: "Tweak & Approve", custom_id: `tweak_${newContribution._id}` },
+                    { type: 2, style: 4, label: "Deny", custom_id: `deny_${newContribution._id}` }
+                ]
+            }]
+        };
+
+        await axios.post(`https://discord.com/api/v10/channels/1559219529593397279/messages`, discordPayload, {
+            headers: {
+                'Authorization': `Bot ${process.env.DISCORD_BOT_TOKEN}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        res.json({ success: true, message: "Contribution submitted for review!" });
+    } catch (err) {
+        console.error("Contribution error:", err);
+        res.status(500).json({ error: "Failed to process contribution." });
+    }
 });
 
 // --- AUTH ROUTES ---

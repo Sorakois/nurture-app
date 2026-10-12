@@ -6,7 +6,19 @@ const userSchema = new mongoose.Schema({
     avatar: { type: String },
     isNurtureMember: { type: Boolean, default: false },
     totalPoints: { type: Number, default: 0 },
-    joinedAt: { type: Date, default: Date.now }
+    gamePoints: { type: Map, of: Number, default: {} }, 
+    contributionStreak: { type: Number, default: 0 },
+    lastContributionDate: { type: Date },
+    
+    // NEW: Two-way mailbox system
+    mailbox: [{
+        messageId: { type: mongoose.Schema.Types.ObjectId, auto: true },
+        direction: { type: String, enum: ['INBOUND', 'OUTBOUND'], required: true }, // INBOUND = Admin to User, OUTBOUND = User to Admin
+        subject: { type: String, required: true },
+        content: { type: String, required: true },
+        date: { type: Date, default: Date.now },
+        read: { type: Boolean, default: false }
+    }]
 });
 
 module.exports = mongoose.model('User', userSchema);
