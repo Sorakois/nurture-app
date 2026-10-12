@@ -338,6 +338,8 @@
                     </a>
                 </div>
 
+                <div id="miniFocusContainer" style="display: none; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin: 15px 0;"></div>
+
                 <div class="sub-nav" id="tabMenu"></div>
 
                 <div class="content-area" id="dynamicContent">
@@ -572,23 +574,6 @@
                     `;
                 }).join('');
 
-                let miniFocusHtml = '';
-                if (currentSection === 'guides' && gameData.mini_focuses && gameData.mini_focuses.length > 0) {
-                    miniFocusHtml = `
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 30px;">
-                            ${gameData.mini_focuses.map(focus => `
-                                <a href="${focus.url}" target="_blank" style="display: flex; align-items: center; gap: 15px; background: linear-gradient(135deg, #4C3A90 0%, #2a2a35 100%); padding: 18px; border-radius: 12px; text-decoration: none; border: 1px solid #7A6BB5; transition: transform 0.2s ease, box-shadow 0.2s ease;" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 6px 15px rgba(0,0,0,0.3)';" onmouseout="this.style.transform='none'; this.style.boxShadow='none';">
-                                    <img src="${focus.icon || '/Assets/placeholder.png'}" style="width: 50px; height: 50px; border-radius: 8px; object-fit: cover; border: 1px solid #3a3a45;">
-                                    <div>
-                                        <div style="font-weight: bold; font-size: 1.1em; color: #fff; margin-bottom: 4px;">${focus.title}</div>
-                                        <div style="font-size: 0.85em; color: #ccc; line-height: 1.3;">${focus.description}</div>
-                                    </div>
-                                </a>
-                            `).join('')}
-                        </div>
-                    `;
-                }
-
                 contentArea.innerHTML = `
                     <h2>${config.title}</h2>
                     ${miniFocusHtml}
@@ -619,6 +604,22 @@
                 document.getElementById('gameTitle').textContent = gameData.name;
                 document.getElementById('gameDev').textContent = gameData.developer;
                 document.getElementById('gameIcon').src = gameData.banner_url || '/Assets/placeholder.png';
+
+                const mfContainer = document.getElementById('miniFocusContainer');
+                if (gameData.mini_focuses && gameData.mini_focuses.length > 0) {
+                    mfContainer.style.display = 'grid';
+                    mfContainer.innerHTML = gameData.mini_focuses.map(focus => `
+                        <a href="${focus.url}" target="_blank" style="display: flex; align-items: center; gap: 15px; background: linear-gradient(135deg, #4C3A90 0%, #2a2a35 100%); padding: 18px; border-radius: 12px; text-decoration: none; border: 1px solid #7A6BB5;">
+                            <img src="${focus.icon || '/Assets/placeholder.png'}" style="width: 50px; height: 50px; border-radius: 8px; object-fit: cover; border: 1px solid #3a3a45;">
+                            <div>
+                                <div style="font-weight: bold; font-size: 1.1em; color: #fff; margin-bottom: 4px;">${focus.title}</div>
+                                <div style="font-size: 0.85em; color: #ccc;">${focus.description}</div>
+                            </div>
+                        </a>
+                    `).join('');
+                } else {
+                    mfContainer.style.display = 'none';
+                }
 
                 const redeemBtn = document.getElementById('redeemCodesBtn');
                 if (gameData.redeem_codes_url) {

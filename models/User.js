@@ -9,6 +9,7 @@ const userSchema = new mongoose.Schema({
     gamePoints: { type: Map, of: Number, default: {} }, 
     contributionStreak: { type: Number, default: 0 },
     lastContributionDate: { type: Date },
+    starredGames: [{ type: String }],
     
     // NEW: Two-way mailbox system
     mailbox: [{

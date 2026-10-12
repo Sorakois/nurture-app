@@ -73,35 +73,31 @@ function initAuth() {
     const authContainer = document.getElementById('authContainer');
     if (!authContainer) return;
 
-    // 1. Instant optimistic render from localStorage to kill flash
     const cachedUserRaw = localStorage.getItem('nurture_user_session');
     if (cachedUserRaw) {
-        try {
-            const cachedUser = JSON.parse(cachedUserRaw);
-            renderLoggedInUI(authContainer, cachedUser);
-        } catch (e) {
-            localStorage.removeItem('nurture_user_session');
-            renderLoggedOutUI(authContainer);
-        }
+        try { renderLoggedInUI(authContainer, JSON.parse(cachedUserRaw)); } 
+        catch (e) { localStorage.removeItem('nurture_user_session'); renderLoggedOutUI(authContainer); }
     } else {
         renderLoggedOutUI(authContainer);
     }
 
-    // 2. Background verification with backend session cookie
     fetch('/api/auth/me')
-        .then(res => res.json())
-        .then(data => {
-            if (data.authenticated && data.user) {
-                localStorage.setItem('nurture_user_session', JSON.stringify(data.user));
-                renderLoggedInUI(authContainer, data.user);
-            } else {
+        .then(res => {
+            // ONLY wipe cache if the server explicitly says "Unauthorized"
+            if (res.status === 401) {
                 localStorage.removeItem('nurture_user_session');
                 renderLoggedOutUI(authContainer);
+                throw new Error("Unauthorized");
+            }
+            return res.json();
+        })
+        .then(data => {
+            if (data && data.authenticated && data.user) {
+                localStorage.setItem('nurture_user_session', JSON.stringify(data.user));
+                renderLoggedInUI(authContainer, data.user);
             }
         })
-        .catch(() => {
-            // Network fallback: retain cache if serverless function cold-starts
-        });
+        .catch(() => { /* Ignore network timeouts/cold starts, keep user logged in via cache */ });
 }
 
 // --- MAILBOX & SETTINGS UI INJECTION ---

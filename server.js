@@ -458,6 +458,59 @@ app.get('/auth/discord', (req, res) => {
     res.redirect(discordLoginUrl);
 });
 
+// --- EXTERNAL GAME LOOKUP (NO API KEY REQUIRED) ---
+app.get('/api/suggest/lookup', async (req, res) => {
+    const term = req.query.term;
+    if (!term) return res.status(400).json({ error: "No search term provided" });
+
+    try {
+        // Query the public Apple App Store API
+        const response = await axios.get(`https://itunes.apple.com/search?term=${encodeURIComponent(term)}&entity=software&limit=1`);
+        
+        if (!response.data.results || response.data.results.length === 0) {
+            return res.json({ found: false });
+        }
+
+        const appData = response.data.results[0];
+        
+        // Filter out redundant Apple tags like "Games" or "Entertainment"
+        const cleanGenres = appData.genres.filter(g => g !== 'Games' && g !== 'Entertainment');
+
+        res.json({
+            found: true,
+            name: appData.trackName,
+            developer: appData.artistName,
+            icon_url: appData.artworkUrl512, // High-res icon
+            tags: cleanGenres,
+            overview_text: appData.description
+        });
+    } catch (err) {
+        console.error("External lookup error:", err);
+        res.status(500).json({ error: "Failed to lookup game data." });
+    }
+});
+
+app.post('/api/user/star', async (req, res) => {
+    const token = req.cookies.nurture_session;
+    if (!token) return res.status(401).json({ error: 'Unauthorized' });
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const user = await User.findById(decoded.userId);
+        const { gameId } = req.body;
+
+        if (user.starredGames.includes(gameId)) {
+            user.starredGames = user.starredGames.filter(id => id !== gameId); // Unstar
+        } else {
+            user.starredGames.push(gameId); // Star
+        }
+        await user.save();
+        res.json({ success: true, starredGames: user.starredGames });
+    } catch (err) {
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
 app.get('/auth/discord/callback', async (req, res) => {
     const code = req.query.code;
     if (!code) return res.status(400).send('No code provided');

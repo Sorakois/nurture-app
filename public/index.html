@@ -416,10 +416,25 @@
 
     <div class="main-wrapper" id="mainWrapper">
         <div style="flex-grow: 1;">
-            <div class="search-container">
-                <input type="text" class="search-input" placeholder="Search games..." id="searchInput">
+            <div class="search-container" style="display: flex; gap: 10px; justify-content: center; align-items: center; max-width: 800px;">
+                <!-- Tag Filter -->
+                <select id="tagFilter" class="filter-btn" style="padding: 12px; border-radius: 20px; outline: none;">
+                    <option value="All">All Tags</option>
+                    <option value="RPG">RPG</option>
+                    <option value="Gacha">Gacha</option>
+                    <option value="Tower Defense">Tower Defense</option>
+                    <option value="Action">Action</option>
+                    <option value="Rhythm">Rhythm</option>
+                </select>
+
+                <!-- Expanding Search -->
+                <div style="position: relative; display: flex; align-items: center; flex-grow: 1;">
+                    <button id="searchToggle" style="background: none; border: none; color: #aaa; font-size: 1.5em; cursor: pointer; padding: 0 10px; z-index: 10;">🔍</button>
+                    <input type="text" class="search-input" placeholder="Search games..." id="searchInput" style="width: 0; opacity: 0; padding: 12px 0; transition: all 0.3s ease; flex-grow: 0;">
+                </div>
             </div>
-            <div class="grid-container" id="gameGrid"></div>
+            <div class="grid-container" id="gameGrid">
+            </div>
         </div>
         
         <!-- Right Sidebar Leaderboard -->
@@ -649,53 +664,115 @@
             }
         });
 
+        // Global variables for Auth/Stars
+        let userStarredGames = [];
+        let cachedSession = JSON.parse(localStorage.getItem('nurture_user_session') || '{}');
+
         function updateGrid(games) {
             gameGrid.innerHTML = ''; 
             
-            if (games.length === 0) {
-                gameGrid.innerHTML = `
-                    <div style="grid-column: 1 / -1; text-align: center; color: white; padding: 40px;">
-                        <h3>No games found</h3>
-                        <p>Try adjusting your search terms</p>
-                    </div>
-                `;
+            // Filter by Tag
+            const selectedTag = document.getElementById('tagFilter').value;
+            let filteredGames = games;
+            if (selectedTag !== 'All') {
+                filteredGames = games.filter(g => g.tags && g.tags.includes(selectedTag));
+            }
+
+            // Sort: Starred games first
+            filteredGames.sort((a, b) => {
+                const aStar = userStarredGames.includes(a.id) ? 1 : 0;
+                const bStar = userStarredGames.includes(b.id) ? 1 : 0;
+                return bStar - aStar;
+            });
+
+            if (filteredGames.length === 0) {
+                gameGrid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; color: white; padding: 40px;"><h3>No games found</h3></div>`;
                 return;
             }
 
-            games.forEach(game => {
+            filteredGames.forEach(game => {
                 const gridItem = document.createElement('div');
-                const hasData = typeof game === 'object' && !!(game.overview_text || game.guides || game.assets || game.communities || game.mods || game.trailer_id || game.ratings);
+                const hasData = !!(game.overview_text || game.guides || game.assets || game.communities || game.mods || game.trailer_id || game.ratings);
                 gridItem.className = `grid-item ${hasData ? '' : 'no-data'}`;
                 
-                const gameName = typeof game === 'string' ? game : game.name;
-                const iconUrl = typeof game === 'object' && game.banner_url ? game.banner_url : '/Assets/placeholder.png';
-                const developer = typeof game === 'object' && game.developer ? game.developer : '';
-                
+                const isStarred = userStarredGames.includes(game.id);
+                const starColor = isStarred ? '#ffc107' : '#555';
+
                 gridItem.innerHTML = `
-                    <img src="${iconUrl}" alt="${gameName}" loading="lazy" onerror="this.src='/Assets/placeholder.png'">
+                    <img src="${game.banner_url || '/Assets/placeholder.png'}" alt="${game.name}" loading="lazy" onerror="this.src='/Assets/placeholder.png'">
                     <div class="title-wrapper">
-                        <div class="grid-item-title">${escapeHtml(gameName)}</div>
+                        <span class="star-btn" data-id="${game.id}" style="color: ${starColor}; cursor: pointer; font-size: 1.2em;" title="Star this game">★</span>
+                        <div class="grid-item-title">${escapeHtml(game.name)}</div>
                         <div class="info-icon ${hasData ? '' : 'disabled'}" title="${hasData ? 'View Game Details' : 'No Data Available'}">i</div>
                     </div>
-                    ${developer ? `<div class="grid-item-dev">${escapeHtml(developer)}</div>` : ''}
+                    ${game.developer ? `<div class="grid-item-dev">${escapeHtml(game.developer)}</div>` : ''}
                 `;
                 
+                // Star Click Logic
+                const starBtn = gridItem.querySelector('.star-btn');
+                starBtn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    if (!cachedSession.discordId) return alert('Must be signed in to star games!');
+                    
+                    // Optimistic UI Update
+                    const currentlyStarred = userStarredGames.includes(game.id);
+                    if (currentlyStarred) {
+                        userStarredGames = userStarredGames.filter(id => id !== game.id);
+                        starBtn.style.color = '#555';
+                    } else {
+                        userStarredGames.push(game.id);
+                        starBtn.style.color = '#ffc107';
+                    }
+                    updateGrid(allGames); // Re-sort visually
+
+                    // Background API call
+                    await fetch('/api/user/star', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ gameId: game.id })
+                    });
+                });
+
                 const infoBtn = gridItem.querySelector('.info-icon');
                 infoBtn.addEventListener('click', (e) => {
                     e.stopPropagation(); 
-                    if (hasData) {
-                        openGameModal(typeof game === 'object' ? game : { name: gameName }, gridItem);
-                    }
+                    if (hasData) openGameModal(game, gridItem);
                 });
                 
-                gridItem.addEventListener('click', () => {
-                    if (game.id && hasData) {
-                        window.location.href = `/games/${game.id}`;
-                    }
-                });
-                
+                gridItem.addEventListener('click', () => { if (game.id && hasData) window.location.href = `/games/${game.id}`; });
                 gameGrid.appendChild(gridItem);
             });
+            
+            // Append Suggest Card logic here...
+        }
+
+        // Search Bar Toggle Logic
+        document.getElementById('searchToggle').addEventListener('click', () => {
+            const input = document.getElementById('searchInput');
+            if (input.style.width === '0px' || input.style.width === '') {
+                input.style.width = '100%';
+                input.style.opacity = '1';
+                input.style.padding = '12px 20px';
+                input.focus();
+            } else {
+                input.style.width = '0';
+                input.style.opacity = '0';
+                input.style.padding = '12px 0';
+                input.value = '';
+                searchGames('');
+            }
+        });
+
+        document.getElementById('tagFilter').addEventListener('change', () => {
+            updateGrid(allGames);
+        });
+
+        // Better Age Ratings logic for the Info Modal
+        function openGameModal(game, cardElement) {
+            // ... existing positional logic ...
+            const esrbMap = { 'E': 'E (Everyone)', 'T': 'T (Teen)', 'M': 'M (Mature 17+)' };
+            modalAge.textContent = esrbMap[game.ratings?.age] || (game.ratings?.age || 'N/A');
+            // ...
         }
 
         const escapeHtml = (text) => {
