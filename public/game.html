@@ -346,10 +346,14 @@
                     <h2>Loading content...</h2>
                 </div>
             </div>
-            <div class="leaderboard-sidebar" id="leaderboardSidebar" style="margin-top: 20px;">
+            <div class="leaderboard-sidebar" id="leaderboardSidebar" style="margin-top: 20px; display: flex; flex-direction: column;">
                 <div class="lb-header" style="background:#4C3A90;">Game Leaderboard</div>
-            <div id="gameLeaderboardList">Loading game ranks...</div>
-        </div>
+                <div id="gameLeaderboardList" style="flex-grow: 1; overflow-y: auto; margin-bottom: 10px; padding-right: 5px;">
+                    <div class="lb-row" style="justify-content:center;color:#ccc;">Loading game ranks...</div>
+                </div>
+                <!-- Pinned User Rank Container -->
+                <div id="userGameRankContainer"></div>
+            </div>
     </div>
 
     <!-- Shared Logic -->
@@ -485,7 +489,7 @@
                     return;
                 }
                 
-                let html = data.top10.map((u, i) => `
+                list.innerHTML = data.top10.map((u, i) => `
                     <div class="lb-row">
                         <div style="font-weight:bold; color:#7A6BB5; width:25px;">#${i+1}</div>
                         <img src="${u.avatar ? `https://cdn.discordapp.com/avatars/${u.discordId}/${u.avatar}.png` : '/Assets/placeholder.png'}" class="lb-avatar">
@@ -494,17 +498,17 @@
                     </div>
                 `).join('');
 
-                if (data.userRank && data.userRank.rank > 10) {
-                    html += `<hr style="border:1px solid #3a3a45; margin:10px 0;">`;
-                    html += `
-                    <div class="lb-row" style="border-color:#7A6BB5;">
+                const userRankContainer = document.getElementById('userGameRankContainer');
+                if (data.userRank) {
+                    userRankContainer.innerHTML = `
+                    <div style="width: 100%; height: 2px; background-color: #3a3a45; margin: 10px 0;"></div>
+                    <div class="lb-row" style="border-color:#7A6BB5; margin-bottom: 0;">
                         <div style="font-weight:bold; color:#7A6BB5; width:25px;">#${data.userRank.rank}</div>
                         <img src="${data.userRank.avatar ? `https://cdn.discordapp.com/avatars/${data.userRank.discordId}/${data.userRank.avatar}.png` : '/Assets/placeholder.png'}" class="lb-avatar">
                         <div class="lb-info"><div class="lb-name">You (${data.userRank.username})</div></div>
                         <div class="lb-score">${data.userRank.points} pts</div>
                     </div>`;
                 }
-                list.innerHTML = html;
             } catch (e) { 
                 document.getElementById('leaderboardList') 
                     ? document.getElementById('leaderboardList').innerHTML = '<div class="lb-row" style="justify-content:center;color:#ccc;font-weight:bold;">NEW! Could be you!</div>'
@@ -613,7 +617,6 @@
 
                 contentArea.innerHTML = `
                     <h2>${config.title}</h2>
-                    ${miniFocusHtml}
                     ${filterHtml}
                     <div class="items-list">
                         ${cardsHtml || '<p style="color: #888;">No items match this filter.</p>'}
@@ -665,6 +668,8 @@
                 } else {
                     redeemBtn.style.display = 'none';
                 }
+                
+                loadGameLeaderboard();
                 
                 contentArea.style.transition = 'opacity 0.2s ease';
                 renderTabs();
