@@ -500,6 +500,26 @@
             document.title = `Nurture | ${gameData.name} - ${currentSection.toUpperCase()}`;
             contentArea.style.opacity = 0.5;
             
+            const mfContainer = document.getElementById('miniFocusContainer');
+
+            // ONLY show on the 'guides' section
+            if (currentSection === 'guides' && gameData.mini_focuses && gameData.mini_focuses.length > 0) {
+                mfContainer.style.display = 'grid';
+                
+                mfContainer.innerHTML = gameData.mini_focuses.map(focus => `
+                    <a href="${focus.url}" target="_blank" style="display: flex; align-items: center; gap: 15px; background: linear-gradient(135deg, #4C3A90 0%, #2a2a35 100%); padding: 18px; border-radius: 12px; text-decoration: none; border: 1px solid #7A6BB5;">
+                        <img src="${focus.icon || '/Assets/placeholder.png'}" style="width: 50px; height: 50px; border-radius: 8px; object-fit: cover; border: 1px solid #3a3a45;">
+                        <div>
+                            <div style="font-weight: bold; font-size: 1.1em; color: #fff; margin-bottom: 4px;">${focus.title}</div>
+                            <div style="font-size: 0.85em; color: #ccc;">${focus.description}</div>
+                        </div>
+                    </a>
+                `).join('');
+            } else {
+                // Hide entirely on Overview, Assets, Communities, and Mods
+                mfContainer.style.display = 'none';
+            }
+
             setTimeout(() => {
                 if (currentSection === 'overview') {
                     let overviewHtml = `

@@ -416,22 +416,27 @@
 
     <div class="main-wrapper" id="mainWrapper">
         <div style="flex-grow: 1;">
-            <div class="search-container" style="display: flex; gap: 10px; justify-content: center; align-items: center; max-width: 800px;">
-                <!-- Tag Filter -->
-                <select id="tagFilter" class="filter-btn" style="padding: 12px; border-radius: 20px; outline: none;">
-                    <option value="All">All Tags</option>
-                    <option value="RPG">RPG</option>
-                    <option value="Gacha">Gacha</option>
-                    <option value="Tower Defense">Tower Defense</option>
-                    <option value="Action">Action</option>
-                    <option value="Rhythm">Rhythm</option>
-                </select>
-
-                <!-- Expanding Search -->
+            <div class="search-container" style="display: flex; gap: 10px; justify-content: center; align-items: center; max-width: 800px; margin: 0 auto 20px auto;">
+                <!-- Expanding Search with Magnifying Glass -->
                 <div style="position: relative; display: flex; align-items: center; flex-grow: 1;">
-                    <button id="searchToggle" style="background: none; border: none; color: #aaa; font-size: 1.5em; cursor: pointer; padding: 0 10px; z-index: 10;">🔍</button>
+                    <button id="searchToggle" style="background: none; border: none; cursor: pointer; padding: 0 10px; z-index: 10;" title="Toggle Search">
+                        <svg viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: #aaa;">
+                            <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                        </svg>
+                    </button>
                     <input type="text" class="search-input" placeholder="Search games..." id="searchInput" style="width: 0; opacity: 0; padding: 12px 0; transition: all 0.3s ease; flex-grow: 0;">
                 </div>
+                
+                <!-- Tags dropdown -->
+                <select id="tagFilter" style="padding: 12px; border-radius: 20px; outline: none; background: #2a2a35; color: white; border: 2px solid #333; cursor: pointer;">
+                    <option value="All">All Tags</option>
+                    <option value="RPG">RPG</option>
+                    <option value="Action">Action</option>
+                    <option value="Turn-Based">Turn-Based</option>
+                    <option value="Tower Defense">Tower Defense</option>
+                    <option value="Rhythm">Rhythm</option>
+                    <option value="City Builder">City Builder</option>
+                </select>
             </div>
             <div class="grid-container" id="gameGrid">
             </div>
@@ -707,7 +712,7 @@
                     </div>
                     ${game.developer ? `<div class="grid-item-dev">${escapeHtml(game.developer)}</div>` : ''}
                 `;
-                
+
                 // Star Click Logic
                 const starBtn = gridItem.querySelector('.star-btn');
                 starBtn.addEventListener('click', async (e) => {
@@ -731,6 +736,28 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ gameId: game.id })
                     });
+                });
+
+                const selectedTag = document.getElementById('tagFilter').value;
+                let filteredGames = games;
+
+                // Fix: Safely check if tags array exists before filtering
+                if (selectedTag !== 'All') {
+                    filteredGames = games.filter(g => g.tags && g.tags.includes(selectedTag));
+                }
+
+                // Fix: Alphabetical Star Sorting
+                filteredGames.sort((a, b) => {
+                    const aStar = userStarredGames.includes(a.id) ? 1 : 0;
+                    const bStar = userStarredGames.includes(b.id) ? 1 : 0;
+
+                    // Starred vs Unstarred
+                    if (aStar !== bStar) {
+                        return bStar - aStar; 
+                    }
+                    
+                    // Fallback: Alphabetical order for both groups
+                    return a.name.localeCompare(b.name);
                 });
 
                 const infoBtn = gridItem.querySelector('.info-icon');

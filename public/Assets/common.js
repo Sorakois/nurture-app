@@ -1,21 +1,10 @@
 // Background Animation Logic (GSAP 3)
 function animateWithRandomNumber(myClass, from, to) {
     if (typeof gsap === 'undefined') return;
-    gsap.fromTo(myClass, 
-        { y: from }, 
-        { 
-            duration: Math.floor((Math.random() * 20) + 1), 
-            y: to, 
-            ease: "none", 
-            onComplete: animateWithRandomNumber, 
-            onCompleteParams: [myClass, from, to] 
-        }
-    );
+    gsap.fromTo(myClass, { y: from }, { duration: Math.floor((Math.random() * 20) + 1), y: to, ease: "none", onComplete: animateWithRandomNumber, onCompleteParams: [myClass, from, to] });
 }
-
 const itemsDown = [".light4", ".light5", ".light6", ".light7", ".light8", ".light11", ".light12", ".light13", ".light14", ".light15", ".light16"];
 itemsDown.forEach(e => animateWithRandomNumber(e, -1080, 1080));
-
 const itemsUp = [".light1", ".light2", ".light3", ".light9", ".light10", ".light17"];
 itemsUp.forEach(e => animateWithRandomNumber(e, 1080, -1080));
 
@@ -26,13 +15,11 @@ function renderLoggedOutUI(container) {
             <img src="https://cdn.simpleicons.org/discord/ffffff" alt="Discord Icon">
             <span class="sub-text">Sign in with Discord</span>
         </a>
-        <a href="https://discord.gg/nurture" target="_blank" rel="noopener noreferrer" class="social-button nurture-discord-button">
-            <img src="/Assets/nurture_icon.png" alt="Nurture Discord">
-            <span class="sub-text">Nurture Discord</span>
+        <a href="https://discord.gg/nurture" target="_blank" class="social-button nurture-discord-button">
+            <img src="/Assets/nurture_icon.png" alt="Nurture Discord"><span class="sub-text">Nurture Discord</span>
         </a>
-        <a href="https://ko-fi.com/sorakoi" target="_blank" rel="noopener noreferrer" class="social-button kofi-button">
-            <img src="/Assets/kofi_icon.png" alt="Ko-fi Icon">
-            <span class="sub-text">Ko-fi</span>
+        <a href="https://ko-fi.com/sorakoi" target="_blank" class="social-button kofi-button">
+            <img src="/Assets/kofi_icon.png" alt="Ko-fi Icon"><span class="sub-text">Ko-fi</span>
         </a>
     `;
 }
@@ -42,33 +29,57 @@ function renderLoggedInUI(container, user) {
         ? `https://cdn.discordapp.com/avatars/${user.discordId}/${user.avatar}.png` 
         : 'https://cdn.discordapp.com/embed/avatars/0.png';
 
-    // Only generate the Discord button HTML if they are NOT in the server
     const nurtureDiscordButton = user.isNurtureMember ? '' : `
-        <a href="https://discord.gg/nurture" target="_blank" rel="noopener noreferrer" class="social-button nurture-discord-button">
+        <a href="https://discord.gg/nurture" target="_blank" class="social-button nurture-discord-button">
             <img src="/Assets/nurture_icon.png" alt="Nurture Discord">
             <span class="sub-text">Nurture Discord</span>
         </a>
     `;
 
+    // High-quality SVG icons
+    const mailboxSvg = `
+        <svg viewBox="0 0 24 24" style="width: 24px; height: 24px; margin-right: 8px; fill: white;">
+            <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+        </svg>
+    `;
+    const settingsSvg = `
+        <svg viewBox="0 0 24 24" style="width: 24px; height: 24px; margin-right: 8px; fill: white;">
+            <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.06-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.73,8.87C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.06,0.94l-2.03,1.58c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.43-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.49-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
+        </svg>
+    `;
+
     container.innerHTML = `
         <div class="user-profile-badge">
-            <img src="${avatarUrl}" alt="Avatar" class="user-avatar">
+            <img src="${avatarUrl}" class="user-avatar">
             <span class="user-name">${user.username}</span>
             <a href="/auth/logout" class="sign-out-btn" onclick="clearCachedAuth()">Sign Out</a>
         </div>
+        
+        <button class="social-button mailbox-button" onclick="openMailboxModal()" style="border:none; cursor:pointer; font-family:inherit;">
+            ${mailboxSvg} 
+            <span class="sub-text">
+                Mailbox 
+                <span id="unreadBadge" style="display:none; background:#ff5555; border-radius:10px; padding:2px 6px; margin-left:4px;">0</span>
+            </span>
+        </button>
+        
+        <button class="social-button settings-button" onclick="openSettingsModal()" style="border:none; cursor:pointer; font-family:inherit;">
+            ${settingsSvg} 
+            <span class="sub-text">Settings</span>
+        </button>
+        
         ${nurtureDiscordButton}
-        <a href="https://ko-fi.com/sorakoi" target="_blank" rel="noopener noreferrer" class="social-button kofi-button">
-            <img src="/Assets/kofi_icon.png" alt="Ko-fi Icon">
+        
+        <a href="https://ko-fi.com/sorakoi" target="_blank" class="social-button kofi-button">
+            <img src="/Assets/kofi_icon.png" alt="Ko-fi">
             <span class="sub-text">Ko-fi</span>
         </a>
     `;
+    fetchUnreadMailCount();
 }
 
-function clearCachedAuth() {
-    localStorage.removeItem('nurture_user_session');
-}
+function clearCachedAuth() { localStorage.removeItem('nurture_user_session'); }
 
-// Instant Pre-render + Background Validation
 function initAuth() {
     const authContainer = document.getElementById('authContainer');
     if (!authContainer) return;
@@ -77,13 +88,10 @@ function initAuth() {
     if (cachedUserRaw) {
         try { renderLoggedInUI(authContainer, JSON.parse(cachedUserRaw)); } 
         catch (e) { localStorage.removeItem('nurture_user_session'); renderLoggedOutUI(authContainer); }
-    } else {
-        renderLoggedOutUI(authContainer);
-    }
+    } else { renderLoggedOutUI(authContainer); }
 
     fetch('/api/auth/me')
         .then(res => {
-            // ONLY wipe cache if the server explicitly says "Unauthorized"
             if (res.status === 401) {
                 localStorage.removeItem('nurture_user_session');
                 renderLoggedOutUI(authContainer);
@@ -96,41 +104,9 @@ function initAuth() {
                 localStorage.setItem('nurture_user_session', JSON.stringify(data.user));
                 renderLoggedInUI(authContainer, data.user);
             }
-        })
-        .catch(() => { /* Ignore network timeouts/cold starts, keep user logged in via cache */ });
+        }).catch(() => {});
 }
-
-// --- MAILBOX & SETTINGS UI INJECTION ---
-function renderLoggedInUI(container, user) {
-    const avatarUrl = user.avatar 
-        ? `https://cdn.discordapp.com/avatars/${user.discordId}/${user.avatar}.png` 
-        : 'https://cdn.discordapp.com/embed/avatars/0.png';
-
-    const nurtureDiscordButton = user.isNurtureMember ? '' : `
-        <a href="https://discord.gg/nurture" target="_blank" rel="noopener noreferrer" class="social-button nurture-discord-button">
-            <img src="/Assets/nurture_icon.png" alt="Nurture Discord">
-            <span class="sub-text">Nurture Discord</span>
-        </a>
-    `;
-
-    container.innerHTML = `
-        <div class="user-profile-badge">
-            <img src="${avatarUrl}" alt="Avatar" class="user-avatar">
-            <span class="user-name">${user.username}</span>
-            <a href="/auth/logout" class="sign-out-btn" onclick="clearCachedAuth()">Sign Out</a>
-        </div>
-        <button class="mailbox-icon-btn" onclick="openMailboxModal()" title="Mailbox">
-            📬 <span id="unreadBadge" class="unread-badge" style="display:none;">0</span>
-        </button>
-        <button class="settings-icon-btn" onclick="openSettingsModal()" title="Settings">⚙️</button>
-        ${nurtureDiscordButton}
-        <a href="https://ko-fi.com/sorakoi" target="_blank" rel="noopener noreferrer" class="social-button kofi-button">
-            <img src="/Assets/kofi_icon.png" alt="Ko-fi Icon">
-            <span class="sub-text">Ko-fi</span>
-        </a>
-    `;
-    fetchUnreadMailCount();
-}
+document.addEventListener('DOMContentLoaded', initAuth);
 
 async function fetchUnreadMailCount() {
     try {
@@ -139,39 +115,30 @@ async function fetchUnreadMailCount() {
         const mail = await res.json();
         const unread = mail.filter(m => !m.read && m.direction === 'INBOUND').length;
         const badge = document.getElementById('unreadBadge');
-        if (badge && unread > 0) {
-            badge.textContent = unread;
-            badge.style.display = 'inline-block';
-        }
+        if (badge && unread > 0) { badge.textContent = unread; badge.style.display = 'inline-block'; }
     } catch (e) {}
 }
 
-// Global modals injection for Mailbox & Settings
 document.addEventListener('DOMContentLoaded', () => {
     const modalWrapper = document.createElement('div');
     modalWrapper.innerHTML = `
-        <!-- Mailbox Modal -->
         <div id="mailboxModal" class="modal-overlay">
             <div class="modal-window" style="max-width: 600px;">
                 <button class="modal-close" onclick="closeMailboxModal()">×</button>
                 <h2 class="modal-title">📬 User Mailbox</h2>
                 <div id="mailboxContent" style="max-height: 350px; overflow-y: auto; margin-bottom: 15px;">Loading messages...</div>
-                <button class="filter-btn active" onclick="openComposeModal()">Compose New Message to Staff</button>
+                <button style="width:100%; padding:10px; background:#4C3A90; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="openComposeModal()">Compose New Message to Staff</button>
             </div>
         </div>
-
-        <!-- Compose Modal -->
         <div id="composeModal" class="modal-overlay">
             <div class="modal-window" style="max-width: 500px;">
                 <button class="modal-close" onclick="closeComposeModal()">×</button>
                 <h2 class="modal-title">✉️ Message Staff</h2>
-                <input type="text" id="mailSubject" placeholder="Subject" class="search-input" style="width:100%; margin-bottom:10px;">
-                <textarea id="mailContent" placeholder="Write your message here..." style="width:100%; height:120px; background:#2a2a35; color:#fff; border:1px solid #3a3a45; border-radius:8px; padding:10px; resize:none;"></textarea>
-                <button class="filter-btn active" style="margin-top:10px; width:100%;" onclick="sendMail()">Send Message</button>
+                <input type="text" id="mailSubject" placeholder="Subject" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; color:white; box-sizing:border-box;">
+                <textarea id="mailContent" placeholder="Write your message here..." style="width:100%; height:120px; background:#2a2a35; color:#fff; border:1px solid #3a3a45; border-radius:8px; padding:10px; resize:none; box-sizing:border-box;"></textarea>
+                <button style="width:100%; margin-top:10px; padding:10px; background:#FF5E5B; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="sendMail()">Send Message</button>
             </div>
         </div>
-
-        <!-- Settings Modal -->
         <div id="settingsModal" class="modal-overlay">
             <div class="modal-window" style="max-width: 400px;">
                 <button class="modal-close" onclick="closeSettingsModal()">×</button>
@@ -182,7 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </label>
                 <label style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;">
                     <span>Leaderboard Position</span>
-                    <select id="selectLbSide" class="filter-btn" onchange="saveSettings()">
+                    <select id="selectLbSide" style="padding:6px; border-radius:6px; background:#1f1f28; color:white; border:1px solid #3a3a45;" onchange="saveSettings()">
                         <option value="right">Right Side</option>
                         <option value="left">Left Side</option>
                     </select>
@@ -191,12 +158,10 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
     `;
     document.body.appendChild(modalWrapper);
+    setTimeout(applySettings, 100);
 });
 
-function openMailboxModal() {
-    document.getElementById('mailboxModal').classList.add('active');
-    loadMailboxMessages();
-}
+function openMailboxModal() { document.getElementById('mailboxModal').classList.add('active'); loadMailboxMessages(); }
 function closeMailboxModal() { document.getElementById('mailboxModal').classList.remove('active'); }
 function openComposeModal() { document.getElementById('composeModal').classList.add('active'); }
 function closeComposeModal() { document.getElementById('composeModal').classList.remove('active'); }
@@ -208,10 +173,7 @@ async function loadMailboxMessages() {
     try {
         const res = await fetch('/api/mailbox');
         const mail = await res.json();
-        if (mail.length === 0) {
-            container.innerHTML = '<p style="color:#888; text-align:center;">Your mailbox is empty.</p>';
-            return;
-        }
+        if (!mail || mail.length === 0) { container.innerHTML = '<p style="color:#888; text-align:center;">Your mailbox is empty.</p>'; return; }
         container.innerHTML = mail.map(m => `
             <div style="background:#1f1f28; border:1px solid #3a3a45; padding:12px; border-radius:8px; margin-bottom:10px;">
                 <div style="display:flex; justify-content:space-between; font-size:0.85em; color:#aaa; margin-bottom:4px;">
@@ -221,31 +183,17 @@ async function loadMailboxMessages() {
                 <div style="color:#fff; font-size:0.95em; white-space:pre-wrap;">${m.content}</div>
             </div>
         `).join('');
-    } catch (e) {
-        container.innerHTML = '<p style="color:#ff5555;">Failed to load mailbox.</p>';
-    }
+    } catch (e) { container.innerHTML = '<p style="color:#ff5555;">Failed to load mailbox.</p>'; }
 }
 
 async function sendMail() {
     const subject = document.getElementById('mailSubject').value;
     const content = document.getElementById('mailContent').value;
     if (!content) return alert('Message content cannot be blank.');
-
     try {
-        const res = await fetch('/api/mailbox/send', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ subject, content })
-        });
-        if (res.ok) {
-            alert('Message sent successfully to Discord!');
-            closeComposeModal();
-            document.getElementById('mailSubject').value = '';
-            document.getElementById('mailContent').value = '';
-        }
-    } catch (e) {
-        alert('Failed to send message.');
-    }
+        const res = await fetch('/api/mailbox/send', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ subject, content }) });
+        if (res.ok) { alert('Message sent to Discord!'); closeComposeModal(); document.getElementById('mailSubject').value = ''; document.getElementById('mailContent').value = ''; }
+    } catch (e) { alert('Failed to send message.'); }
 }
 
 function saveSettings() {
@@ -265,5 +213,3 @@ function applySettings() {
         lbEl.style.order = lbSide === 'left' ? '-1' : '1';
     }
 }
-
-document.addEventListener('DOMContentLoaded', initAuth);

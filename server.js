@@ -278,24 +278,23 @@ app.post('/api/contribute', async (req, res) => {
 
 // --- LEADERBOARD API ROUTES ---
 
-// Website-wide Leaderboard
+// --- LEADERBOARD & MAILBOX API ROUTES ---
+
 app.get('/api/leaderboard', async (req, res) => {
     try {
         const topUsers = await User.find({})
             .sort({ totalPoints: -1 })
             .limit(10)
-            .select('username discordId avatar totalPoints contributionStreak');
+            .select('username discordId avatar totalPoints');
         res.json(topUsers);
     } catch (err) {
         res.status(500).json({ error: "Failed to fetch leaderboard" });
     }
 });
 
-// Game-Specific Leaderboard
 app.get('/api/leaderboard/game/:gameId', async (req, res) => {
     try {
         const gameId = req.params.gameId;
-        // Find users who have points mapped to this specific game ID
         const users = await User.find({ [`gamePoints.${gameId}`]: { $exists: true } })
             .sort({ [`gamePoints.${gameId}`]: -1 })
             .limit(10)
@@ -307,21 +306,39 @@ app.get('/api/leaderboard/game/:gameId', async (req, res) => {
             avatar: u.avatar,
             points: u.gamePoints.get(gameId) || 0
         }));
-
         res.json(rankedUsers);
     } catch (err) {
         res.status(500).json({ error: "Failed to fetch game leaderboard" });
     }
 });
 
-// --- MAILBOX API ROUTES ---
-
-app.get('/api/mailbox', async (req, res) => {
-    const sessionToken = req.cookies.nurture_session;
-    if (!sessionToken) return res.status(401).json({ error: "Unauthorized" });
+app.post('/api/user/star', async (req, res) => {
+    const token = req.cookies.nurture_session;
+    if (!token) return res.status(401).json({ error: 'Unauthorized' });
 
     try {
-        const decoded = jwt.verify(sessionToken, process.env.JWT_SECRET);
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const user = await User.findById(decoded.userId);
+        const { gameId } = req.body;
+
+        if (user.starredGames.includes(gameId)) {
+            user.starredGames = user.starredGames.filter(id => id !== gameId); 
+        } else {
+            user.starredGames.push(gameId); 
+        }
+        await user.save();
+        res.json({ success: true, starredGames: user.starredGames });
+    } catch (err) {
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+app.get('/api/mailbox', async (req, res) => {
+    const token = req.cookies.nurture_session;
+    if (!token) return res.status(401).json({ error: "Unauthorized" });
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const user = await User.findById(decoded.userId).select('mailbox');
         res.json(user.mailbox.sort((a, b) => new Date(b.date) - new Date(a.date)));
     } catch (err) {
@@ -490,26 +507,6 @@ app.get('/api/suggest/lookup', async (req, res) => {
     }
 });
 
-app.post('/api/user/star', async (req, res) => {
-    const token = req.cookies.nurture_session;
-    if (!token) return res.status(401).json({ error: 'Unauthorized' });
-
-    try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const user = await User.findById(decoded.userId);
-        const { gameId } = req.body;
-
-        if (user.starredGames.includes(gameId)) {
-            user.starredGames = user.starredGames.filter(id => id !== gameId); // Unstar
-        } else {
-            user.starredGames.push(gameId); // Star
-        }
-        await user.save();
-        res.json({ success: true, starredGames: user.starredGames });
-    } catch (err) {
-        res.status(500).json({ error: 'Server error' });
-    }
-});
 
 app.get('/auth/discord/callback', async (req, res) => {
     const code = req.query.code;
