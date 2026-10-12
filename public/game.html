@@ -322,25 +322,31 @@
         <a href="/" style="color: #aaa; text-decoration: none; display: inline-block; margin-bottom: 20px;">
             ← Back to All Games
         </a>
+        <div style="display: flex; max-width: 1300px; margin: 0 auto; gap: 20px; padding: 0 20px;">
+            <div style="flex-grow: 1;">
+                <div class="game-header">
+                    <div class="header-left">
+                        <img src="/Assets/placeholder.png" alt="Game Icon" id="gameIcon">
+                        <div>
+                            <h1 class="game-title" id="gameTitle">Loading...</h1>
+                            <p class="game-dev" id="gameDev">-</p>
+                        </div>
+                    </div>
 
-        <div class="game-header">
-            <div class="header-left">
-                <img src="/Assets/placeholder.png" alt="Game Icon" id="gameIcon">
-                <div>
-                    <h1 class="game-title" id="gameTitle">Loading...</h1>
-                    <p class="game-dev" id="gameDev">-</p>
+                    <a href="#" target="_blank" id="redeemCodesBtn" class="redeem-btn" style="display: none;" title="Active Redeem Codes">
+                        <img src="/Assets/ticket.png" alt="Redeem Codes">
+                    </a>
+                </div>
+
+                <div class="sub-nav" id="tabMenu"></div>
+
+                <div class="content-area" id="dynamicContent">
+                    <h2>Loading content...</h2>
                 </div>
             </div>
-
-            <a href="#" target="_blank" id="redeemCodesBtn" class="redeem-btn" style="display: none;" title="Active Redeem Codes">
-                <img src="/Assets/ticket.png" alt="Redeem Codes">
-            </a>
-        </div>
-
-        <div class="sub-nav" id="tabMenu"></div>
-
-        <div class="content-area" id="dynamicContent">
-            <h2>Loading content...</h2>
+            <div class="leaderboard-sidebar" style="margin-top: 20px;">
+                <div class="lb-header" style="background:#4C3A90;">Game Leaderboard</div>
+            <div id="gameLeaderboardList">Loading game ranks...</div>
         </div>
     </div>
 
@@ -466,7 +472,26 @@
                 </div>
             `;
         }
-
+        async function loadGameLeaderboard() {
+            try {
+                const res = await fetch(`/api/leaderboard/game/${gameId}`);
+                const data = await res.json();
+                const list = document.getElementById('gameLeaderboardList');
+                if (data.length === 0) {
+                    list.innerHTML = '<p style="color:#888; font-size:0.85em; text-align:center;">No contributors yet.</p>';
+                    return;
+                }
+                list.innerHTML = data.map(u => `
+                    <div class="lb-row">
+                        <img src="${u.avatar ? `https://cdn.discordapp.com/avatars/${u.discordId}/${u.avatar}.png` : '/Assets/placeholder.png'}" class="lb-avatar">
+                        <div class="lb-info">
+                            <div class="lb-name">${u.username}</div>
+                        </div>
+                        <div class="lb-score">${u.points}</div>
+                    </div>
+                `).join('');
+            } catch(e) {}
+        }
         function renderContent() {
             if (!gameData) return;
             

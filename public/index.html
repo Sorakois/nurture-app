@@ -16,6 +16,44 @@
     <script defer src="/_vercel/insights/script.js"></script>
 
     <style>
+    .main-wrapper {
+        display: flex;
+        max-width: 1400px;
+        margin: 0 auto;
+        gap: 20px;
+        padding: 20px;
+    }
+    .leaderboard-sidebar {
+        width: 280px;
+        background-color: #2a2a35;
+        border: 1px solid #3a3a45;
+        border-radius: 12px;
+        padding: 20px;
+        height: fit-content;
+    }
+    .lb-header {
+        background-color: #FF5E5B;
+        color: white;
+        text-align: center;
+        padding: 10px;
+        border-radius: 8px;
+        font-weight: bold;
+        margin-bottom: 15px;
+    }
+    .lb-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: #1f1f28;
+        padding: 8px 12px;
+        border-radius: 8px;
+        margin-bottom: 8px;
+        border: 1px solid #3a3a45;
+    }
+    .lb-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
+    .lb-info { flex-grow: 1; overflow: hidden; }
+    .lb-name { font-size: 0.85em; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .lb-score { color: #ffc107; font-weight: bold; font-size: 0.9em; }
         .about-us {
             text-align: center;
             padding: 40px;
@@ -376,9 +414,19 @@
         </p>
     </div>
 
-    <div class="search-container">
-        <input type="text" class="search-input" placeholder="Search games..." id="searchInput">
-        <div class="suggestions" id="suggestions"></div>
+    <div class="main-wrapper" id="mainWrapper">
+        <div style="flex-grow: 1;">
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="Search games..." id="searchInput">
+            </div>
+            <div class="grid-container" id="gameGrid"></div>
+        </div>
+        
+        <!-- Right Sidebar Leaderboard -->
+        <div class="leaderboard-sidebar" id="leaderboardSidebar">
+            <div class="lb-header">Top Contributors</div>
+            <div id="leaderboardList">Loading ranks...</div>
+        </div>
     </div>
 
     <div class="grid-container" id="gameGrid"></div>
@@ -687,6 +735,17 @@
         });
 
         window.addEventListener('online', () => loadGames());
+
+        const suggestCard = document.createElement('div');
+        suggestCard.className = 'grid-item';
+        suggestCard.style.border = '2px dashed #7A6BB5';
+        suggestCard.innerHTML = `
+            <div style="height: 140px; display: flex; align-items: center; justify-content: center; font-size: 3em;">➕</div>
+            <div class="title-wrapper"><div class="grid-item-title">Suggest a Game</div></div>
+            <div class="grid-item-dev">Don't see your game?</div>
+        `;
+        suggestCard.addEventListener('click', openSuggestGameModal);
+        gameGrid.appendChild(suggestCard);
 
         const scrollTrigger = document.createElement('div');
         scrollTrigger.style.height = '20px';

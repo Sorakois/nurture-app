@@ -43,7 +43,15 @@ const validateInput = {
 const hasGameData = (game) => {
     return !!(game.overview_text || (game.guides && game.guides.length) || (game.assets && game.assets.length) || (game.communities && game.communities.length) || (game.mods && game.mods.length) || game.trailer_id || game.ratings);
 };
-
+// Helper to strip empty arrays so the frontend properly grays out inactive games
+const cleanEmptyArrays = (game) => {
+    if (game.guides && game.guides.length === 0) delete game.guides;
+    if (game.assets && game.assets.length === 0) delete game.assets;
+    if (game.communities && game.communities.length === 0) delete game.communities;
+    if (game.mods && game.mods.length === 0) delete game.mods;
+    if (game.mini_focuses && game.mini_focuses.length === 0) delete game.mini_focuses;
+    return game;
+};
 // --- API ROUTES ---
 
 app.get('/api/games', async (req, res) => {
@@ -63,7 +71,7 @@ app.get('/api/games', async (req, res) => {
             return a.name.localeCompare(b.name);
         });
 
-        const paginatedGames = allGames.slice(startIndex, startIndex + limit);
+        const paginatedGames = allGames.slice(startIndex, startIndex + limit).map(cleanEmptyArrays);
 
         res.json({
             games: paginatedGames,
@@ -105,7 +113,7 @@ app.get('/api/games/search/:term', async (req, res) => {
                 { developer: { $regex: sanitizedTerm,$options: 'i' } }
             ]
         }).limit(10).lean();
-        res.json(results);
+        res.json(results.map(cleanEmptyArrays));
     } catch (err) {
         console.error("Search error:", err);
         res.status(500).json({ error: "Database error" });
@@ -265,6 +273,178 @@ app.post('/api/contribute', async (req, res) => {
     } catch (err) {
         console.error("Contribution error:", err);
         res.status(500).json({ error: "Failed to process contribution." });
+    }
+});
+
+// --- LEADERBOARD API ROUTES ---
+
+// Website-wide Leaderboard
+app.get('/api/leaderboard', async (req, res) => {
+    try {
+        const topUsers = await User.find({})
+            .sort({ totalPoints: -1 })
+            .limit(10)
+            .select('username discordId avatar totalPoints contributionStreak');
+        res.json(topUsers);
+    } catch (err) {
+        res.status(500).json({ error: "Failed to fetch leaderboard" });
+    }
+});
+
+// Game-Specific Leaderboard
+app.get('/api/leaderboard/game/:gameId', async (req, res) => {
+    try {
+        const gameId = req.params.gameId;
+        // Find users who have points mapped to this specific game ID
+        const users = await User.find({ [`gamePoints.${gameId}`]: { $exists: true } })
+            .sort({ [`gamePoints.${gameId}`]: -1 })
+            .limit(10)
+            .select('username discordId avatar gamePoints');
+
+        const rankedUsers = users.map(u => ({
+            username: u.username,
+            discordId: u.discordId,
+            avatar: u.avatar,
+            points: u.gamePoints.get(gameId) || 0
+        }));
+
+        res.json(rankedUsers);
+    } catch (err) {
+        res.status(500).json({ error: "Failed to fetch game leaderboard" });
+    }
+});
+
+// --- MAILBOX API ROUTES ---
+
+app.get('/api/mailbox', async (req, res) => {
+    const sessionToken = req.cookies.nurture_session;
+    if (!sessionToken) return res.status(401).json({ error: "Unauthorized" });
+
+    try {
+        const decoded = jwt.verify(sessionToken, process.env.JWT_SECRET);
+        const user = await User.findById(decoded.userId).select('mailbox');
+        res.json(user.mailbox.sort((a, b) => new Date(b.date) - new Date(a.date)));
+    } catch (err) {
+        res.status(500).json({ error: "Failed to fetch mailbox" });
+    }
+});
+
+app.post('/api/mailbox/send', async (req, res) => {
+    const sessionToken = req.cookies.nurture_session;
+    if (!sessionToken) return res.status(401).json({ error: "Unauthorized" });
+
+    try {
+        const decoded = jwt.verify(sessionToken, process.env.JWT_SECRET);
+        const user = await User.findById(decoded.userId);
+        const { subject, content } = req.body;
+
+        // 1. Push to user's local mailbox as OUTBOUND
+        user.mailbox.push({
+            direction: 'OUTBOUND',
+            subject: subject || 'User Inquiry',
+            content
+        });
+        await user.save();
+
+        // 2. Forward to Discord suggestion channel
+        const discordPayload = {
+            embeds: [{
+                title: `📩 Mail from User: ${user.username} (${user.discordId})`,
+                description: `**Subject:** ${subject}\n\n${content}`,
+                color: 0x5865F2
+            }]
+        };
+
+        await axios.post(`https://discord.com/api/v10/channels/1559219529593397279/messages`, discordPayload, {
+            headers: { 'Authorization': `Bot ${process.env.DISCORD_BOT_TOKEN}`, 'Content-Type': 'application/json' }
+        });
+
+        res.json({ success: true, mailbox: user.mailbox });
+    } catch (err) {
+        console.error("Mailbox send error:", err);
+        res.status(500).json({ error: "Failed to send message" });
+    }
+});
+
+// --- UPDATED DISCORD INTERACTIONS (APPROVE / DENY LOGIC) ---
+app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY), async (req, res) => {
+    const interaction = req.body;
+    if (interaction.type === InteractionType.PING) return res.send({ type: InteractionResponseType.PONG });
+
+    if (interaction.type === InteractionType.MESSAGE_COMPONENT) {
+        const [action, contributionId] = interaction.data.custom_id.split('_');
+        try {
+            const contribution = await Contribution.findById(contributionId);
+            if (!contribution) return res.send({ type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE, data: { content: "Contribution not found.", flags: 64 } });
+
+            const user = await User.findOne({ discordId: contribution.submitterDiscordId });
+
+            if (action === 'approve' || action === 'tweak_approve') {
+                contribution.status = 'approved';
+                await contribution.save();
+
+                // Apply changes to Game database based on actionType (CREATE, EDIT, DELETE)
+                if (contribution.gameId) {
+                    const game = await Game.findOne({ id: contribution.gameId });
+                    if (game) {
+                        const catArray = game[contribution.itemCategory.toLowerCase() + 's'] || game[contribution.itemCategory.toLowerCase()];
+                        if (contribution.actionType === 'CREATE') {
+                            catArray.push({ ...contribution.data, _id: new mongoose.Types.ObjectId() });
+                        } else if (contribution.actionType === 'EDIT') {
+                            const idx = catArray.findIndex(item => item._id.toString() === contribution.targetIdentifier || item.title === contribution.targetIdentifier);
+                            if (idx !== -1) catArray[idx] = { ...catArray[idx], ...contribution.data };
+                        } else if (contribution.actionType === 'DELETE') {
+                            const idx = catArray.findIndex(item => item._id.toString() === contribution.targetIdentifier || item.title === contribution.targetIdentifier);
+                            if (idx !== -1) catArray.splice(idx, 1);
+                        }
+                        await game.save();
+                    }
+                } else if (contribution.actionType === 'CREATE' && contribution.itemCategory === 'Game') {
+                    await Game.create(contribution.data);
+                }
+
+                // Award points and streak
+                if (user) {
+                    user.totalPoints += 50;
+                    if (contribution.gameId) {
+                        const currentPoints = user.gamePoints.get(contribution.gameId) || 0;
+                        user.gamePoints.set(contribution.gameId, currentPoints + 50);
+                    }
+                    user.mailbox.push({
+                        direction: 'INBOUND',
+                        subject: 'Contribution Approved! (+50 pts)',
+                        content: `Your submission for ${contribution.itemCategory} was approved by an admin!`
+                    });
+                    await user.save();
+                }
+
+                return res.send({
+                    type: InteractionResponseType.UPDATE_MESSAGE,
+                    data: { content: `✅ **Approved by <@${interaction.member.user.id}>**`, components: [] }
+                });
+            }
+
+            if (action === 'deny') {
+                contribution.status = 'rejected';
+                await contribution.save();
+
+                if (user) {
+                    user.mailbox.push({
+                        direction: 'INBOUND',
+                        subject: 'Contribution Denied',
+                        content: `Your submission for ${contribution.itemCategory} was reviewed and rejected.`
+                    });
+                    await user.save();
+                }
+
+                return res.send({
+                    type: InteractionResponseType.UPDATE_MESSAGE,
+                    data: { content: `❌ **Denied by <@${interaction.member.user.id}>**`, components: [] }
+                });
+            }
+        } catch (err) {
+            console.error("Interaction handler error:", err);
+        }
     }
 });
 
