@@ -417,17 +417,23 @@
     <div class="main-wrapper" id="mainWrapper">
         <div style="flex-grow: 1;">
             <div class="search-container" style="display: flex; gap: 10px; justify-content: center; align-items: center; max-width: 800px; margin: 0 auto 20px auto;">
-                <!-- Expanding Search with Magnifying Glass -->
                 <div style="position: relative; display: flex; align-items: center; flex-grow: 1;">
                     <button id="searchToggle" style="background: none; border: none; cursor: pointer; padding: 0 10px; z-index: 10;" title="Toggle Search">
-                        <svg viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: #aaa;">
-                            <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
-                        </svg>
+                        <svg viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: #aaa;"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
                     </button>
-                    <input type="text" class="search-input" placeholder="Search games..." id="searchInput" style="width: 0; opacity: 0; padding: 12px 0; transition: all 0.3s ease; flex-grow: 0;">
+                    <input type="text" class="search-input" placeholder="Search games..." id="searchInput" style="width: 100%; opacity: 1; padding: 12px 20px; transition: all 0.3s ease; flex-grow: 1;">
                 </div>
                 
-                <!-- Tags dropdown -->
+                <select id="tagFilter" style="padding: 12px; border-radius: 20px; outline: none; background: #2a2a35; color: white; border: 2px solid #333; cursor: pointer;">
+                    <option value="All">All Tags</option>
+                    <option value="RPG">RPG</option>
+                    <option value="Action">Action</option>
+                    <option value="Turn-Based">Turn-Based</option>
+                    <option value="Tower Defense">Tower Defense</option>
+                    <option value="Rhythm">Rhythm</option>
+                    <option value="City Builder">City Builder</option>
+                </select>
+            </div>
                 <select id="tagFilter" style="padding: 12px; border-radius: 20px; outline: none; background: #2a2a35; color: white; border: 2px solid #333; cursor: pointer;">
                     <option value="All">All Tags</option>
                     <option value="RPG">RPG</option>
@@ -495,34 +501,57 @@
     <!-- Page Specific Script -->
     <script>
         let allGames = [];
-        let currentPage = 1;
-        const gamesPerPage = 20;
+        let userStarredGames = [];
+        let cachedSession = JSON.parse(localStorage.getItem('nurture_user_session') || '{}');
         let isLoading = false;
         let isSearching = false;
-        let totalPages = 1;
 
-        const loadGames = async (page = 1, append = false) => {
+        async function fetchInitialData() {
+            try {
+                const lbRes = await fetch('/api/leaderboard');
+                const lbData = await lbRes.json();
+                const lbList = document.getElementById('leaderboardList');
+                
+                if (!lbData.top10 || lbData.top10.length === 0) {
+                    lbList.innerHTML = '<div class="lb-row" style="justify-content:center;color:#ccc;font-weight:bold;">NEW! Could be you!</div>';
+                } else {
+                    let html = lbData.top10.map((u, i) => `
+                        <div class="lb-row">
+                            <div style="font-weight:bold; color:#7A6BB5; width:25px;">#${i+1}</div>
+                            <img src="${u.avatar ? `https://cdn.discordapp.com/avatars/${u.discordId}/${u.avatar}.png` : '/Assets/placeholder.png'}" class="lb-avatar">
+                            <div class="lb-info"><div class="lb-name">${u.username}</div></div>
+                            <div class="lb-score">${u.totalPoints} pts</div>
+                        </div>
+                    `).join('');
+
+                    if (lbData.userRank && lbData.userRank.rank > 10) {
+                        html += `<hr style="border:1px solid #3a3a45; margin:10px 0;">`;
+                        html += `
+                        <div class="lb-row" style="border-color:#7A6BB5;">
+                            <div style="font-weight:bold; color:#7A6BB5; width:25px;">#${lbData.userRank.rank}</div>
+                            <img src="${lbData.userRank.avatar ? `https://cdn.discordapp.com/avatars/${lbData.userRank.discordId}/${lbData.userRank.avatar}.png` : '/Assets/placeholder.png'}" class="lb-avatar">
+                            <div class="lb-info"><div class="lb-name">You (${lbData.userRank.username})</div></div>
+                            <div class="lb-score">${lbData.userRank.totalPoints} pts</div>
+                        </div>`;
+                    }
+                    lbList.innerHTML = html;
+                }
+            } catch (e) { console.log("Leaderboard empty or failed"); }
+
             if (isLoading) return; 
             isLoading = true;
-
             try {
-                const data = await apiCall(`/games?page=${page}&limit=${gamesPerPage}`);
-                
+                const data = await apiCall(`/games?limit=100`);
                 if (data.games) {
-                    totalPages = data.pagination.pages; 
-                    if (append) {
-                        allGames = [...allGames, ...data.games]; 
-                    } else {
-                        allGames = data.games; 
-                    }
+                    allGames = data.games; 
                     updateGrid(allGames);
                 }
             } catch (error) {
-                showError('Failed to load games from the server.');
+                showError('Failed to load games.');
             } finally {
                 isLoading = false;
             }
-        };
+        }
 
         const searchInput = document.getElementById('searchInput');
         const gameGrid = document.getElementById('gameGrid');
@@ -668,125 +697,93 @@
                 closeGameModal();
             }
         });
-
-        // Global variables for Auth/Stars
-        let userStarredGames = [];
-        let cachedSession = JSON.parse(localStorage.getItem('nurture_user_session') || '{}');
-
         function updateGrid(games) {
             gameGrid.innerHTML = ''; 
             
-            // Filter by Tag
-            const selectedTag = document.getElementById('tagFilter').value;
+            const selectedTag = document.getElementById('tagFilter') ? document.getElementById('tagFilter').value : 'All';
             let filteredGames = games;
+            
             if (selectedTag !== 'All') {
                 filteredGames = games.filter(g => g.tags && g.tags.includes(selectedTag));
             }
 
-            // Sort: Starred games first
             filteredGames.sort((a, b) => {
                 const aStar = userStarredGames.includes(a.id) ? 1 : 0;
                 const bStar = userStarredGames.includes(b.id) ? 1 : 0;
-                return bStar - aStar;
+                if (aStar !== bStar) return bStar - aStar; 
+                return a.name.localeCompare(b.name);
             });
 
             if (filteredGames.length === 0) {
-                gameGrid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; color: white; padding: 40px;"><h3>No games found</h3></div>`;
+                gameGrid.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; color: white; padding: 40px;">
+                        <h3>No games found</h3>
+                    </div>
+                `;
                 return;
             }
 
             filteredGames.forEach(game => {
                 const gridItem = document.createElement('div');
-                const hasData = !!(game.overview_text || game.guides || game.assets || game.communities || game.mods || game.trailer_id || game.ratings);
+                const hasData = typeof game === 'object' && !!(game.overview_text || game.guides || game.assets || game.communities || game.mods || game.trailer_id || game.ratings);
                 gridItem.className = `grid-item ${hasData ? '' : 'no-data'}`;
+                
+                const gameName = typeof game === 'string' ? game : game.name;
+                const iconUrl = typeof game === 'object' && game.banner_url ? game.banner_url : '/Assets/placeholder.png';
+                const developer = typeof game === 'object' && game.developer ? game.developer : '';
                 
                 const isStarred = userStarredGames.includes(game.id);
                 const starColor = isStarred ? '#ffc107' : '#555';
 
                 gridItem.innerHTML = `
-                    <img src="${game.banner_url || '/Assets/placeholder.png'}" alt="${game.name}" loading="lazy" onerror="this.src='/Assets/placeholder.png'">
+                    <img src="${iconUrl}" alt="${gameName}" loading="lazy" onerror="this.src='/Assets/placeholder.png'">
                     <div class="title-wrapper">
-                        <span class="star-btn" data-id="${game.id}" style="color: ${starColor}; cursor: pointer; font-size: 1.2em;" title="Star this game">★</span>
-                        <div class="grid-item-title">${escapeHtml(game.name)}</div>
+                        <svg class="star-btn" data-id="${game.id}" style="width:18px;height:18px;cursor:pointer;fill:${starColor}; transition:fill 0.2s;" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                        <div class="grid-item-title">${escapeHtml(gameName)}</div>
                         <div class="info-icon ${hasData ? '' : 'disabled'}" title="${hasData ? 'View Game Details' : 'No Data Available'}">i</div>
                     </div>
-                    ${game.developer ? `<div class="grid-item-dev">${escapeHtml(game.developer)}</div>` : ''}
+                    ${developer ? `<div class="grid-item-dev">${escapeHtml(developer)}</div>` : ''}
                 `;
-
-                // Star Click Logic
+                
                 const starBtn = gridItem.querySelector('.star-btn');
                 starBtn.addEventListener('click', async (e) => {
                     e.stopPropagation();
                     if (!cachedSession.discordId) return alert('Must be signed in to star games!');
-                    
-                    // Optimistic UI Update
-                    const currentlyStarred = userStarredGames.includes(game.id);
-                    if (currentlyStarred) {
+                    if (userStarredGames.includes(game.id)) {
                         userStarredGames = userStarredGames.filter(id => id !== game.id);
-                        starBtn.style.color = '#555';
                     } else {
                         userStarredGames.push(game.id);
-                        starBtn.style.color = '#ffc107';
                     }
-                    updateGrid(allGames); // Re-sort visually
-
-                    // Background API call
-                    await fetch('/api/user/star', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ gameId: game.id })
-                    });
-                });
-
-                const selectedTag = document.getElementById('tagFilter').value;
-                let filteredGames = games;
-
-                // Fix: Safely check if tags array exists before filtering
-                if (selectedTag !== 'All') {
-                    filteredGames = games.filter(g => g.tags && g.tags.includes(selectedTag));
-                }
-
-                // Fix: Alphabetical Star Sorting
-                filteredGames.sort((a, b) => {
-                    const aStar = userStarredGames.includes(a.id) ? 1 : 0;
-                    const bStar = userStarredGames.includes(b.id) ? 1 : 0;
-
-                    // Starred vs Unstarred
-                    if (aStar !== bStar) {
-                        return bStar - aStar; 
-                    }
-                    
-                    // Fallback: Alphabetical order for both groups
-                    return a.name.localeCompare(b.name);
+                    updateGrid(allGames); 
+                    await fetch('/api/user/star', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ gameId: game.id }) });
                 });
 
                 const infoBtn = gridItem.querySelector('.info-icon');
                 infoBtn.addEventListener('click', (e) => {
                     e.stopPropagation(); 
-                    if (hasData) openGameModal(game, gridItem);
+                    if (hasData) {
+                        openGameModal(typeof game === 'object' ? game : { name: gameName }, gridItem);
+                    }
                 });
                 
-                gridItem.addEventListener('click', () => { if (game.id && hasData) window.location.href = `/games/${game.id}`; });
+                gridItem.addEventListener('click', () => {
+                    if (game.id && hasData) {
+                        window.location.href = `/games/${game.id}`;
+                    }
+                });
+                
                 gameGrid.appendChild(gridItem);
             });
-            
-            // Append Suggest Card logic here...
         }
 
         // Search Bar Toggle Logic
         document.getElementById('searchToggle').addEventListener('click', () => {
             const input = document.getElementById('searchInput');
             if (input.style.width === '0px' || input.style.width === '') {
-                input.style.width = '100%';
-                input.style.opacity = '1';
-                input.style.padding = '12px 20px';
-                input.focus();
+                input.style.width = '100%'; input.style.opacity = '1'; input.style.padding = '12px 20px'; input.focus();
             } else {
-                input.style.width = '0';
-                input.style.opacity = '0';
-                input.style.padding = '12px 0';
-                input.value = '';
-                searchGames('');
+                input.style.width = '0'; input.style.opacity = '0'; input.style.padding = '12px 0'; input.value = '';
+                updateGrid(allGames);
             }
         });
 
@@ -816,7 +813,24 @@
         const debouncedSearch = debounce(searchGames, 300);
 
         document.addEventListener('DOMContentLoaded', () => {
-            loadGames();
+            fetchInitialData();
+            
+            // Attach Tag Filter Listener
+            const tagFilter = document.getElementById('tagFilter');
+            if (tagFilter) tagFilter.addEventListener('change', () => updateGrid(allGames));
+
+            // Attach Search Toggle Listener
+            const searchToggle = document.getElementById('searchToggle');
+            if (searchToggle) {
+                searchToggle.addEventListener('click', () => {
+                    const input = document.getElementById('searchInput');
+                    if (input.style.width === '0px' || input.style.width === '') {
+                        input.style.width = '100%'; input.style.opacity = '1'; input.style.padding = '12px 20px'; input.focus();
+                    } else {
+                        input.style.width = '0'; input.style.opacity = '0'; input.style.padding = '12px 0'; input.value = ''; updateGrid(allGames);
+                    }
+                });
+            }
         });
 
         searchInput.addEventListener('input', function() {
@@ -827,43 +841,11 @@
             if (e.key === 'Escape') {
                 this.value = '';
                 isSearching = false;
-                currentPage = 1;
-                loadGames(1, false);
+                updateGrid(allGames);
             }
         });
 
-        document.addEventListener('click', function(e) {
-            if (suggestionsDiv && !suggestionsDiv.contains(e.target) && e.target !== searchInput) {
-                suggestionsDiv.style.display = 'none';
-            }
-        });
-
-        window.addEventListener('online', () => loadGames());
-
-        const suggestCard = document.createElement('div');
-        suggestCard.className = 'grid-item';
-        suggestCard.style.border = '2px dashed #7A6BB5';
-        suggestCard.innerHTML = `
-            <div style="height: 140px; display: flex; align-items: center; justify-content: center; font-size: 3em;">➕</div>
-            <div class="title-wrapper"><div class="grid-item-title">Suggest a Game</div></div>
-            <div class="grid-item-dev">Don't see your game?</div>
-        `;
-        suggestCard.addEventListener('click', openSuggestGameModal);
-        gameGrid.appendChild(suggestCard);
-
-        const scrollTrigger = document.createElement('div');
-        scrollTrigger.style.height = '20px';
-        document.body.appendChild(scrollTrigger);
-
-        const observer = new IntersectionObserver((entries) => {
-            if (entries[0].isIntersecting && !isLoading && !isSearching && currentPage < totalPages) {
-                currentPage++;
-                loadGames(currentPage, true);
-            }
-        }, { rootMargin: '200px' }); 
-        
-        //dummy comment for push edit a period = ......
-        observer.observe(scrollTrigger);
+        window.addEventListener('online', () => fetchInitialData());
     </script>
 </body>
 </html>

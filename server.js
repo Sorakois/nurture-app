@@ -276,17 +276,30 @@ app.post('/api/contribute', async (req, res) => {
     }
 });
 
-// --- LEADERBOARD API ROUTES ---
-
 // --- LEADERBOARD & MAILBOX API ROUTES ---
-
 app.get('/api/leaderboard', async (req, res) => {
     try {
-        const topUsers = await User.find({})
-            .sort({ totalPoints: -1 })
-            .limit(10)
-            .select('username discordId avatar totalPoints');
-        res.json(topUsers);
+        const allUsers = await User.find({}).sort({ totalPoints: -1 }).select('username discordId avatar totalPoints').lean();
+        const top10 = allUsers.slice(0, 10);
+        
+        let userRank = null;
+        const token = req.cookies.nurture_session;
+        if (token) {
+            try {
+                const decoded = jwt.verify(token, process.env.JWT_SECRET);
+                const userIdx = allUsers.findIndex(u => u.discordId === decoded.discordId);
+                if (userIdx !== -1) {
+                    userRank = {
+                        rank: userIdx + 1,
+                        username: allUsers[userIdx].username,
+                        avatar: allUsers[userIdx].avatar,
+                        discordId: allUsers[userIdx].discordId,
+                        totalPoints: allUsers[userIdx].totalPoints || 0
+                    };
+                }
+            } catch(e) {}
+        }
+        res.json({ top10, userRank });
     } catch (err) {
         res.status(500).json({ error: "Failed to fetch leaderboard" });
     }
@@ -295,18 +308,39 @@ app.get('/api/leaderboard', async (req, res) => {
 app.get('/api/leaderboard/game/:gameId', async (req, res) => {
     try {
         const gameId = req.params.gameId;
-        const users = await User.find({ [`gamePoints.${gameId}`]: { $exists: true } })
-            .sort({ [`gamePoints.${gameId}`]: -1 })
-            .limit(10)
-            .select('username discordId avatar gamePoints');
+        const allUsers = await User.find({}).lean();
+        
+        allUsers.sort((a, b) => {
+            const aPts = (a.gamePoints && a.gamePoints[gameId]) || 0;
+            const bPts = (b.gamePoints && b.gamePoints[gameId]) || 0;
+            return bPts - aPts;
+        });
 
-        const rankedUsers = users.map(u => ({
+        const top10 = allUsers.slice(0, 10).map(u => ({
             username: u.username,
             discordId: u.discordId,
             avatar: u.avatar,
-            points: u.gamePoints.get(gameId) || 0
+            points: (u.gamePoints && u.gamePoints[gameId]) || 0
         }));
-        res.json(rankedUsers);
+
+        let userRank = null;
+        const token = req.cookies.nurture_session;
+        if (token) {
+            try {
+                const decoded = jwt.verify(token, process.env.JWT_SECRET);
+                const userIdx = allUsers.findIndex(u => u.discordId === decoded.discordId);
+                if (userIdx !== -1) {
+                    userRank = {
+                        rank: userIdx + 1,
+                        username: allUsers[userIdx].username,
+                        avatar: allUsers[userIdx].avatar,
+                        discordId: allUsers[userIdx].discordId,
+                        points: (allUsers[userIdx].gamePoints && allUsers[userIdx].gamePoints[gameId]) || 0
+                    };
+                }
+            } catch(e) {}
+        }
+        res.json({ top10, userRank });
     } catch (err) {
         res.status(500).json({ error: "Failed to fetch game leaderboard" });
     }

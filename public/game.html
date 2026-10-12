@@ -474,25 +474,38 @@
                 </div>
             `;
         }
+        // Fetch Game Leaderboard
         async function loadGameLeaderboard() {
             try {
                 const res = await fetch(`/api/leaderboard/game/${gameId}`);
                 const data = await res.json();
                 const list = document.getElementById('gameLeaderboardList');
-                if (data.length === 0) {
+                if (!data.top10 || data.top10.length === 0) {
                     list.innerHTML = '<p style="color:#888; font-size:0.85em; text-align:center;">No contributors yet.</p>';
                     return;
                 }
-                list.innerHTML = data.map(u => `
+                
+                let html = data.top10.map((u, i) => `
                     <div class="lb-row">
+                        <div style="font-weight:bold; color:#7A6BB5; width:25px;">#${i+1}</div>
                         <img src="${u.avatar ? `https://cdn.discordapp.com/avatars/${u.discordId}/${u.avatar}.png` : '/Assets/placeholder.png'}" class="lb-avatar">
-                        <div class="lb-info">
-                            <div class="lb-name">${u.username}</div>
-                        </div>
-                        <div class="lb-score">${u.points}</div>
+                        <div class="lb-info"><div class="lb-name">${u.username}</div></div>
+                        <div class="lb-score">${u.points} pts</div>
                     </div>
                 `).join('');
-            } catch(e) {}
+
+                if (data.userRank && data.userRank.rank > 10) {
+                    html += `<hr style="border:1px solid #3a3a45; margin:10px 0;">`;
+                    html += `
+                    <div class="lb-row" style="border-color:#7A6BB5;">
+                        <div style="font-weight:bold; color:#7A6BB5; width:25px;">#${data.userRank.rank}</div>
+                        <img src="${data.userRank.avatar ? `https://cdn.discordapp.com/avatars/${data.userRank.discordId}/${data.userRank.avatar}.png` : '/Assets/placeholder.png'}" class="lb-avatar">
+                        <div class="lb-info"><div class="lb-name">You (${data.userRank.username})</div></div>
+                        <div class="lb-score">${data.userRank.points} pts</div>
+                    </div>`;
+                }
+                list.innerHTML = html;
+            } catch(e) { console.error("Game Leaderboard failed to load"); }
         }
         function renderContent() {
             if (!gameData) return;

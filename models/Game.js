@@ -8,6 +8,7 @@ const gameSchema = new mongoose.Schema({
     redeem_codes_url: { type: String },
     overview_text: { type: String },
     new_player_video_id: { type: String },
+    tags: [{ type: String }],
     ratings: {
         age: String,
         f2p: String,
