@@ -346,7 +346,7 @@
                     <h2>Loading content...</h2>
                 </div>
             </div>
-            <div class="leaderboard-sidebar" style="margin-top: 20px;">
+            <div class="leaderboard-sidebar" id="leaderboardSidebar" style="margin-top: 20px;">
                 <div class="lb-header" style="background:#4C3A90;">Game Leaderboard</div>
             <div id="gameLeaderboardList">Loading game ranks...</div>
         </div>
@@ -380,7 +380,7 @@
             
             sections.forEach(sec => {
                 const link = document.createElement('a');
-                const url = sec.id === 'overview' ? `/games/${gameId}` : `/games/${gameId}/${sec.id}`;
+                const url = sec.id === 'overview' ? `/games/${gameId}` : `/games/${gameId}?tab=${sec.id}`;
                 link.href = url;
                 link.textContent = sec.label;
                 
@@ -505,7 +505,11 @@
                     </div>`;
                 }
                 list.innerHTML = html;
-            } catch(e) { console.error("Game Leaderboard failed to load"); }
+            } catch (e) { 
+                document.getElementById('leaderboardList') 
+                    ? document.getElementById('leaderboardList').innerHTML = '<div class="lb-row" style="justify-content:center;color:#ccc;font-weight:bold;">NEW! Could be you!</div>'
+                    : document.getElementById('gameLeaderboardList').innerHTML = '<div class="lb-row" style="justify-content:center;color:#ccc;font-weight:bold;">NEW! Could be you!</div>';
+            }
         }
         function renderContent() {
             if (!gameData) return;
@@ -621,8 +625,8 @@
         }
 
         window.addEventListener('popstate', () => {
-            const parts = window.location.pathname.split('/').filter(p => p);
-            currentSection = parts[2] || 'overview';
+            const urlParams = new URLSearchParams(window.location.search);
+            let currentSection = urlParams.get('tab') || 'overview';
             renderTabs();
             renderContent();
         });

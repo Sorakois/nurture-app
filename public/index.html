@@ -434,16 +434,6 @@
                     <option value="City Builder">City Builder</option>
                 </select>
             </div>
-                <select id="tagFilter" style="padding: 12px; border-radius: 20px; outline: none; background: #2a2a35; color: white; border: 2px solid #333; cursor: pointer;">
-                    <option value="All">All Tags</option>
-                    <option value="RPG">RPG</option>
-                    <option value="Action">Action</option>
-                    <option value="Turn-Based">Turn-Based</option>
-                    <option value="Tower Defense">Tower Defense</option>
-                    <option value="Rhythm">Rhythm</option>
-                    <option value="City Builder">City Builder</option>
-                </select>
-            </div>
             <div class="grid-container" id="gameGrid">
             </div>
         </div>
@@ -536,7 +526,11 @@
                     }
                     lbList.innerHTML = html;
                 }
-            } catch (e) { console.log("Leaderboard empty or failed"); }
+            } catch (e) { 
+                document.getElementById('leaderboardList') 
+                    ? document.getElementById('leaderboardList').innerHTML = '<div class="lb-row" style="justify-content:center;color:#ccc;font-weight:bold;">NEW! Could be you!</div>'
+                    : document.getElementById('gameLeaderboardList').innerHTML = '<div class="lb-row" style="justify-content:center;color:#ccc;font-weight:bold;">NEW! Could be you!</div>';
+            }
 
             if (isLoading) return; 
             isLoading = true;
@@ -708,9 +702,17 @@
             }
 
             filteredGames.sort((a, b) => {
+                // Priority 1: Starred status
                 const aStar = userStarredGames.includes(a.id) ? 1 : 0;
                 const bStar = userStarredGames.includes(b.id) ? 1 : 0;
                 if (aStar !== bStar) return bStar - aStar; 
+                
+                // Priority 2: Has Content vs Grayed out
+                const aData = !!(a.overview_text || (a.guides && a.guides.length) || (a.assets && a.assets.length) || (a.communities && a.communities.length) || (a.mods && a.mods.length) || a.trailer_id || a.ratings) ? 1 : 0;
+                const bData = !!(b.overview_text || (b.guides && b.guides.length) || (b.assets && b.assets.length) || (b.communities && b.communities.length) || (b.mods && b.mods.length) || b.trailer_id || b.ratings) ? 1 : 0;
+                if (aData !== bData) return bData - aData;
+
+                // Priority 3: Alphabetical Fallback
                 return a.name.localeCompare(b.name);
             });
 

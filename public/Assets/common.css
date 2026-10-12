@@ -83,6 +83,10 @@ body {
     padding: 8px 16px;
     border-radius: 20px;
     text-decoration: none;
+    font-size: 16px;
+    font-family: inherit;
+    border: none;
+    cursor: pointer;
     transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
 }
 
@@ -116,11 +120,12 @@ body {
     background-color: #e04f4c;
 }
 
-.social-button img {
+.social-button img, .social-button svg {
     height: 28px;
     width: 28px;
     object-fit: contain;
     margin-right: 8px;
+    fill: white;
 }
 
 .sub-text {
@@ -189,7 +194,7 @@ body {
         padding: 5px 10px;
     }
 
-    .social-button img, .user-avatar {
+    .social-button img, .social-button svg, .user-avatar {
         height: 20px;
         width: 20px;
     }
