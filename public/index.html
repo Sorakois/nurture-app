@@ -456,6 +456,7 @@
             <div id="userRankContainer"></div>
         </div>
 
+    <!-- Main Game Info Modal -->
     <div id="gameModal" class="modal-overlay">
         <div class="modal-window" id="modalWindowContent">
             <button class="modal-close" id="closeModal">×</button>
@@ -492,16 +493,12 @@
                 </div>
             </div>
 
-            <button onclick="openEditInfoModal()" style="width:100%; margin-top:20px; padding:12px; background:#4C3A90; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; transition: background 0.2s;" onmouseover="this.style.background='#5c47ac'" onmouseout="this.style.background='#4C3A90'">✏️ Suggest Data Update</button>
+            <!-- BUTTONS MUST BE INSIDE THE modal-window DIV -->
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button onclick="openRateGameModal()" style="flex: 1; padding:12px; background:#ffc107; color:#000; border:none; border-radius:8px; font-weight:bold; cursor:pointer; transition: background 0.2s;" onmouseover="this.style.background='#e0a800'" onmouseout="this.style.background='#ffc107'">⭐ Rate Game</button>
+                <button onclick="openEditInfoModal()" style="flex: 1; padding:12px; background:#4C3A90; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; transition: background 0.2s;" onmouseover="this.style.background='#5c47ac'" onmouseout="this.style.background='#4C3A90'">✏️ Suggest Data</button>
+            </div>
         </div>
-    </div>
-
-    <!-- Suggest Info Edit Modal -->
-    <!-- Game Info Action Buttons (Inside gameModal) -->
-    <!-- Look for the single "Suggest Data Update" button near line 286 and replace it with this: -->
-    <div style="display: flex; gap: 10px; margin-top: 20px;">
-        <button onclick="openRateGameModal()" style="flex: 1; padding:12px; background:#ffc107; color:#000; border:none; border-radius:8px; font-weight:bold; cursor:pointer; transition: background 0.2s;" onmouseover="this.style.background='#e0a800'" onmouseout="this.style.background='#ffc107'">⭐ Rate Game</button>
-        <button onclick="openEditInfoModal()" style="flex: 1; padding:12px; background:#4C3A90; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; transition: background 0.2s;" onmouseover="this.style.background='#5c47ac'" onmouseout="this.style.background='#4C3A90'">✏️ Suggest Data</button>
     </div>
 
     <!-- Live Rating Modal -->
@@ -534,7 +531,7 @@
         </div>
     </div>
 
-    <!-- Suggest Info Edit Modal (Stripped of Ratings) -->
+    <!-- Suggest Info Edit Modal -->
     <div id="editInfoModal" class="modal-overlay">
         <div class="modal-window" style="max-width: 500px;">
             <button class="modal-close" onclick="document.getElementById('editInfoModal').classList.remove('active')">×</button>

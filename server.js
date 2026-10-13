@@ -70,22 +70,23 @@ const cleanEmptyArrays = (game) => {
 };
 // --- API ROUTES ---
 
+// --- API ROUTES ---
+
 app.get('/api/games', async (req, res) => {
     const page = Math.max(1, parseInt(req.query.page) || 1);
     const limit = Math.min(50, parseInt(req.query.limit) || 20);
     const startIndex = (page - 1) * limit;
 
     try {
-        const allGames = await Game.find({}).lean();
+        // Use native MongoDB driver to completely bypass Mongoose Schema stripping
+        const allGames = await Game.collection.find({}).toArray();
         
-        // Retain original sorting logic: prioritized games with populated data, then alphabetical
         allGames.sort((a, b) => {
             const aData = hasGameData(a);
             const bData = hasGameData(b);
             if (aData && !bData) return -1;
             if (!aData && bData) return 1;
             
-            // Safely fallback to an empty string if a game was saved without a name
             const aName = a.name || '';
             const bName = b.name || '';
             return aName.localeCompare(bName);
@@ -95,12 +96,7 @@ app.get('/api/games', async (req, res) => {
 
         res.json({
             games: paginatedGames,
-            pagination: {
-                page,
-                limit,
-                total: allGames.length,
-                pages: Math.ceil(allGames.length / limit)
-            }
+            pagination: { page, limit, total: allGames.length, pages: Math.ceil(allGames.length / limit) }
         });
     } catch (err) {
         console.error("Failed to fetch games:", err);
@@ -110,7 +106,8 @@ app.get('/api/games', async (req, res) => {
 
 app.get('/api/games/:id', async (req, res) => {
     try {
-        const game = await Game.findOne({ id: req.params.id }).lean();
+        // Use native driver here as well to expose hidden fields
+        const game = await Game.collection.findOne({ id: req.params.id });
         if (!game) return res.status(404).json({ error: 'Game not found' });
         res.json(game);
     } catch (err) {
@@ -121,18 +118,16 @@ app.get('/api/games/:id', async (req, res) => {
 
 app.get('/api/games/search/:term', async (req, res) => {
     const searchTerm = req.params.term;
-    if (!validateInput.isValidSearch(searchTerm)) {
-        return res.status(400).json({ error: 'Invalid search term' });
-    }
+    if (!validateInput.isValidSearch(searchTerm)) return res.status(400).json({ error: 'Invalid search term' });
     const sanitizedTerm = validateInput.sanitizeString(searchTerm);
     
     try {
-        const results = await Game.find({
+        const results = await Game.collection.find({
             $or: [
-                { name: { $regex: sanitizedTerm,$options: 'i' } },
-                { developer: { $regex: sanitizedTerm,$options: 'i' } }
+                { name: { $regex: sanitizedTerm, $options: 'i' } },
+                { developer: { $regex: sanitizedTerm, $options: 'i' } }
             ]
-        }).limit(10).lean();
+        }).limit(10).toArray();
         res.json(results.map(cleanEmptyArrays));
     } catch (err) {
         console.error("Search error:", err);
