@@ -312,6 +312,11 @@
             border: 1px solid #ffc107;
         }
 
+        /* === STAR RATINGS === */
+        .star-rating-input { display: flex; gap: 4px; cursor: pointer; color: #3a3a45; font-size: 28px; justify-content: center; line-height: 1; margin-top: 5px; }
+        .star-rating-input .star:hover, .star-rating-input .star.active { color: #ffc107; }
+        .star-display { font-size: 1.3em; letter-spacing: 2px; }
+
         /* === MOBILE RESPONSIVENESS === */
         @media (max-width: 768px) {
             .grid-container {
@@ -500,16 +505,36 @@
             <input type="text" id="editTrailer" placeholder="YouTube Trailer Video ID (e.g. dQw4w9WgXcQ)" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; color:white; box-sizing:border-box;">
             
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:10px;">
-                <select id="editAge" style="padding:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; color:white;">
+                <select id="editAge" style="padding:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; color:white; height: 100%;">
                     <option value="">Age Rating...</option>
                     <option value="E">E (Everyone)</option>
                     <option value="T">T (Teen)</option>
                     <option value="M">M (Mature 17+)</option>
                 </select>
-                <input type="number" id="editF2P" placeholder="F2P Rating (1-5)" min="1" max="5" style="padding:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; color:white;">
-                <input type="number" id="editAFK" placeholder="AFK Rating (1-5)" min="1" max="5" style="padding:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; color:white;">
-                <input type="number" id="editStory" placeholder="Story Rating (1-5)" min="1" max="5" style="padding:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; color:white;">
-                <input type="number" id="editGameplay" placeholder="Gameplay Rating (1-5)" min="1" max="5" style="padding:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; color:white;">
+                <div style="padding:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; text-align:center;">
+                    <div style="font-size:0.7em; color:#aaa; text-transform:uppercase; font-weight:bold;">F2P Rating</div>
+                    <div class="star-rating-input" id="editF2P" data-val="0">
+                        <span class="star" data-rating="1">★</span><span class="star" data-rating="2">★</span><span class="star" data-rating="3">★</span><span class="star" data-rating="4">★</span><span class="star" data-rating="5">★</span>
+                    </div>
+                </div>
+                <div style="padding:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; text-align:center;">
+                    <div style="font-size:0.7em; color:#aaa; text-transform:uppercase; font-weight:bold;">AFK Rating</div>
+                    <div class="star-rating-input" id="editAFK" data-val="0">
+                        <span class="star" data-rating="1">★</span><span class="star" data-rating="2">★</span><span class="star" data-rating="3">★</span><span class="star" data-rating="4">★</span><span class="star" data-rating="5">★</span>
+                    </div>
+                </div>
+                <div style="padding:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; text-align:center;">
+                    <div style="font-size:0.7em; color:#aaa; text-transform:uppercase; font-weight:bold;">Story Rating</div>
+                    <div class="star-rating-input" id="editStory" data-val="0">
+                        <span class="star" data-rating="1">★</span><span class="star" data-rating="2">★</span><span class="star" data-rating="3">★</span><span class="star" data-rating="4">★</span><span class="star" data-rating="5">★</span>
+                    </div>
+                </div>
+                <div style="padding:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; text-align:center; grid-column: span 2;">
+                    <div style="font-size:0.7em; color:#aaa; text-transform:uppercase; font-weight:bold;">Gameplay Rating</div>
+                    <div class="star-rating-input" id="editGameplay" data-val="0">
+                        <span class="star" data-rating="1">★</span><span class="star" data-rating="2">★</span><span class="star" data-rating="3">★</span><span class="star" data-rating="4">★</span><span class="star" data-rating="5">★</span>
+                    </div>
+                </div>
             </div>
             
             <input type="text" id="editCommit" placeholder="What was updated (e.g. Added Trailer)" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #3a3a45; background:#1f1f28; color:white; box-sizing:border-box;">
@@ -703,8 +728,16 @@
             }
         };
 
+        function renderStars(val) {
+            const num = Math.round(parseFloat(val));
+            if (isNaN(num) || num < 1) return '<span style="color:#888; font-size: 0.85em;">N/A</span>';
+            const filled = '★'.repeat(num);
+            const empty = '☆'.repeat(5 - num);
+            return `<span class="star-display"><span style="color:#ffc107;">${filled}</span><span style="color:#555;">${empty}</span></span>`;
+        }
+
         function openGameModal(game, cardElement) {
-            currentGameForModal = game; // Store globally for the Edit button
+            currentGameForModal = game; 
             const rect = cardElement.getBoundingClientRect();
             
             modalWindowContent.style.setProperty('--start-x', `${(rect.left + rect.width / 2) - (window.innerWidth / 2)}px`);
@@ -725,19 +758,20 @@
                 videoContainer.style.display = 'none';
             }
             
-            // Map the age ratings to official ESRB images
+            // Render highly reliable PNG fallback thumbnails instead of raw SVGs
             const esrbImages = {
-                'E': '<img src="https://upload.wikimedia.org/wikipedia/commons/2/22/ESRB_Everyone.svg" style="height:35px;">',
-                'T': '<img src="https://upload.wikimedia.org/wikipedia/commons/c/cb/ESRB_Teen.svg" style="height:35px;">',
-                'M': '<img src="https://upload.wikimedia.org/wikipedia/commons/4/4b/ESRB_Mature_17%2B.svg" style="height:35px;">'
+                'E': '<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/ESRB_Everyone.svg/150px-ESRB_Everyone.svg.png" style="height:35px;">',
+                'T': '<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/cb/ESRB_Teen.svg/150px-ESRB_Teen.svg.png" style="height:35px;">',
+                'M': '<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/ESRB_Mature_17%2B.svg/150px-ESRB_Mature_17%2B.svg.png" style="height:35px;">'
             };
             modalAge.innerHTML = esrbImages[game.ratings?.age] || '<span style="font-size:1.1em; font-weight:bold; color:#ffc107;">N/A</span>';
             
-            modalF2P.textContent = game.ratings?.f2p ? `${game.ratings.f2p}/5` : 'N/A';
-            modalAFK.textContent = game.ratings?.afk ? `${game.ratings.afk}/5` : 'N/A';
-            modalStory.textContent = game.ratings?.story ? `${game.ratings.story}/5` : 'N/A';
-            modalGameplay.textContent = game.ratings?.gameplay ? `${game.ratings.gameplay}/5` : 'N/A';
-            modalOverall.textContent = game.ratings?.overall || 'N/A';
+            // Render integer ratings into visual stars
+            modalF2P.innerHTML = renderStars(game.ratings?.f2p);
+            modalAFK.innerHTML = renderStars(game.ratings?.afk);
+            modalStory.innerHTML = renderStars(game.ratings?.story);
+            modalGameplay.innerHTML = renderStars(game.ratings?.gameplay);
+            modalOverall.innerHTML = renderStars(game.ratings?.overall);
             
             gameModal.classList.add('active');
         }
@@ -975,20 +1009,36 @@
             } catch (e) { alert("Failed to submit."); }
         }
 
+        function setStarRating(containerId, value) {
+            const container = document.getElementById(containerId);
+            container.setAttribute('data-val', value || 0);
+            container.querySelectorAll('.star').forEach(s => {
+                if (parseInt(s.getAttribute('data-rating')) <= (value || 0)) s.classList.add('active');
+                else s.classList.remove('active');
+            });
+        }
+
+        // Initialize click logic for the star raters
+        document.querySelectorAll('.star-rating-input').forEach(container => {
+            container.querySelectorAll('.star').forEach(star => {
+                star.addEventListener('click', () => setStarRating(container.id, star.getAttribute('data-rating')));
+            });
+        });
+
         function openEditInfoModal() {
             if (!cachedSession.discordId) return alert('Must be logged in to suggest edits!');
             if (!currentGameForModal) return;
             
             document.getElementById('gameModal').classList.remove('active');
             
-            // Pre-fill existing data
             document.getElementById('editTrailer').value = currentGameForModal.trailer_id || '';
             document.getElementById('editAge').value = currentGameForModal.ratings?.age || '';
-            document.getElementById('editF2P').value = currentGameForModal.ratings?.f2p || '';
-            document.getElementById('editAFK').value = currentGameForModal.ratings?.afk || '';
-            document.getElementById('editStory').value = currentGameForModal.ratings?.story || '';
-            document.getElementById('editGameplay').value = currentGameForModal.ratings?.gameplay || '';
             document.getElementById('editCommit').value = '';
+            
+            setStarRating('editF2P', currentGameForModal.ratings?.f2p);
+            setStarRating('editAFK', currentGameForModal.ratings?.afk);
+            setStarRating('editStory', currentGameForModal.ratings?.story);
+            setStarRating('editGameplay', currentGameForModal.ratings?.gameplay);
             
             document.getElementById('editInfoModal').classList.add('active');
         }
@@ -998,15 +1048,16 @@
                 gameId: currentGameForModal.id,
                 itemCategory: 'GameInfo',
                 actionType: 'EDIT',
+                targetIdentifier: currentGameForModal.name, // THIS PREVENTS THE DATABASE CRASH!
                 data: {
                     trailer_id: document.getElementById('editTrailer').value.trim(),
                     commitMessage: document.getElementById('editCommit').value.trim(),
                     ratings: {
                         age: document.getElementById('editAge').value,
-                        f2p: document.getElementById('editF2P').value,
-                        afk: document.getElementById('editAFK').value,
-                        story: document.getElementById('editStory').value,
-                        gameplay: document.getElementById('editGameplay').value
+                        f2p: document.getElementById('editF2P').getAttribute('data-val'),
+                        afk: document.getElementById('editAFK').getAttribute('data-val'),
+                        story: document.getElementById('editStory').getAttribute('data-val'),
+                        gameplay: document.getElementById('editGameplay').getAttribute('data-val')
                     }
                 }
             };
