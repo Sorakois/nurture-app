@@ -353,7 +353,6 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
 });
 
 // --- CONTRIBUTION ROUTES ---
-
 app.post('/api/contribute', async (req, res) => {
     const sessionToken = req.cookies.nurture_session;
     if (!sessionToken) return res.status(401).json({ error: "Must be signed in to contribute." });
@@ -406,10 +405,11 @@ app.post('/api/contribute', async (req, res) => {
         await newContribution.save();
 
         // 2. Fire serverless HTTP request to Discord to trigger the admin embed
+        const commitMessageText = data.commitMessage ? `\n**Commit Message:** ${data.commitMessage}` : '';
         const discordPayload = {
             embeds: [{
                 title: `New Contribution: ${actionType}${itemCategory}`,
-                description: `**From:** ${user.username}\n**Game:** ${gameId || 'N/A'}\n**Target:** ${targetIdentifier || 'N/A'}\n\n\`\`\`json\n${JSON.stringify(data, null, 2).substring(0, 3900)}\n\`\`\``,
+                description: `**From:** ${user.username}\n**Game:** ${gameId || 'N/A'}\n**Target:** ${targetIdentifier || 'N/A'}${commitMessageText}\n\n\`\`\`json\n${JSON.stringify(data, null, 2).substring(0, 3900)}\n\`\`\``,
                 color: 0x7A6BB5
             }],
             components: [{
@@ -636,56 +636,74 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
         const [action, targetId] = customId.split('_');
 
         try {
-            // HANDLE REPLY TO MAILBOX BUTTON
             if (action === 'replymail') {
                 return res.send({
                     type: InteractionResponseType.MODAL,
                     data: {
                         custom_id: `modal_replymail_${targetId}`,
                         title: "Reply to User",
-                        components: [{
-                            type: 1,
-                            components: [{
-                                type: 4, custom_id: "reply_text", label: "Message:", style: 2, min_length: 1, max_length: 2000, required: true
-                            }]
-                        }]
+                        components: [{ type: 1, components: [{ type: 4, custom_id: "reply_text", label: "Message:", style: 2, min_length: 1, max_length: 2000, required: true }] }]
                     }
                 });
             }
 
-            // HANDLE CONTRIBUTION BUTTONS
             const contribution = await Contribution.findById(targetId);
             if (!contribution) return res.send({ type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE, data: { content: "Contribution not found.", flags: 64 } });
+
+            if (action === 'tweak') {
+                return res.send({
+                    type: InteractionResponseType.MODAL,
+                    data: {
+                        custom_id: `modal_tweak_${targetId}`,
+                        title: "Tweak Contribution",
+                        components: [{ type: 1, components: [{ type: 4, custom_id: "tweaked_data", label: "Edit JSON:", style: 2, value: JSON.stringify(contribution.data, null, 2), required: true }] }]
+                    }
+                });
+            }
+
+            // Immediately acknowledge Discord to prevent the 3-second timeout crash
+            res.send({ type: InteractionResponseType.UPDATE_MESSAGE, data: { content: `⏳ **Processing... (<@${interaction.member.user.id}>)**`, components: [] } });
 
             const user = await User.findOne({ discordId: contribution.submitterDiscordId });
             const adminAvatar = interaction.member.user.avatar ? `https://cdn.discordapp.com/avatars/${interaction.member.user.id}/${interaction.member.user.avatar}.png` : 'https://cdn.discordapp.com/embed/avatars/0.png';
 
-            if (action === 'approve' || action === 'tweak_approve') {
-                contribution.status = 'approved';
-                await contribution.save();
+            if (action === 'approve') {
+                await Contribution.updateOne({ _id: contribution._id }, { $set: { status: 'approved' } });
 
-                if (contribution.gameId) {
+                if (contribution.itemCategory === 'Game' && contribution.actionType === 'CREATE') {
+                    const existing = await Game.findOne({ id: contribution.gameId });
+                    if (!existing) await Game.create(contribution.data);
+                } else if (contribution.gameId) {
                     const game = await Game.findOne({ id: contribution.gameId });
                     if (game) {
-                        const catArray = game[contribution.itemCategory.toLowerCase() + 's'] || game[contribution.itemCategory.toLowerCase()];
-                        if (contribution.actionType === 'CREATE') { catArray.push({ ...contribution.data, _id: new mongoose.Types.ObjectId() }); }
-                        else if (contribution.actionType === 'EDIT') {
-                            const idx = catArray.findIndex(item => item._id.toString() === contribution.targetIdentifier || item.title === contribution.targetIdentifier);
-                            if (idx !== -1) catArray[idx] = { ...catArray[idx], ...contribution.data };
-                        }
-                        else if (contribution.actionType === 'DELETE') {
-                            const idx = catArray.findIndex(item => item._id.toString() === contribution.targetIdentifier || item.title === contribution.targetIdentifier);
-                            if (idx !== -1) catArray.splice(idx, 1);
+                        if (contribution.itemCategory === 'Overview') {
+                            game.overview_text = contribution.data.overview_text;
+                        } else {
+                            const catKey = contribution.itemCategory.toLowerCase() + 's';
+                            const catArray = game[catKey] || game[contribution.itemCategory.toLowerCase()];
+                            if (catArray) {
+                                if (contribution.actionType === 'CREATE') catArray.push({ ...contribution.data, _id: new mongoose.Types.ObjectId() });
+                                else if (contribution.actionType === 'EDIT') {
+                                    const idx = catArray.findIndex(item => item._id?.toString() === contribution.targetIdentifier || item.title === contribution.targetIdentifier);
+                                    if (idx !== -1) catArray[idx] = { ...catArray[idx], ...contribution.data };
+                                }
+                                else if (contribution.actionType === 'DELETE') {
+                                    const idx = catArray.findIndex(item => item._id?.toString() === contribution.targetIdentifier || item.title === contribution.targetIdentifier);
+                                    if (idx !== -1) catArray.splice(idx, 1);
+                                }
+                                game.markModified(catKey);
+                            }
                         }
                         await game.save();
                     }
-                } else if (contribution.actionType === 'CREATE' && contribution.itemCategory === 'Game') { await Game.create(contribution.data); }
+                }
 
                 if (user) {
-                    user.totalPoints += 50;
+                    user.totalPoints = (user.totalPoints || 0) + 50;
                     if (contribution.gameId) {
-                        const currentPoints = user.gamePoints.get(contribution.gameId) || 0;
-                        user.gamePoints.set(contribution.gameId, currentPoints + 50);
+                        if (!user.gamePoints) user.gamePoints = new Map();
+                        const currentPts = user.gamePoints.get(contribution.gameId) || 0;
+                        user.gamePoints.set(contribution.gameId, currentPts + 50);
                     }
                     user.mailbox.push({
                         direction: 'INBOUND',
@@ -698,16 +716,11 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                     await user.save();
                 }
 
-                return res.send({
-                    type: InteractionResponseType.UPDATE_MESSAGE,
-                    data: { content: `✅ **Approved by <@${interaction.member.user.id}>**`, components: [] }
-                });
+                await axios.patch(`https://discord.com/api/v10/webhooks/${process.env.DISCORD_CLIENT_ID}/${interaction.token}/messages/@original`, { content: `✅ **Approved by <@${interaction.member.user.id}>**` });
             }
 
             if (action === 'deny') {
-                contribution.status = 'rejected';
-                await contribution.save();
-
+                await Contribution.updateOne({ _id: contribution._id }, { $set: { status: 'rejected' } });
                 if (user) {
                     user.mailbox.push({
                         direction: 'INBOUND',
@@ -719,35 +732,17 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                     });
                     await user.save();
                 }
-
-                return res.send({
-                    type: InteractionResponseType.UPDATE_MESSAGE,
-                    data: { content: `❌ **Denied by <@${interaction.member.user.id}>**`, components: [] }
-                });
-            }
-
-            if (action === 'tweak') {
-                return res.send({
-                    type: InteractionResponseType.MODAL,
-                    data: {
-                        custom_id: `modal_tweak_${targetId}`,
-                        title: "Tweak Contribution",
-                        components: [{ type: 1, components: [{ type: 4, custom_id: "tweaked_data", label: "Edit JSON:", style: 2, value: JSON.stringify(contribution.data, null, 2), required: true }] }]
-                    }
-                });
+                await axios.patch(`https://discord.com/api/v10/webhooks/${process.env.DISCORD_CLIENT_ID}/${interaction.token}/messages/@original`, { content: `❌ **Denied by <@${interaction.member.user.id}>**` });
             }
         } catch (err) { console.error("Interaction error:", err); }
     }
 
-    // HANDLE MODAL SUBMISSIONS
     if (interaction.type === InteractionType.MODAL_SUBMIT) {
         const customId = interaction.data.custom_id;
         
-        // Modal: Reply to Mailbox
         if (customId.startsWith('modal_replymail_')) {
             const userId = customId.split('_')[2];
             const replyText = interaction.data.components[0].components[0].value;
-            
             const user = await User.findById(userId);
             if (user) {
                 user.mailbox.push({
@@ -760,80 +755,60 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                 });
                 await user.save();
             }
-
-            return res.send({
-                type: InteractionResponseType.UPDATE_MESSAGE,
-                data: {
-                    content: `✅ **Replied by <@${interaction.member.user.id}>:**\n> ${replyText.split('\n').join('\n> ')}`,
-                    components: []
-                }
-            });
+            return res.send({ type: InteractionResponseType.UPDATE_MESSAGE, data: { content: `✅ **Replied by <@${interaction.member.user.id}>:**\n>${replyText.split('\n').join('\n> ')}`, components: [] } });
         }
         
-        // Modal: Tweak Contribution (Secured)
         if (customId.startsWith('modal_tweak_')) {
             const contributionId = customId.split('_')[2];
             const newJsonDataRaw = interaction.data.components[0].components[0].value;
             
             try {
                 const parsedData = JSON.parse(newJsonDataRaw); 
+                res.send({ type: InteractionResponseType.UPDATE_MESSAGE, data: { content: `⏳ **Saving tweak... (<@${interaction.member.user.id}>)**`, components: [] } });
+                
                 const contribution = await Contribution.findById(contributionId);
-                if (!contribution) throw new Error("Contribution not found.");
+                await Contribution.updateOne({ _id: contribution._id }, { $set: { status: 'approved', data: parsedData } });
+                contribution.data = parsedData;
 
-                contribution.data = parsedData; // Update with admin's tweaked data
-                contribution.status = 'approved';
-                await contribution.save();
-
-                const user = await User.findOne({ discordId: contribution.submitterDiscordId });
-                const adminAvatar = interaction.member.user.avatar ? `https://cdn.discordapp.com/avatars/${interaction.member.user.id}/${interaction.member.user.avatar}.png` : 'https://cdn.discordapp.com/embed/avatars/0.png';
-
-                // Apply changes to Game database
-                if (contribution.gameId) {
+                if (contribution.itemCategory === 'Game' && contribution.actionType === 'CREATE') {
+                    const existing = await Game.findOne({ id: contribution.gameId });
+                    if (!existing) await Game.create(contribution.data);
+                } else if (contribution.gameId) {
                     const game = await Game.findOne({ id: contribution.gameId });
                     if (game) {
-                        const catArray = game[contribution.itemCategory.toLowerCase() + 's'] || game[contribution.itemCategory.toLowerCase()];
-                        if (contribution.actionType === 'CREATE') { catArray.push({ ...contribution.data, _id: new mongoose.Types.ObjectId() }); }
-                        else if (contribution.actionType === 'EDIT') {
-                            const idx = catArray.findIndex(item => item._id.toString() === contribution.targetIdentifier || item.title === contribution.targetIdentifier);
-                            if (idx !== -1) catArray[idx] = { ...catArray[idx], ...contribution.data };
-                        }
-                        else if (contribution.actionType === 'DELETE') {
-                            const idx = catArray.findIndex(item => item._id.toString() === contribution.targetIdentifier || item.title === contribution.targetIdentifier);
-                            if (idx !== -1) catArray.splice(idx, 1);
+                        if (contribution.itemCategory === 'Overview') {
+                            game.overview_text = contribution.data.overview_text;
+                        } else {
+                            const catKey = contribution.itemCategory.toLowerCase() + 's';
+                            const catArray = game[catKey] || game[contribution.itemCategory.toLowerCase()];
+                            if (catArray) {
+                                if (contribution.actionType === 'CREATE') catArray.push({ ...contribution.data, _id: new mongoose.Types.ObjectId() });
+                                else if (contribution.actionType === 'EDIT') {
+                                    const idx = catArray.findIndex(item => item._id?.toString() === contribution.targetIdentifier || item.title === contribution.targetIdentifier);
+                                    if (idx !== -1) catArray[idx] = { ...catArray[idx], ...contribution.data };
+                                }
+                                game.markModified(catKey);
+                            }
                         }
                         await game.save();
                     }
-                } else if (contribution.actionType === 'CREATE' && contribution.itemCategory === 'Game') { 
-                    await Game.create(contribution.data); 
                 }
 
-                // Award points and notify
+                const user = await User.findOne({ discordId: contribution.submitterDiscordId });
                 if (user) {
-                    user.totalPoints += 50;
+                    user.totalPoints = (user.totalPoints || 0) + 50;
                     if (contribution.gameId) {
-                        const currentPoints = user.gamePoints.get(contribution.gameId) || 0;
-                        user.gamePoints.set(contribution.gameId, currentPoints + 50);
+                        if (!user.gamePoints) user.gamePoints = new Map();
+                        const currentPts = user.gamePoints.get(contribution.gameId) || 0;
+                        user.gamePoints.set(contribution.gameId, currentPts + 50);
                     }
-                    user.mailbox.push({
-                        direction: 'INBOUND',
-                        subject: 'Contribution Approved! (+50 pts)',
-                        content: `Your submission for ${contribution.itemCategory} was tweaked and approved by an admin!`,
-                        adminUsername: interaction.member.user.username,
-                        adminAvatar: adminAvatar,
-                        date: new Date()
-                    });
+                    user.mailbox.push({ direction: 'INBOUND', subject: 'Contribution Approved! (+50 pts)', content: `Your submission for ${contribution.itemCategory} was tweaked and approved by an admin!`, adminUsername: interaction.member.user.username, adminAvatar: interaction.member.user.avatar ? `https://cdn.discordapp.com/avatars/${interaction.member.user.id}/${interaction.member.user.avatar}.png` : 'https://cdn.discordapp.com/embed/avatars/0.png', date: new Date() });
                     await user.save();
                 }
 
-                return res.send({
-                    type: InteractionResponseType.UPDATE_MESSAGE,
-                    data: { content: `✏️ ✅ **Tweaked & Approved by <@${interaction.member.user.id}>**`, components: [] }
-                });
+                await axios.patch(`https://discord.com/api/v10/webhooks/${process.env.DISCORD_CLIENT_ID}/${interaction.token}/messages/@original`, { content: `✏️ ✅ **Tweaked & Approved by <@${interaction.member.user.id}>**` });
             } catch (error) {
-                return res.send({
-                    type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-                    data: { content: `❌ **Failed to save tweak!**\n\`${error.message}\``, flags: 64 }
-                });
+                return res.send({ type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE, data: { content: `❌ **Failed to save tweak! Invalid JSON syntax.**\n\`${error.message}\``, flags: 64 } });
             }
         }
     }

@@ -326,7 +326,7 @@
             <div style="flex-grow: 1; min-width: 0;">
                 <div class="game-header">
                     <div class="header-left">
-                        <img src="/Assets/placeholder.png" alt="Game Icon" id="gameIcon">
+                        <img src="/Assets/placeholder.png" alt="Game Icon" id="gameIcon" referrerpolicy="no-referrer">
                         <div>
                             <h1 class="game-title" id="gameTitle">Loading...</h1>
                             <p class="game-dev" id="gameDev">-</p>
@@ -359,16 +359,13 @@
 
     <!-- Game Sub-Page Suggestion Modal -->
     <div id="gameSuggestModal" class="modal-overlay">
-        <div class="modal-window" style="max-width: 600px;">
-            <button class="modal-close" onclick="document.getElementById('gameSuggestModal').classList.remove('active')">×</button>
-            <h2 class="modal-title">Contribute to <span id="gsCategory"></span></h2>
-            <div style="display:flex; flex-direction:column; gap:10px;">
+        <div id="gsStandardInputs" style="display:flex; flex-direction:column; gap:10px;">
                 <input type="text" id="gsTitle" placeholder="Link Title / Resource Name" style="padding:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; color:white;">
                 <input type="text" id="gsAuthor" placeholder="Author / Platform / Format / Version" style="padding:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; color:white;">
                 <input type="text" id="gsUrl" placeholder="URL Link" style="padding:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; color:white;">
-            </div>
-            <button onclick="submitGameSuggestion()" style="width:100%; margin-top:15px; padding:12px; background:#FF5E5B; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">Submit for Review</button>
         </div>
+        <textarea id="gsOverviewText" placeholder="Edit Overview text..." style="display:none; width:100%; height:150px; padding:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; color:white; resize:vertical; box-sizing:border-box; margin-bottom:10px;"></textarea>
+        <input type="text" id="gsCommit" placeholder="What was added / changed: (e.g. Fixed typo)" style="width:100%; padding:10px; margin-top:10px; border-radius:8px; border:1px solid #3a3a45; background:#1f1f28; color:white; box-sizing:border-box;">
     </div>
 
     <!-- Shared Logic -->
@@ -517,7 +514,7 @@
                 if (data.userRank) {
                     userRankContainer.innerHTML = `
                     <div style="width: 100%; height: 2px; background-color: #3a3a45; margin: 10px 0;"></div>
-                    <div class="lb-row" style="border-color:#7A6BB5; margin-bottom: 0;">
+                    <div class="lb-row" style="border-color:#7A6BB5; margin-bottom: 0; cursor: pointer; transition: border 0.2s;" onmouseover="this.style.borderColor='#9d8ec7'" onmouseout="this.style.borderColor='#7A6BB5'" onclick="openUserProfileModal('${data.userRank.discordId}')">
                         <div style="font-weight:bold; color:#7A6BB5; width:25px;">#${data.userRank.rank}</div>
                         <img src="${data.userRank.avatar ? `https://cdn.discordapp.com/avatars/${data.userRank.discordId}/${data.userRank.avatar}.png` : '/Assets/placeholder.png'}" class="lb-avatar">
                         <div class="lb-info"><div class="lb-name">You (${data.userRank.username})</div></div>
@@ -558,11 +555,12 @@
 
             setTimeout(() => {
                 if (currentSection === 'overview') {
+                    const editOverviewSvg = `<svg onclick="openGameSuggestModal('Overview')" style="width:20px;height:20px;fill:#ffffff;float:right;cursor:pointer;margin-top:5px;" title="Edit Overview" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>`;
+                    
                     let overviewHtml = `
-                        <h2>Overview</h2>
+                        <h2>Overview ${editOverviewSvg}</h2>
                         <p style="line-height: 1.6; color: #ddd; white-space: pre-wrap;">${gameData.overview_text || 'No overview available for this game yet.'}</p>
                     `;
-
                     if (gameData.new_player_video_id) {
                         overviewHtml += `
                             <h3 style="margin-top: 40px; border-bottom: 1px solid #3a3a45; padding-bottom: 10px;">New Player Guide</h3>
@@ -713,23 +711,41 @@
         function openGameSuggestModal(category) {
             currentSuggestCategory = category;
             document.getElementById('gsCategory').textContent = category;
-            document.getElementById('gsTitle').value = '';
-            document.getElementById('gsAuthor').value = '';
-            document.getElementById('gsUrl').value = '';
+            document.getElementById('gsCommit').value = '';
+            
+            if (category === 'Overview') {
+                document.getElementById('gsStandardInputs').style.display = 'none';
+                document.getElementById('gsOverviewText').style.display = 'block';
+                document.getElementById('gsOverviewText').value = gameData.overview_text || '';
+            } else {
+                document.getElementById('gsStandardInputs').style.display = 'flex';
+                document.getElementById('gsOverviewText').style.display = 'none';
+                document.getElementById('gsTitle').value = '';
+                document.getElementById('gsAuthor').value = '';
+                document.getElementById('gsUrl').value = '';
+            }
             document.getElementById('gameSuggestModal').classList.add('active');
         }
 
         async function submitGameSuggestion() {
-            const title = document.getElementById('gsTitle').value;
-            const author = document.getElementById('gsAuthor').value;
-            const url = document.getElementById('gsUrl').value;
-            if (!title || !url) return alert("Title and URL are required.");
+            const commitMessage = document.getElementById('gsCommit').value;
+            let dataPayload = {};
+
+            if (currentSuggestCategory === 'Overview') {
+                dataPayload = { overview_text: document.getElementById('gsOverviewText').value, commitMessage };
+            } else {
+                const title = document.getElementById('gsTitle').value;
+                const author = document.getElementById('gsAuthor').value;
+                const url = document.getElementById('gsUrl').value;
+                if (!title || !url) return alert("Title and URL are required.");
+                dataPayload = { title, url, author, platform: author, type: author, version: author, commitMessage };
+            }
 
             const payload = {
                 gameId: gameData.id,
                 itemCategory: currentSuggestCategory,
-                actionType: 'CREATE',
-                data: { title, url, author, platform: author, type: author, version: author }
+                actionType: currentSuggestCategory === 'Overview' ? 'EDIT' : 'CREATE',
+                data: dataPayload
             };
 
             try {

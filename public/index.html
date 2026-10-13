@@ -511,6 +511,7 @@
                 </div>
             </div>
             <textarea id="sgDesc" placeholder="Overview Description" style="width:100%; height:100px; padding:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; color:white; resize:none; box-sizing:border-box;"></textarea>
+            <input type="text" id="sgCommit" placeholder="What was added: (e.g. Added starter guide)" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #3a3a45; background:#1f1f28; color:white; box-sizing:border-box;">
             <input type="hidden" id="sgIcon">
 
             <button onclick="submitSuggestion()" style="width:100%; margin-top:15px; padding:12px; background:#FF5E5B; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">Submit to Admins</button>
@@ -551,7 +552,7 @@
                     if (lbData.userRank) {
                         userRankContainer.innerHTML = `
                         <div style="width: 100%; height: 2px; background-color: #3a3a45; margin: 10px 0;"></div>
-                        <div class="lb-row" style="border-color:#7A6BB5; margin-bottom: 0;">
+                        <div class="lb-row" style="border-color:#7A6BB5; margin-bottom: 0; cursor: pointer; transition: border 0.2s;" onmouseover="this.style.borderColor='#9d8ec7'" onmouseout="this.style.borderColor='#7A6BB5'" onclick="openUserProfileModal('${lbData.userRank.discordId}')">
                             <div style="font-weight:bold; color:#7A6BB5; width:25px;">#${lbData.userRank.rank}</div>
                             <img src="${lbData.userRank.avatar ? `https://cdn.discordapp.com/avatars/${lbData.userRank.discordId}/${lbData.userRank.avatar}.png` : '/Assets/placeholder.png'}" class="lb-avatar">
                             <div class="lb-info"><div class="lb-name">You (${lbData.userRank.username})</div></div>
@@ -929,7 +930,8 @@
                     developer: document.getElementById('sgDev').value,
                     tags: document.getElementById('sgTags').value.split(',').map(s=>s.trim()),
                     overview_text: document.getElementById('sgDesc').value,
-                    banner_url: document.getElementById('sgIcon').value
+                    banner_url: document.getElementById('sgIcon').value,
+                    commitMessage: document.getElementById('sgCommit').value
                 }
             };
             try {
