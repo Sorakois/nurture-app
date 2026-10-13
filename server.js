@@ -70,7 +70,11 @@ app.get('/api/games', async (req, res) => {
             const bData = hasGameData(b);
             if (aData && !bData) return -1;
             if (!aData && bData) return 1;
-            return a.name.localeCompare(b.name);
+            
+            // Safely fallback to an empty string if a game was saved without a name
+            const aName = a.name || '';
+            const bName = b.name || '';
+            return aName.localeCompare(bName);
         });
 
         const paginatedGames = allGames.slice(startIndex, startIndex + limit).map(cleanEmptyArrays);

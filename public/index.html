@@ -450,8 +450,6 @@
             <div id="userRankContainer"></div>
         </div>
 
-    <div class="grid-container" id="gameGrid"></div>
-
     <div id="gameModal" class="modal-overlay">
         <div class="modal-window" id="modalWindowContent">
             <button class="modal-close" id="closeModal">×</button>
@@ -724,19 +722,26 @@
             }
         });
         function updateGrid(games) {
+            const gameGrid = document.getElementById('gameGrid');
+            if (!gameGrid) return;
             gameGrid.innerHTML = ''; 
             
             const selectedTag = document.getElementById('tagFilter') ? document.getElementById('tagFilter').value : 'All';
-            let filteredGames = games;
+            let filteredGames = games || [];
             
             if (selectedTag !== 'All') {
-                filteredGames = games.filter(g => g.tags && g.tags.includes(selectedTag));
+                filteredGames = filteredGames.filter(g => g.tags && g.tags.includes(selectedTag));
             }
 
             filteredGames.sort((a, b) => {
+                const aId = a.id || '';
+                const bId = b.id || '';
+                const aName = typeof a === 'string' ? a : (a.name || '');
+                const bName = typeof b === 'string' ? b : (b.name || '');
+
                 // Priority 1: Starred status
-                const aStar = userStarredGames.includes(a.id) ? 1 : 0;
-                const bStar = userStarredGames.includes(b.id) ? 1 : 0;
+                const aStar = userStarredGames.includes(aId) ? 1 : 0;
+                const bStar = userStarredGames.includes(bId) ? 1 : 0;
                 if (aStar !== bStar) return bStar - aStar; 
                 
                 // Priority 2: Has Content vs Grayed out
@@ -745,7 +750,7 @@
                 if (aData !== bData) return bData - aData;
 
                 // Priority 3: Alphabetical Fallback
-                return a.name.localeCompare(b.name);
+                return aName.localeCompare(bName);
             });
 
             if (filteredGames.length === 0) {
@@ -754,61 +759,58 @@
                         <h3>No games found</h3>
                     </div>
                 `;
-                return;
+            } else {
+                filteredGames.forEach(game => {
+                    if (!game) return;
+                    const gridItem = document.createElement('div');
+                    gridItem.className = 'grid-item'; 
+                    
+                    const gameName = typeof game === 'string' ? game : (game.name || 'Unknown Game');
+                    const gameId = game.id || '';
+                    const iconUrl = typeof game === 'object' && game.banner_url ? game.banner_url : '/Assets/placeholder.png';
+                    const developer = typeof game === 'object' && game.developer ? game.developer : '';
+                    
+                    const isStarred = userStarredGames.includes(gameId);
+                    const starColor = isStarred ? '#ffc107' : '#555';
+
+                    gridItem.innerHTML = `
+                        <img src="${iconUrl}" alt="${escapeHtml(gameName)}" loading="lazy" onerror="this.src='/Assets/placeholder.png'">
+                        <div class="title-wrapper">
+                            <svg class="star-btn" data-id="${gameId}" style="width:18px;height:18px;cursor:pointer;fill:${starColor}; transition:fill 0.2s;" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                            <div class="grid-item-title">${escapeHtml(gameName)}</div>
+                            <div class="info-icon" title="View Game Details">i</div>
+                        </div>
+                        ${developer ? `<div class="grid-item-dev">${escapeHtml(developer)}</div>` : ''}
+                    `;
+                    
+                    const starBtn = gridItem.querySelector('.star-btn');
+                    starBtn.addEventListener('click', async (e) => {
+                        e.stopPropagation();
+                        if (!cachedSession.discordId) return alert('Must be signed in to star games!');
+                        if (userStarredGames.includes(gameId)) {
+                            userStarredGames = userStarredGames.filter(id => id !== gameId);
+                        } else {
+                            userStarredGames.push(gameId);
+                        }
+                        updateGrid(allGames); 
+                        await fetch('/api/user/star', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ gameId: gameId }) });
+                    });
+
+                    const infoBtn = gridItem.querySelector('.info-icon');
+                    infoBtn.addEventListener('click', (e) => {
+                        e.stopPropagation(); 
+                        openGameModal(typeof game === 'object' ? game : { name: gameName }, gridItem);
+                    });
+                    
+                    gridItem.addEventListener('click', () => {
+                        if (gameId) { 
+                            window.location.href = `/games/${gameId}`;
+                        }
+                    });
+                    
+                    gameGrid.appendChild(gridItem);
+                });
             }
-
-            const gridItem = document.createElement('div');
-                // We are wrapping everything back inside this loop!
-            filteredGames.forEach(game => {
-                const gridItem = document.createElement('div');
-                gridItem.className = 'grid-item'; 
-                
-                const gameName = typeof game === 'string' ? game : game.name;
-                const iconUrl = typeof game === 'object' && game.banner_url ? game.banner_url : '/Assets/placeholder.png';
-                const developer = typeof game === 'object' && game.developer ? game.developer : '';
-                
-                const isStarred = userStarredGames.includes(game.id);
-                const starColor = isStarred ? '#ffc107' : '#555';
-
-                gridItem.innerHTML = `
-                    <img src="${iconUrl}" alt="${gameName}" loading="lazy" onerror="this.src='/Assets/placeholder.png'">
-                    <div class="title-wrapper">
-                        <svg class="star-btn" data-id="${game.id}" style="width:18px;height:18px;cursor:pointer;fill:${starColor}; transition:fill 0.2s;" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-                        <div class="grid-item-title">${escapeHtml(gameName)}</div>
-                        <div class="info-icon" title="View Game Details">i</div>
-                    </div>
-                    ${developer ? `<div class="grid-item-dev">${escapeHtml(developer)}</div>` : ''}
-                `;
-                
-                const starBtn = gridItem.querySelector('.star-btn');
-                starBtn.addEventListener('click', async (e) => {
-                    e.stopPropagation();
-                    if (!cachedSession.discordId) return alert('Must be signed in to star games!');
-                    if (userStarredGames.includes(game.id)) {
-                        userStarredGames = userStarredGames.filter(id => id !== game.id);
-                    } else {
-                        userStarredGames.push(game.id);
-                    }
-                    updateGrid(allGames); 
-                    await fetch('/api/user/star', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ gameId: game.id }) });
-                });
-
-                const infoBtn = gridItem.querySelector('.info-icon');
-                infoBtn.addEventListener('click', (e) => {
-                    e.stopPropagation(); 
-                    // Modal opens regardless of data state
-                    openGameModal(typeof game === 'object' ? game : { name: gameName }, gridItem);
-                });
-                
-                gridItem.addEventListener('click', () => {
-                    if (game.id) { 
-                        // Routes to game page regardless of data state
-                        window.location.href = `/games/${game.id}`;
-                    }
-                });
-                
-                gameGrid.appendChild(gridItem);
-            });
 
             // Append Suggest Game Box
             const suggestCard = document.createElement('div');
