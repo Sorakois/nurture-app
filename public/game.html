@@ -358,14 +358,22 @@
 
     <!-- Game Sub-Page Suggestion Modal -->
     <div id="gameSuggestModal" class="modal-overlay">
-        <div id="gsStandardInputs" style="display:flex; flex-direction:column; gap:10px;">
+        <div class="modal-window" style="max-width: 600px;">
+            <button class="modal-close" onclick="document.getElementById('gameSuggestModal').classList.remove('active')">×</button>
+            <h2 class="modal-title" id="gsCategoryTitle">Suggest Update</h2>
+            
+            <div id="gsStandardInputs" style="display:flex; flex-direction:column; gap:10px;">
                 <input type="text" id="gsTitle" placeholder="Link Title / Resource Name" style="padding:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; color:white;">
                 <input type="text" id="gsAuthor" placeholder="Author / Platform / Format / Version" style="padding:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; color:white;">
                 <input type="text" id="gsUrl" placeholder="URL Link" style="padding:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; color:white;">
+            </div>
+            
+            <textarea id="gsOverviewText" placeholder="Edit Overview text..." style="display:none; width:100%; height:150px; padding:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; color:white; resize:vertical; box-sizing:border-box; margin-top:10px;"></textarea>
+            <input type="text" id="gsNewPlayerGuide" placeholder="(OPTIONAL) New Player Guide URL (e.g. YouTube Link)" style="display:none; width:100%; padding:10px; margin-top:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; color:white; box-sizing:border-box;">
+            
+            <input type="text" id="gsCommit" placeholder="What was added / changed: (e.g. Fixed typo)" style="width:100%; padding:10px; margin-top:10px; border-radius:8px; border:1px solid #3a3a45; background:#1f1f28; color:white; box-sizing:border-box;">
+            <button onclick="submitGameSuggestion()" style="width:100%; margin-top:15px; padding:12px; background:#4C3A90; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; transition: background 0.2s;" onmouseover="this.style.background='#5c47ac'" onmouseout="this.style.background='#4C3A90'">Submit Update</button>
         </div>
-        <textarea id="gsOverviewText" placeholder="Edit Overview text..." style="display:none; width:100%; height:150px; padding:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; color:white; resize:vertical; box-sizing:border-box; margin-bottom:10px;"></textarea>
-            <input type="text" id="gsNewPlayerGuide" placeholder="(OPTIONAL) New Player Guide URL (e.g. YouTube Link)" style="display:none; width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; color:white; box-sizing:border-box;">
-        <input type="text" id="gsCommit" placeholder="What was added / changed: (e.g. Fixed typo)" style="width:100%; padding:10px; margin-top:10px; border-radius:8px; border:1px solid #3a3a45; background:#1f1f28; color:white; box-sizing:border-box;">
     </div>
 
     <!-- Shared Logic -->
@@ -808,6 +816,25 @@
         }
 
         initPage();
+
+        // Silently monitor for Discord admin approvals every 15 seconds
+        setInterval(async () => {
+            // Do not refresh data while a modal is actively open to prevent typing interruptions
+            if (document.visibilityState !== 'visible' || document.querySelector('.modal-overlay.active')) return;
+            
+            try {
+                const res = await fetch(`/api/games/${gameId}`);
+                if (res.ok) {
+                    const newData = await res.json();
+                    // If the database changed, instantly re-render the screen
+                    if (JSON.stringify(newData) !== JSON.stringify(gameData)) {
+                        gameData = newData;
+                        renderContent();
+                        loadGameLeaderboard();
+                    }
+                }
+            } catch (e) {}
+        }, 15000);
     </script>
 </body>
 </html>

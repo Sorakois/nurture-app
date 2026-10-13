@@ -616,8 +616,10 @@
                     : document.getElementById('gameLeaderboardList').innerHTML = '<div class="lb-row" style="justify-content:center;color:#ccc;font-weight:bold;">NEW! Could be you!</div>';
             }
 
-            if (isLoading) return; 
-            isLoading = true;
+            if (!silent) {
+                if (isLoading) return; 
+                isLoading = true;
+            }
             try {
                 const data = await apiCall(`/games?limit=100`);
                 if (data.games) {
@@ -1044,11 +1046,12 @@
         }
 
         async function submitInfoEdit() {
-            // 1. Safely extract the game name and ID to prevent database crashes
-            const gName = typeof currentGameForModal === 'string' ? currentGameForModal : (currentGameForModal.name || 'Unknown');
+            if (!currentGameForModal) return alert("Error: No game selected.");
+            
+            // Strictly enforce names and IDs so the database never receives a blank payload
+            const gName = typeof currentGameForModal === 'string' ? currentGameForModal : (currentGameForModal.name || 'Unknown Game');
             const gId = (currentGameForModal && currentGameForModal.id) ? currentGameForModal.id : gName.toLowerCase().replace(/[^a-z0-9]/g, '-');
 
-            // 2. Automatically parse out the YouTube Video ID if a full URL is pasted
             let rawTrailer = document.getElementById('editTrailer').value.trim();
             let parsedTrailerId = rawTrailer;
             if (rawTrailer.includes('v=')) parsedTrailerId = rawTrailer.split('v=')[1].split('&')[0];
@@ -1056,10 +1059,9 @@
 
             const payload = {
                 gameId: gId,
-                // Was previously -> itemCategory: 'Overview'
-                itemCategory: 'Game', 
+                itemCategory: 'Game', // Required to pass Mongoose DB schema validation
                 actionType: 'EDIT',
-                targetIdentifier: gName,
+                targetIdentifier: gName, // Must not be blank
                 data: {
                     trailer_id: parsedTrailerId,
                     commitMessage: document.getElementById('editCommit').value.trim(),
@@ -1073,6 +1075,8 @@
                 }
             };
 
+            console.log("Sending payload to backend:", payload); // Debug logging
+
             try {
                 const response = await fetch('/api/contribute', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
                 if (!response.ok) {
@@ -1083,11 +1087,18 @@
                 document.getElementById('editInfoModal').classList.remove('active');
             } catch (e) { 
                 alert("Failed to submit: " + e.message); 
-                console.error(e);
+                console.error("Submission Error:", e);
             }
         }
 
         window.addEventListener('online', () => fetchInitialData());
+
+        // Silently update the grid and leaderboard every 15 seconds
+        setInterval(() => {
+            if (!isSearching && document.visibilityState === 'visible') {
+                fetchInitialData(true);
+            }
+        }, 15000);
     </script>
 </body>
 </html>

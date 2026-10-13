@@ -697,31 +697,42 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                 } else if (contribution.gameId) {
                     const game = await Game.findOne({ id: contribution.gameId });
                     if (game) {
+                        // REMEMBER ME 1
                         if (contribution.itemCategory === 'Overview' || contribution.itemCategory === 'Game') {
+                            let updates = {};
+                            
                             // 1. Standard Overview Updates
-                            if (contribution.data.overview_text !== undefined) game.overview_text = contribution.data.overview_text;
-                            if (contribution.data.new_player_guide !== undefined) game.new_player_guide = contribution.data.new_player_guide;
+                            if (contribution.data.overview_text !== undefined) updates.overview_text = contribution.data.overview_text;
+                            if (contribution.data.new_player_guide !== undefined) updates.new_player_guide = contribution.data.new_player_guide;
                             
                             // 2. Info Menu (Trailer & Ratings) Updates
-                            if (contribution.data.trailer_id !== undefined) game.trailer_id = contribution.data.trailer_id;
+                            if (contribution.data.trailer_id !== undefined) updates.trailer_id = contribution.data.trailer_id;
                             
                             if (contribution.data.ratings) {
-                                if (!game.ratings) game.ratings = {};
-                                game.ratings = { ...game.ratings, ...contribution.data.ratings };
-                                
+                                const r = { ...(game.ratings || {}), ...contribution.data.ratings };
                                 // Auto-calculate the new Overall Average
-                                const r = game.ratings;
                                 const scores = [r.f2p, r.afk, r.story, r.gameplay].map(Number).filter(n => !isNaN(n) && n > 0);
                                 if (scores.length > 0) {
-                                    game.ratings.overall = (scores.reduce((a,b) => a+b, 0) / scores.length).toFixed(1) + '/5';
+                                    r.overall = (scores.reduce((a,b) => a+b, 0) / scores.length).toFixed(1) + '/5';
                                 }
+                                updates.ratings = r;
                             }
-                            game.markModified('ratings');
+                            
+                            // Forcefully bypass strict schema rules to save the new fields
+                            await Game.updateOne({ id: contribution.gameId }, { $set: updates }, { strict: false });
+
                         } else {
                             const catKey = contribution.itemCategory.toLowerCase() + 's';
                             const catArray = game[catKey] || game[contribution.itemCategory.toLowerCase()];
                             if (catArray) {
-                                if (contribution.actionType === 'CREATE') catArray.push({ ...contribution.data, _id: new mongoose.Types.ObjectId() });
+                                if (contribution.actionType === 'CREATE') {
+                                    catArray.push({ 
+                                        ...contribution.data, 
+                                        submitterUsername: contribution.submitterUsername,
+                                        submitterDiscordId: contribution.submitterDiscordId,
+                                        _id: new mongoose.Types.ObjectId() 
+                                    });
+                                }
                                 else if (contribution.actionType === 'EDIT') {
                                     const idx = catArray.findIndex(item => item._id?.toString() === contribution.targetIdentifier || item.title === contribution.targetIdentifier);
                                     if (idx !== -1) catArray[idx] = { ...catArray[idx], ...contribution.data };
@@ -731,6 +742,7 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                                     if (idx !== -1) catArray.splice(idx, 1);
                                 }
                                 game.markModified(catKey);
+                                await game.save();
                             }
                         }
                         await game.save();
@@ -815,36 +827,52 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                 } else if (contribution.gameId) {
                     const game = await Game.findOne({ id: contribution.gameId });
                     if (game) {
+                        // REMEMBER ME 2
                         if (contribution.itemCategory === 'Overview' || contribution.itemCategory === 'Game') {
+                            let updates = {};
+                            
                             // 1. Standard Overview Updates
-                            if (contribution.data.overview_text !== undefined) game.overview_text = contribution.data.overview_text;
-                            if (contribution.data.new_player_guide !== undefined) game.new_player_guide = contribution.data.new_player_guide;
+                            if (contribution.data.overview_text !== undefined) updates.overview_text = contribution.data.overview_text;
+                            if (contribution.data.new_player_guide !== undefined) updates.new_player_guide = contribution.data.new_player_guide;
                             
                             // 2. Info Menu (Trailer & Ratings) Updates
-                            if (contribution.data.trailer_id !== undefined) game.trailer_id = contribution.data.trailer_id;
+                            if (contribution.data.trailer_id !== undefined) updates.trailer_id = contribution.data.trailer_id;
                             
                             if (contribution.data.ratings) {
-                                if (!game.ratings) game.ratings = {};
-                                game.ratings = { ...game.ratings, ...contribution.data.ratings };
-                                
+                                const r = { ...(game.ratings || {}), ...contribution.data.ratings };
                                 // Auto-calculate the new Overall Average
-                                const r = game.ratings;
                                 const scores = [r.f2p, r.afk, r.story, r.gameplay].map(Number).filter(n => !isNaN(n) && n > 0);
                                 if (scores.length > 0) {
-                                    game.ratings.overall = (scores.reduce((a,b) => a+b, 0) / scores.length).toFixed(1) + '/5';
+                                    r.overall = (scores.reduce((a,b) => a+b, 0) / scores.length).toFixed(1) + '/5';
                                 }
+                                updates.ratings = r;
                             }
-                            game.markModified('ratings');
+                            
+                            // Forcefully bypass strict schema rules to save the new fields
+                            await Game.updateOne({ id: contribution.gameId }, { $set: updates }, { strict: false });
+
                         } else {
                             const catKey = contribution.itemCategory.toLowerCase() + 's';
                             const catArray = game[catKey] || game[contribution.itemCategory.toLowerCase()];
                             if (catArray) {
-                                if (contribution.actionType === 'CREATE') catArray.push({ ...contribution.data, _id: new mongoose.Types.ObjectId() });
+                                if (contribution.actionType === 'CREATE') {
+                                    catArray.push({ 
+                                        ...contribution.data, 
+                                        submitterUsername: contribution.submitterUsername,
+                                        submitterDiscordId: contribution.submitterDiscordId,
+                                        _id: new mongoose.Types.ObjectId() 
+                                    });
+                                }
                                 else if (contribution.actionType === 'EDIT') {
                                     const idx = catArray.findIndex(item => item._id?.toString() === contribution.targetIdentifier || item.title === contribution.targetIdentifier);
                                     if (idx !== -1) catArray[idx] = { ...catArray[idx], ...contribution.data };
                                 }
+                                else if (contribution.actionType === 'DELETE') {
+                                    const idx = catArray.findIndex(item => item._id?.toString() === contribution.targetIdentifier || item.title === contribution.targetIdentifier);
+                                    if (idx !== -1) catArray.splice(idx, 1);
+                                }
                                 game.markModified(catKey);
+                                await game.save();
                             }
                         }
                         await game.save();

@@ -345,3 +345,12 @@ function applySettings() {
     if (toggle) toggle.checked = showLb;
     if (select) select.value = lbSide;
 }
+
+// --- Silent Polling for Live Updates ---
+document.addEventListener('DOMContentLoaded', () => {
+    // Check for new mailbox notifications every 15 seconds
+    setInterval(() => {
+        const cachedUserRaw = localStorage.getItem('nurture_user_session');
+        if (cachedUserRaw) fetchUnreadMailCount();
+    }, 15000);
+});
