@@ -697,14 +697,15 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                     const game = await Game.findOne({ id: contribution.gameId });
                     if (game) {
                         if (contribution.itemCategory === 'Overview') {
-                            if (contribution.data.overview_text) game.overview_text = contribution.data.overview_text;
-                            if (contribution.data.new_player_guide) game.new_player_guide = contribution.data.new_player_guide;
-                        } else if (contribution.itemCategory === 'GameInfo') {
-                            // Automatically update the trailer and ratings data
+                            // 1. Standard Overview Updates
+                            if (contribution.data.overview_text !== undefined) game.overview_text = contribution.data.overview_text;
+                            if (contribution.data.new_player_guide !== undefined) game.new_player_guide = contribution.data.new_player_guide;
+                            
+                            // 2. Info Menu (Trailer & Ratings) Updates
                             if (contribution.data.trailer_id !== undefined) game.trailer_id = contribution.data.trailer_id;
                             
-                            if (!game.ratings) game.ratings = {};
                             if (contribution.data.ratings) {
+                                if (!game.ratings) game.ratings = {};
                                 game.ratings = { ...game.ratings, ...contribution.data.ratings };
                                 
                                 // Auto-calculate the new Overall Average
@@ -814,14 +815,15 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                     const game = await Game.findOne({ id: contribution.gameId });
                     if (game) {
                         if (contribution.itemCategory === 'Overview') {
-                            if (contribution.data.overview_text) game.overview_text = contribution.data.overview_text;
-                            if (contribution.data.new_player_guide) game.new_player_guide = contribution.data.new_player_guide;
-                        } else if (contribution.itemCategory === 'GameInfo') {
-                            // Automatically update the trailer and ratings data
+                            // 1. Standard Overview Updates
+                            if (contribution.data.overview_text !== undefined) game.overview_text = contribution.data.overview_text;
+                            if (contribution.data.new_player_guide !== undefined) game.new_player_guide = contribution.data.new_player_guide;
+                            
+                            // 2. Info Menu (Trailer & Ratings) Updates
                             if (contribution.data.trailer_id !== undefined) game.trailer_id = contribution.data.trailer_id;
                             
-                            if (!game.ratings) game.ratings = {};
                             if (contribution.data.ratings) {
+                                if (!game.ratings) game.ratings = {};
                                 game.ratings = { ...game.ratings, ...contribution.data.ratings };
                                 
                                 // Auto-calculate the new Overall Average
