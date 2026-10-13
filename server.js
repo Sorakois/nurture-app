@@ -1021,6 +1021,8 @@ app.get('/api/profile/:query', async (req, res) => {
             contributions: contributions.map(c => ({
                 gameId: c.gameId,
                 category: c.itemCategory,
+                action: c.actionType,
+                commitMessage: c.data?.commitMessage || '',
                 target: c.targetIdentifier || (c.data && (c.data.title || c.data.name)) || 'Unknown Submission',
                 date: c.createdAt || c._id.getTimestamp()
             }))

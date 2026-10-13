@@ -238,13 +238,24 @@ async function openUserProfileModal(discordId, username = null) {
             const tabMap = { 'Guide': 'guides', 'Asset': 'assets', 'Community': 'communities', 'Mod': 'mods', 'Game': 'overview' };
             const tab = tabMap[c.category] || 'overview';
             const link = c.gameId ? `/games/${c.gameId}?tab=${tab}` : '/';
+            
+            const dateStr = new Date(c.date).toLocaleDateString();
+            const actionText = c.action ? c.action.toUpperCase() : 'EDIT';
+            const commitHtml = c.commitMessage ? `<div style="font-size:0.85em; color:#ddd; border-left:2px solid #4C3A90; padding-left:8px; margin-top:8px; font-style: italic;">${escapeTxt(c.commitMessage)}</div>` : '';
+            
             return `
-                <a href="${link}" style="display:flex; justify-content:space-between; align-items:center; background:#2a2a35; padding:12px; border:1px solid #3a3a45; border-radius:8px; margin-bottom:8px; text-decoration:none; color:white; transition:border 0.2s;" onmouseover="this.style.borderColor='#7A6BB5'" onmouseout="this.style.borderColor='#3a3a45'">
-                    <div>
-                        <div style="font-weight:bold; color:#9d8ec7; margin-bottom:4px;">${escapeTxt(c.target)}</div>
-                        <div style="font-size:0.8em; color:#888;">${c.category} • ${c.gameId || 'General'}</div>
+                <a href="${link}" style="display:block; background:#2a2a35; padding:14px; border:1px solid #3a3a45; border-radius:8px; margin-bottom:10px; text-decoration:none; color:white; transition:border 0.2s, background 0.2s;" onmouseover="this.style.borderColor='#7A6BB5'; this.style.background='#2f2f3b';" onmouseout="this.style.borderColor='#3a3a45'; this.style.background='#2a2a35';">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
+                        <div style="font-weight:bold; color:#9d8ec7; font-size:1.1em;">${escapeTxt(c.target)}</div>
+                        <span style="font-size:0.75em; color:#888;">${dateStr}</span>
                     </div>
-                    <span style="font-size:1.2em; color:#7A6BB5;">➔</span>
+                    <div style="font-size:0.8em; color:#aaa; margin-bottom:4px; display:flex; align-items:center; gap:6px;">
+                        <strong style="color:#FF5E5B; background:#1f1f28; padding:2px 6px; border-radius:4px; border:1px solid #3a3a45;">${actionText}</strong> 
+                        <span>in ${c.category}</span>
+                        <span style="color:#555;">•</span>
+                        <span style="font-family:monospace; color:#ccc;">${c.gameId || 'General'}</span>
+                    </div>
+                    ${commitHtml}
                 </a>
             `;
         }).join('');
