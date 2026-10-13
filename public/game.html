@@ -338,9 +338,10 @@
                     </a>
                 </div>
 
-                <div id="miniFocusContainer" style="display: none; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin: 15px 0;"></div>
-
+                <!--This is the "guides/tools, raw assets, etc tabs"-->
                 <div class="sub-nav" id="tabMenu"></div>
+                <!--This is "Hey sorakoi is coding something"-->
+                <div id="miniFocusContainer" style="display: none; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin: 15px 0;"></div>
 
                 <div class="content-area" id="dynamicContent">
                     <h2>Loading content...</h2>
@@ -354,6 +355,20 @@
                 <!-- Pinned User Rank Container -->
                 <div id="userGameRankContainer"></div>
             </div>
+    </div>
+
+    <!-- Game Sub-Page Suggestion Modal -->
+    <div id="gameSuggestModal" class="modal-overlay">
+        <div class="modal-window" style="max-width: 600px;">
+            <button class="modal-close" onclick="document.getElementById('gameSuggestModal').classList.remove('active')">×</button>
+            <h2 class="modal-title">Contribute to <span id="gsCategory"></span></h2>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+                <input type="text" id="gsTitle" placeholder="Link Title / Resource Name" style="padding:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; color:white;">
+                <input type="text" id="gsAuthor" placeholder="Author / Platform / Format / Version" style="padding:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; color:white;">
+                <input type="text" id="gsUrl" placeholder="URL Link" style="padding:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; color:white;">
+            </div>
+            <button onclick="submitGameSuggestion()" style="width:100%; margin-top:15px; padding:12px; background:#FF5E5B; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">Submit for Review</button>
+        </div>
     </div>
 
     <!-- Shared Logic -->
@@ -569,19 +584,23 @@
                 }
 
                 const sectionConfig = {
-                    guides: { title: 'Guides/Tools', data: gameData.guides, catKey: 'category', metaKey: 'author', metaPrefix: 'By ' },
-                    assets: { title: 'Raw Assets', data: gameData.assets, catKey: 'type', metaKey: 'type', metaPrefix: 'Format: ' },
-                    communities: { title: 'Communities', data: gameData.communities, catKey: 'platform', metaKey: 'platform', metaPrefix: 'Platform: ' },
-                    mods: { title: 'Mods', data: gameData.mods, catKey: 'author', metaKey: 'version', metaPrefix: 'Version: ' }
+                    guides: { title: 'Guides/Tools', dbKey: 'Guide', data: gameData.guides, catKey: 'category', metaKey: 'author', metaPrefix: 'By ' },
+                    assets: { title: 'Raw Assets', dbKey: 'Asset', data: gameData.assets, catKey: 'type', metaKey: 'type', metaPrefix: 'Format: ' },
+                    communities: { title: 'Communities', dbKey: 'Community', data: gameData.communities, catKey: 'platform', metaKey: 'platform', metaPrefix: 'Platform: ' },
+                    mods: { title: 'Mods', dbKey: 'Mod', data: gameData.mods, catKey: 'author', metaKey: 'version', metaPrefix: 'Version: ' }
                 };
 
                 const config = sectionConfig[currentSection];
+                const contributeSvg = `<svg onclick="openGameSuggestModal('${config.dbKey}')" style="width:24px;height:24px;fill:#ffffff;float:right;cursor:pointer;" title="Contribute to ${config.title}" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>`;
+                const headerHtml = `<h2>${config.title} ${contributeSvg}</h2>`;
 
                 if (!config || !config.data || config.data.length === 0) {
-                    contentArea.innerHTML = `<h2>${config?.title || 'Section'}</h2><p style="color: #aaa;">No items found.</p>`;
+                    contentArea.innerHTML = headerHtml + `<p style="color: #aaa;">No items found.</p>`;
                     contentArea.style.opacity = 1;
                     return;
                 }
+                // Override the simple h2 injected lower down with our new headerHtml
+                config.title = config.title + " " + contributeSvg;
 
                 const filteredData = activeFilter === 'All' 
                     ? config.data 
@@ -679,6 +698,36 @@
                 console.error("Failed to load page data:", error);
                 contentArea.innerHTML = `<h2>Error loading game data.</h2>`;
             }
+        }
+
+        let currentSuggestCategory = '';
+        function openGameSuggestModal(category) {
+            currentSuggestCategory = category;
+            document.getElementById('gsCategory').textContent = category;
+            document.getElementById('gsTitle').value = '';
+            document.getElementById('gsAuthor').value = '';
+            document.getElementById('gsUrl').value = '';
+            document.getElementById('gameSuggestModal').classList.add('active');
+        }
+
+        async function submitGameSuggestion() {
+            const title = document.getElementById('gsTitle').value;
+            const author = document.getElementById('gsAuthor').value;
+            const url = document.getElementById('gsUrl').value;
+            if (!title || !url) return alert("Title and URL are required.");
+
+            const payload = {
+                gameId: gameData.id,
+                itemCategory: currentSuggestCategory,
+                actionType: 'CREATE',
+                data: { title, url, author, platform: author, type: author, version: author }
+            };
+
+            try {
+                await fetch('/api/contribute', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+                alert("Suggestion submitted successfully! Awaiting Admin Approval.");
+                document.getElementById('gameSuggestModal').classList.remove('active');
+            } catch (e) { alert("Failed to submit."); }
         }
 
         initPage();

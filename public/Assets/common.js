@@ -134,7 +134,11 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(applySettings, 100);
 });
 
-function openMailboxModal() { document.getElementById('mailboxModal').classList.add('active'); loadMailboxMessages(); }
+function openMailboxModal() { 
+    document.getElementById('mailboxModal').classList.add('active'); 
+    document.getElementById('mailboxContent').innerHTML = '<p style="color:#aaa;">Loading messages...</p>';
+    setTimeout(loadMailboxMessages, 50); 
+}
 function closeMailboxModal() { document.getElementById('mailboxModal').classList.remove('active'); }
 function openComposeModal() { document.getElementById('composeModal').classList.add('active'); }
 function closeComposeModal() { document.getElementById('composeModal').classList.remove('active'); }
