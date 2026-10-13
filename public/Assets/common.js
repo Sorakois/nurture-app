@@ -151,15 +151,34 @@ async function loadMailboxMessages() {
         const res = await fetch('/api/mailbox');
         const mail = await res.json();
         if (!mail || mail.length === 0) { container.innerHTML = '<p style="color:#888; text-align:center;">Your mailbox is empty.</p>'; return; }
-        container.innerHTML = mail.map(m => `
+        
+        container.innerHTML = mail.map(m => {
+            let senderInfo = '';
+            let statusBadge = '';
+            
+            if (m.direction === 'INBOUND') {
+                const avatar = m.adminAvatar || 'https://cdn.discordapp.com/embed/avatars/0.png';
+                const name = m.adminUsername || 'Admin';
+                senderInfo = `<img src="${avatar}" style="width:20px;height:20px;border-radius:50%;vertical-align:middle;margin-right:5px; border: 1px solid #7A6BB5;"><b>${name}</b>`;
+            } else if (m.direction === 'OUTBOUND_CONTRIBUTION') {
+                senderInfo = `<b>📦 Contribution</b>`;
+                const statusStr = (m.status || 'Pending').toUpperCase();
+                const color = statusStr === 'APPROVED' ? '#4CAF50' : statusStr === 'REJECTED' ? '#F44336' : '#FFC107';
+                statusBadge = `<span style="background:${color}; color:#000; padding:2px 6px; border-radius:10px; font-size:0.7em; font-weight:bold; margin-left:8px; vertical-align:middle;">${statusStr}</span>`;
+            } else {
+                senderInfo = `<b>📤 You</b>`;
+            }
+
+            return `
             <div style="background:#1f1f28; border:1px solid #3a3a45; padding:12px; border-radius:8px; margin-bottom:10px;">
-                <div style="display:flex; justify-content:space-between; font-size:0.85em; color:#aaa; margin-bottom:4px;">
-                    <span><b>${m.direction === 'INBOUND' ? '🛡️ Admin Reply' : '📤 You'}</b> — ${m.subject}</span>
+                <div style="display:flex; justify-content:space-between; font-size:0.85em; color:#aaa; margin-bottom:8px; align-items:center;">
+                    <div>${senderInfo} — ${m.subject} ${statusBadge}</div>
                     <span>${new Date(m.date).toLocaleDateString()}</span>
                 </div>
                 <div style="color:#fff; font-size:0.95em; white-space:pre-wrap;">${m.content}</div>
             </div>
-        `).join('');
+            `;
+        }).join('');
     } catch (e) { container.innerHTML = '<p style="color:#ff5555;">Failed to load mailbox.</p>'; }
 }
 

@@ -373,8 +373,30 @@ app.get('/api/mailbox', async (req, res) => {
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const user = await User.findById(decoded.userId).select('mailbox');
-        res.json(user.mailbox.sort((a, b) => new Date(b.date) - new Date(a.date)));
+        const user = await User.findById(decoded.userId).select('mailbox discordId');
+        const contributions = await Contribution.find({ submitterDiscordId: user.discordId }).lean();
+        
+        let allItems = user.mailbox.map(m => ({
+            direction: m.direction,
+            subject: m.subject,
+            content: m.content,
+            adminUsername: m.adminUsername,
+            adminAvatar: m.adminAvatar,
+            date: m.date || new Date()
+        }));
+
+        // Dynamically inject all outgoing contributions into the mailbox view
+        contributions.forEach(c => {
+            allItems.push({
+                direction: 'OUTBOUND_CONTRIBUTION',
+                subject: `Suggested ${c.itemCategory} for ${c.gameId}`,
+                content: `Target: ${c.targetIdentifier || 'N/A'}\nData: ${JSON.stringify(c.data)}`,
+                status: c.status || 'pending',
+                date: c.createdAt || c._id.getTimestamp()
+            });
+        });
+
+        res.json(allItems.sort((a, b) => new Date(b.date) - new Date(a.date)));
     } catch (err) {
         res.status(500).json({ error: "Failed to fetch mailbox" });
     }
@@ -389,20 +411,25 @@ app.post('/api/mailbox/send', async (req, res) => {
         const user = await User.findById(decoded.userId);
         const { subject, content } = req.body;
 
-        // 1. Push to user's local mailbox as OUTBOUND
         user.mailbox.push({
             direction: 'OUTBOUND',
             subject: subject || 'User Inquiry',
-            content
+            content,
+            date: new Date()
         });
         await user.save();
 
-        // 2. Forward to Discord suggestion channel
         const discordPayload = {
             embeds: [{
                 title: `📩 Mail from User: ${user.username} (${user.discordId})`,
                 description: `**Subject:** ${subject}\n\n${content}`,
                 color: 0x5865F2
+            }],
+            components: [{
+                type: 1,
+                components: [
+                    { type: 2, style: 1, label: "Reply to User", custom_id: `replymail_${user._id}` }
+                ]
             }]
         };
 
@@ -417,44 +444,61 @@ app.post('/api/mailbox/send', async (req, res) => {
     }
 });
 
-// --- UPDATED DISCORD INTERACTIONS (APPROVE / DENY LOGIC) ---
+// --- UPDATED DISCORD INTERACTIONS (APPROVE / DENY / REPLY LOGIC) ---
 app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY), async (req, res) => {
     const interaction = req.body;
     if (interaction.type === InteractionType.PING) return res.send({ type: InteractionResponseType.PONG });
 
     if (interaction.type === InteractionType.MESSAGE_COMPONENT) {
-        const [action, contributionId] = interaction.data.custom_id.split('_');
+        const customId = interaction.data.custom_id;
+        const [action, targetId] = customId.split('_');
+
         try {
-            const contribution = await Contribution.findById(contributionId);
+            // HANDLE REPLY TO MAILBOX BUTTON
+            if (action === 'replymail') {
+                return res.send({
+                    type: InteractionResponseType.MODAL,
+                    data: {
+                        custom_id: `modal_replymail_${targetId}`,
+                        title: "Reply to User",
+                        components: [{
+                            type: 1,
+                            components: [{
+                                type: 4, custom_id: "reply_text", label: "Message:", style: 2, min_length: 1, max_length: 2000, required: true
+                            }]
+                        }]
+                    }
+                });
+            }
+
+            // HANDLE CONTRIBUTION BUTTONS
+            const contribution = await Contribution.findById(targetId);
             if (!contribution) return res.send({ type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE, data: { content: "Contribution not found.", flags: 64 } });
 
             const user = await User.findOne({ discordId: contribution.submitterDiscordId });
+            const adminAvatar = interaction.member.user.avatar ? `https://cdn.discordapp.com/avatars/${interaction.member.user.id}/${interaction.member.user.avatar}.png` : 'https://cdn.discordapp.com/embed/avatars/0.png';
 
             if (action === 'approve' || action === 'tweak_approve') {
                 contribution.status = 'approved';
                 await contribution.save();
 
-                // Apply changes to Game database based on actionType (CREATE, EDIT, DELETE)
                 if (contribution.gameId) {
                     const game = await Game.findOne({ id: contribution.gameId });
                     if (game) {
                         const catArray = game[contribution.itemCategory.toLowerCase() + 's'] || game[contribution.itemCategory.toLowerCase()];
-                        if (contribution.actionType === 'CREATE') {
-                            catArray.push({ ...contribution.data, _id: new mongoose.Types.ObjectId() });
-                        } else if (contribution.actionType === 'EDIT') {
+                        if (contribution.actionType === 'CREATE') { catArray.push({ ...contribution.data, _id: new mongoose.Types.ObjectId() }); }
+                        else if (contribution.actionType === 'EDIT') {
                             const idx = catArray.findIndex(item => item._id.toString() === contribution.targetIdentifier || item.title === contribution.targetIdentifier);
                             if (idx !== -1) catArray[idx] = { ...catArray[idx], ...contribution.data };
-                        } else if (contribution.actionType === 'DELETE') {
+                        }
+                        else if (contribution.actionType === 'DELETE') {
                             const idx = catArray.findIndex(item => item._id.toString() === contribution.targetIdentifier || item.title === contribution.targetIdentifier);
                             if (idx !== -1) catArray.splice(idx, 1);
                         }
                         await game.save();
                     }
-                } else if (contribution.actionType === 'CREATE' && contribution.itemCategory === 'Game') {
-                    await Game.create(contribution.data);
-                }
+                } else if (contribution.actionType === 'CREATE' && contribution.itemCategory === 'Game') { await Game.create(contribution.data); }
 
-                // Award points and streak
                 if (user) {
                     user.totalPoints += 50;
                     if (contribution.gameId) {
@@ -464,7 +508,10 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                     user.mailbox.push({
                         direction: 'INBOUND',
                         subject: 'Contribution Approved! (+50 pts)',
-                        content: `Your submission for ${contribution.itemCategory} was approved by an admin!`
+                        content: `Your submission for ${contribution.itemCategory} was approved!`,
+                        adminUsername: interaction.member.user.username,
+                        adminAvatar: adminAvatar,
+                        date: new Date()
                     });
                     await user.save();
                 }
@@ -483,7 +530,10 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                     user.mailbox.push({
                         direction: 'INBOUND',
                         subject: 'Contribution Denied',
-                        content: `Your submission for ${contribution.itemCategory} was reviewed and rejected.`
+                        content: `Your submission for ${contribution.itemCategory} was reviewed and rejected.`,
+                        adminUsername: interaction.member.user.username,
+                        adminAvatar: adminAvatar,
+                        date: new Date()
                     });
                     await user.save();
                 }
@@ -493,8 +543,57 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                     data: { content: `❌ **Denied by <@${interaction.member.user.id}>**`, components: [] }
                 });
             }
-        } catch (err) {
-            console.error("Interaction handler error:", err);
+
+            if (action === 'tweak') {
+                return res.send({
+                    type: InteractionResponseType.MODAL,
+                    data: {
+                        custom_id: `modal_tweak_${targetId}`,
+                        title: "Tweak Contribution",
+                        components: [{ type: 1, components: [{ type: 4, custom_id: "tweaked_data", label: "Edit JSON:", style: 2, value: JSON.stringify(contribution.data, null, 2), required: true }] }]
+                    }
+                });
+            }
+        } catch (err) { console.error("Interaction error:", err); }
+    }
+
+    // HANDLE MODAL SUBMISSIONS
+    if (interaction.type === InteractionType.MODAL_SUBMIT) {
+        const customId = interaction.data.custom_id;
+        
+        // Modal: Reply to Mailbox
+        if (customId.startsWith('modal_replymail_')) {
+            const userId = customId.split('_')[2];
+            const replyText = interaction.data.components[0].components[0].value;
+            
+            const user = await User.findById(userId);
+            if (user) {
+                user.mailbox.push({
+                    direction: 'INBOUND',
+                    subject: 'Message from Admin',
+                    content: replyText,
+                    adminUsername: interaction.member.user.username,
+                    adminAvatar: interaction.member.user.avatar ? `https://cdn.discordapp.com/avatars/${interaction.member.user.id}/${interaction.member.user.avatar}.png` : 'https://cdn.discordapp.com/embed/avatars/0.png',
+                    date: new Date()
+                });
+                await user.save();
+            }
+
+            return res.send({
+                type: InteractionResponseType.UPDATE_MESSAGE,
+                data: {
+                    content: `✅ **Replied by <@${interaction.member.user.id}>:**\n> ${replyText.split('\n').join('\n> ')}`,
+                    components: []
+                }
+            });
+        }
+        
+        // Modal: Tweak Contribution
+        if (customId.startsWith('modal_tweak_')) {
+            return res.send({
+                type: InteractionResponseType.UPDATE_MESSAGE,
+                data: { content: `✏️ ✅ **Tweaked & Approved by <@${interaction.member.user.id}>**`, components: [] }
+            });
         }
     }
 });
