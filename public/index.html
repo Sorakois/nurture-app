@@ -766,8 +766,8 @@
             modalGameTitle.textContent = game.name || 'Unknown Game';
             
             const videoContainer = document.getElementById('modalVideoContainer');
-            // Fetch the legacy key that actually exists in your database!
-            const vidId = game.new_player_video_id || game.trailer_id;
+            // Strictly fetch the trailer ID, entirely ignoring the starter guide
+            const vidId = game.trailer_id;
             
             if (vidId) {
                 if (currentTrailerId !== vidId) {
@@ -1119,7 +1119,8 @@ function openRateGameModal() {
             
             document.getElementById('gameModal').classList.remove('active');
             
-            document.getElementById('editTrailer').value = currentGameForModal.new_player_video_id || currentGameForModal.trailer_id || '';
+            // Only pull the trailer ID
+            document.getElementById('editTrailer').value = currentGameForModal.trailer_id || '';
             document.getElementById('editAge').value = currentGameForModal.ratings?.age || '';
             document.getElementById('editCommit').value = '';
             
@@ -1142,7 +1143,7 @@ function openRateGameModal() {
                 actionType: 'EDIT',
                 targetIdentifier: gName, 
                 data: {
-                    new_player_video_id: parsedTrailerId,
+                    trailer_id: parsedTrailerId,
                     age: document.getElementById('editAge').value,
                     commitMessage: document.getElementById('editCommit').value.trim()
                 }
