@@ -584,6 +584,19 @@ app.post('/api/mailbox/send', async (req, res) => {
     }
 });
 
+app.post('/api/mailbox/clear', async (req, res) => {
+    const token = req.cookies.nurture_session;
+    if (!token) return res.status(401).json({ error: "Unauthorized" });
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
+        await User.updateOne({ _id: decoded.userId }, { $set: { mailbox: [] } });
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: "Failed to clear mailbox" });
+    }
+});
+
 // --- UPDATED DISCORD INTERACTIONS (APPROVE / DENY / REPLY LOGIC) ---
 app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY), async (req, res) => {
     const interaction = req.body;

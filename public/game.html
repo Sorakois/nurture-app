@@ -562,6 +562,11 @@
                             <h3 style="margin-top:30px; border-bottom:1px solid #3a3a45; padding-bottom:8px; color:#9d8ec7;">New Player Guide</h3>
                             <a href="${gameData.new_player_guide}" target="_blank" style="display:inline-block; padding:12px 20px; background:#4C3A90; color:white; text-decoration:none; border-radius:8px; border:1px solid #7A6BB5; font-weight:bold; margin-top:10px;">📺 View Recommended Guide</a>
                         `;
+                    } else {
+                        guideHtml = `
+                            <h3 style="margin-top:30px; border-bottom:1px solid #3a3a45; padding-bottom:8px; color:#9d8ec7;">New Player Guide</h3>
+                            <button onclick="openGameSuggestModal('Overview')" style="display:inline-block; padding:10px 16px; background:#2a2a35; color:#aaa; border:1px dashed #7A6BB5; border-radius:8px; cursor:pointer; margin-top:10px; transition:color 0.2s, border 0.2s;" onmouseover="this.style.color='#fff'; this.style.borderColor='#9d8ec7'" onmouseout="this.style.color='#aaa'; this.style.borderColor='#7A6BB5'">+ Suggest Beginner Guide</button>
+                        `;
                     }
                     
                     let overviewHtml = `

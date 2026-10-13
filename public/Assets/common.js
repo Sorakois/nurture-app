@@ -98,7 +98,10 @@ document.addEventListener('DOMContentLoaded', () => {
         <div id="mailboxModal" class="modal-overlay">
             <div class="modal-window" style="max-width: 600px;">
                 <button class="modal-close" onclick="closeMailboxModal()">×</button>
-                <h2 class="modal-title">📬 User Mailbox</h2>
+                <h2 class="modal-title" style="display: flex; justify-content: space-between; align-items: center;">
+                    📬 User Mailbox
+                    <span onclick="clearMailbox()" style="font-size: 0.45em; color: #ff5555; cursor: pointer; border: 1px solid #ff5555; padding: 4px 10px; border-radius: 12px; font-weight: normal; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,85,85,0.1)'" onmouseout="this.style.background='transparent'">Clear All</span>
+                </h2>
                 <div id="mailboxContent" style="max-height: 350px; overflow-y: auto; margin-bottom: 15px;">Loading messages...</div>
                 <button style="width:100%; padding:10px; background:#4C3A90; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="openComposeModal()">Compose New Message to Staff</button>
             </div>
@@ -152,6 +155,14 @@ function openMailboxModal() {
     document.getElementById('mailboxModal').classList.add('active'); 
     document.getElementById('mailboxContent').innerHTML = '<p style="color:#aaa;">Loading messages...</p>';
     setTimeout(loadMailboxMessages, 50); 
+}
+async function clearMailbox() {
+    if (!confirm("Are you sure you want to clear all your messages and notifications?")) return;
+    try {
+        await fetch('/api/mailbox/clear', { method: 'POST' });
+        loadMailboxMessages(); // Refreshes the UI instantly
+        document.getElementById('unreadBadge').style.display = 'none';
+    } catch (e) { alert("Failed to clear mailbox."); }
 }
 function closeMailboxModal() { document.getElementById('mailboxModal').classList.remove('active'); }
 function openComposeModal() { document.getElementById('composeModal').classList.add('active'); }

@@ -10,6 +10,13 @@ body {
     color: white;
 }
 
+/* Ungray empty games and restore click functionality so users can populate them */
+.game-card.inactive, .inactive {
+    filter: none !important;
+    pointer-events: auto !important;
+    opacity: 1 !important;
+}
+
 /* === BACKGROUND & BANNER STYLES === */
 .background-container {
     position: fixed;

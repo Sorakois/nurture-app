@@ -126,8 +126,9 @@
             height: auto;
             border-radius: 5px;
         }
-        
-        .grid-item.no-data {
+
+        /* Graying-out games with no data */
+        /* .grid-item.no-data {
             filter: grayscale(100%);
             opacity: 0.4;
         }
@@ -135,7 +136,7 @@
         .grid-item.no-data:hover {
             transform: none; 
             opacity: 0.6;
-        }
+        } */
 
         .title-wrapper {
             display: flex;
@@ -508,10 +509,9 @@
                     <input type="text" id="sgTags" placeholder="Tags (comma separated)" style="padding:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; color:white;">
                 </div>
             </div>
-            <textarea id="sgDesc" placeholder="Overview Description" style="width:100%; height:100px; padding:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; color:white; resize:none; box-sizing:border-box;"></textarea>
+            <textarea id="sgDesc" placeholder="Overview Description" style="width:100%; height:100px; padding:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; color:white; resize:none; box-sizing:border-box; margin-bottom:10px;"></textarea>
+            <input type="text" id="sgIcon" placeholder="Game Icon URL (Auto-fills on Lookup)" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; color:white; box-sizing:border-box;" oninput="document.getElementById('sgIconPreview').src = this.value || '/Assets/placeholder.png'; document.getElementById('sgIconPreview').style.display = 'block';">
             <input type="text" id="sgCommit" placeholder="What was added: (e.g. Added starter guide)" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #3a3a45; background:#1f1f28; color:white; box-sizing:border-box;">
-            <input type="hidden" id="sgIcon">
-
             <button onclick="submitSuggestion()" style="width:100%; margin-top:15px; padding:12px; background:#FF5E5B; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">Submit to Admins</button>
         </div>
     </div>
@@ -757,10 +757,8 @@
                 return;
             }
 
-            filteredGames.forEach(game => {
-                const gridItem = document.createElement('div');
-                const hasData = typeof game === 'object' && !!(game.overview_text || game.guides || game.assets || game.communities || game.mods || game.trailer_id || game.ratings);
-                gridItem.className = `grid-item ${hasData ? '' : 'no-data'}`;
+            const gridItem = document.createElement('div');
+                gridItem.className = 'grid-item'; // Removed the 'no-data' class assignment
                 
                 const gameName = typeof game === 'string' ? game : game.name;
                 const iconUrl = typeof game === 'object' && game.banner_url ? game.banner_url : '/Assets/placeholder.png';
@@ -774,7 +772,7 @@
                     <div class="title-wrapper">
                         <svg class="star-btn" data-id="${game.id}" style="width:18px;height:18px;cursor:pointer;fill:${starColor}; transition:fill 0.2s;" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
                         <div class="grid-item-title">${escapeHtml(gameName)}</div>
-                        <div class="info-icon ${hasData ? '' : 'disabled'}" title="${hasData ? 'View Game Details' : 'No Data Available'}">i</div>
+                        <div class="info-icon" title="View Game Details">i</div>
                     </div>
                     ${developer ? `<div class="grid-item-dev">${escapeHtml(developer)}</div>` : ''}
                 `;
@@ -795,19 +793,18 @@
                 const infoBtn = gridItem.querySelector('.info-icon');
                 infoBtn.addEventListener('click', (e) => {
                     e.stopPropagation(); 
-                    if (hasData) {
-                        openGameModal(typeof game === 'object' ? game : { name: gameName }, gridItem);
-                    }
+                    // Modal opens regardless of data state
+                    openGameModal(typeof game === 'object' ? game : { name: gameName }, gridItem);
                 });
                 
                 gridItem.addEventListener('click', () => {
-                    if (game.id && hasData) {
+                    if (game.id) { 
+                        // Routes to game page regardless of data state
                         window.location.href = `/games/${game.id}`;
                     }
                 });
                 
                 gameGrid.appendChild(gridItem);
-            });
 
             // Append Suggest Game Box
             const suggestCard = document.createElement('div');
