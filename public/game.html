@@ -300,10 +300,8 @@
 
     <div class="banner">
         <div class="banner-row">
-            <div>
-                <a href="/">
-                    <img src="/Assets/nurture_banner.png" alt="Nurture Banner" style="height:90px; vertical-align:left; padding-left: 10px;">
-                </a>
+            <div style="cursor: default;">
+                <img src="/Assets/nurture_banner.png" alt="Nurture Banner" style="height:90px; vertical-align:left; padding-left: 10px;">
             </div>
             <div class="banner-actions" id="authContainer">
                 <a href="/auth/discord" class="social-button discord-button">
@@ -365,6 +363,7 @@
                 <input type="text" id="gsUrl" placeholder="URL Link" style="padding:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; color:white;">
         </div>
         <textarea id="gsOverviewText" placeholder="Edit Overview text..." style="display:none; width:100%; height:150px; padding:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; color:white; resize:vertical; box-sizing:border-box; margin-bottom:10px;"></textarea>
+            <input type="text" id="gsNewPlayerGuide" placeholder="(OPTIONAL) New Player Guide URL (e.g. YouTube Link)" style="display:none; width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; color:white; box-sizing:border-box;">
         <input type="text" id="gsCommit" placeholder="What was added / changed: (e.g. Fixed typo)" style="width:100%; padding:10px; margin-top:10px; border-radius:8px; border:1px solid #3a3a45; background:#1f1f28; color:white; box-sizing:border-box;">
     </div>
 
@@ -557,9 +556,18 @@
                 if (currentSection === 'overview') {
                     const editOverviewSvg = `<svg onclick="openGameSuggestModal('Overview')" style="width:20px;height:20px;fill:#ffffff;float:right;cursor:pointer;margin-top:5px;" title="Edit Overview" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>`;
                     
+                    let guideHtml = '';
+                    if (gameData.new_player_guide) {
+                        guideHtml = `
+                            <h3 style="margin-top:30px; border-bottom:1px solid #3a3a45; padding-bottom:8px; color:#9d8ec7;">New Player Guide</h3>
+                            <a href="${gameData.new_player_guide}" target="_blank" style="display:inline-block; padding:12px 20px; background:#4C3A90; color:white; text-decoration:none; border-radius:8px; border:1px solid #7A6BB5; font-weight:bold; margin-top:10px;">📺 View Recommended Guide</a>
+                        `;
+                    }
+                    
                     let overviewHtml = `
                         <h2>Overview ${editOverviewSvg}</h2>
                         <p style="line-height: 1.6; color: #ddd; white-space: pre-wrap;">${gameData.overview_text || 'No overview available for this game yet.'}</p>
+                        ${guideHtml}
                     `;
                     if (gameData.new_player_video_id) {
                         overviewHtml += `
@@ -716,10 +724,13 @@
             if (category === 'Overview') {
                 document.getElementById('gsStandardInputs').style.display = 'none';
                 document.getElementById('gsOverviewText').style.display = 'block';
+                document.getElementById('gsNewPlayerGuide').style.display = 'block';
                 document.getElementById('gsOverviewText').value = gameData.overview_text || '';
+                document.getElementById('gsNewPlayerGuide').value = gameData.new_player_guide || '';
             } else {
                 document.getElementById('gsStandardInputs').style.display = 'flex';
                 document.getElementById('gsOverviewText').style.display = 'none';
+                document.getElementById('gsNewPlayerGuide').style.display = 'none';
                 document.getElementById('gsTitle').value = '';
                 document.getElementById('gsAuthor').value = '';
                 document.getElementById('gsUrl').value = '';
@@ -732,7 +743,11 @@
             let dataPayload = {};
 
             if (currentSuggestCategory === 'Overview') {
-                dataPayload = { overview_text: document.getElementById('gsOverviewText').value, commitMessage };
+                dataPayload = { 
+                    overview_text: document.getElementById('gsOverviewText').value, 
+                    new_player_guide: document.getElementById('gsNewPlayerGuide').value,
+                    commitMessage 
+                };
             } else {
                 const title = document.getElementById('gsTitle').value;
                 const author = document.getElementById('gsAuthor').value;

@@ -36,7 +36,8 @@ app.use(helmet({
 
 // Input validation
 const validateInput = {
-    sanitizeString: (str) => xss(validator.escape(str || '')),
+    // Only use xss() to strip malicious tags. Do NOT use validator.escape() as it ruins image URLs.
+    sanitizeString: (str) => xss(str || ''),
     isValidSearch: (term) => validator.isLength(term || '', { min: 1, max: 100 })
 };
 
@@ -121,157 +122,133 @@ app.get('/api/games/search/:term', async (req, res) => {
     }
 });
 
-// --- DISCORD INTERACTIONS ROUTES ---
-// NOTE: This route MUST use verifyKeyMiddleware before parsing the body
+// --- UPDATED DISCORD INTERACTIONS (APPROVE / DENY / REPLY LOGIC) ---
 app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY), async (req, res) => {
     const interaction = req.body;
+    if (interaction.type === InteractionType.PING) return res.send({ type: InteractionResponseType.PONG });
 
-    // Handle Discord's mandatory security ping
-    if (interaction.type === InteractionType.PING) {
-        return res.send({ type: InteractionResponseType.PONG });
-    }
-
-    // Handle Button Clicks
     if (interaction.type === InteractionType.MESSAGE_COMPONENT) {
-        const customId = interaction.data.custom_id; // e.g., "approve_12345"
-        const [action, contributionId] = customId.split('_');
+        const customId = interaction.data.custom_id;
+        const [action, targetId] = customId.split('_');
 
         try {
-            const contribution = await Contribution.findById(contributionId);
-            if (!contribution) {
+            if (action === 'replymail') {
                 return res.send({
-                    type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-                    data: { content: "Error: Contribution not found in database.", flags: 64 } // Ephemeral
+                    type: InteractionResponseType.MODAL,
+                    data: {
+                        custom_id: `modal_replymail_${targetId}`,
+                        title: "Reply to User",
+                        components: [{ type: 1, components: [{ type: 4, custom_id: "reply_text", label: "Message:", style: 2, min_length: 1, max_length: 2000, required: true }] }]
+                    }
                 });
             }
 
-            if (action === 'approve' || action === 'tweak_approve') {
-                // 1. Force the status update directly in MongoDB (bypasses schema strictness)
+            const contribution = await Contribution.findById(targetId);
+            if (!contribution) return res.send({ type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE, data: { content: "Contribution not found.", flags: 64 } });
+
+            if (action === 'tweak') {
+                return res.send({
+                    type: InteractionResponseType.MODAL,
+                    data: {
+                        custom_id: `modal_tweak_${targetId}`,
+                        title: "Tweak Contribution",
+                        components: [{ type: 1, components: [{ type: 4, custom_id: "tweaked_data", label: "Edit JSON:", style: 2, value: JSON.stringify(contribution.data, null, 2), required: true }] }]
+                    }
+                });
+            }
+
+            // NOTE: No early res.send() here. We await all database processes first.
+            const user = await User.findOne({ discordId: contribution.submitterDiscordId });
+            const adminAvatar = interaction.member.user.avatar ? `https://cdn.discordapp.com/avatars/${interaction.member.user.id}/${interaction.member.user.avatar}.png` : 'https://cdn.discordapp.com/embed/avatars/0.png';
+
+            if (action === 'approve') {
                 await Contribution.updateOne({ _id: contribution._id }, { $set: { status: 'approved' } });
 
-                // 2. Fixed Game Creation vs Updating logic
                 if (contribution.itemCategory === 'Game' && contribution.actionType === 'CREATE') {
                     const existing = await Game.findOne({ id: contribution.gameId });
                     if (!existing) await Game.create(contribution.data);
                 } else if (contribution.gameId) {
                     const game = await Game.findOne({ id: contribution.gameId });
                     if (game) {
-                        const catKey = contribution.itemCategory.toLowerCase() + 's';
-                        const catArray = game[catKey] || game[contribution.itemCategory.toLowerCase()];
-                        if (catArray) {
-                            if (contribution.actionType === 'CREATE') { catArray.push({ ...contribution.data, _id: new mongoose.Types.ObjectId() }); }
-                            else if (contribution.actionType === 'EDIT') {
-                                const idx = catArray.findIndex(item => item._id?.toString() === contribution.targetIdentifier || item.title === contribution.targetIdentifier);
-                                if (idx !== -1) catArray[idx] = { ...catArray[idx], ...contribution.data };
+                        if (contribution.itemCategory === 'Overview') {
+                            if (contribution.data.overview_text) game.overview_text = contribution.data.overview_text;
+                            if (contribution.data.new_player_guide) game.new_player_guide = contribution.data.new_player_guide;
+                        } else {
+                            const catKey = contribution.itemCategory.toLowerCase() + 's';
+                            const catArray = game[catKey] || game[contribution.itemCategory.toLowerCase()];
+                            if (catArray) {
+                                if (contribution.actionType === 'CREATE') catArray.push({ ...contribution.data, _id: new mongoose.Types.ObjectId() });
+                                else if (contribution.actionType === 'EDIT') {
+                                    const idx = catArray.findIndex(item => item._id?.toString() === contribution.targetIdentifier || item.title === contribution.targetIdentifier);
+                                    if (idx !== -1) catArray[idx] = { ...catArray[idx], ...contribution.data };
+                                }
+                                else if (contribution.actionType === 'DELETE') {
+                                    const idx = catArray.findIndex(item => item._id?.toString() === contribution.targetIdentifier || item.title === contribution.targetIdentifier);
+                                    if (idx !== -1) catArray.splice(idx, 1);
+                                }
+                                game.markModified(catKey);
                             }
-                            else if (contribution.actionType === 'DELETE') {
-                                const idx = catArray.findIndex(item => item._id?.toString() === contribution.targetIdentifier || item.title === contribution.targetIdentifier);
-                                if (idx !== -1) catArray.splice(idx, 1);
-                            }
-                            game.markModified(catKey);
-                            await game.save();
                         }
+                        await game.save();
                     }
                 }
 
-                // 3. Safely handle points for both Map and POJO types
                 if (user) {
-                    user.totalPoints = (user.totalPoints || 0) + 50;
+                    user.totalPoints = (user.totalPoints || 0) + 1; // Exactly +1 point assigned
                     if (contribution.gameId) {
-                        if (!user.gamePoints) user.gamePoints = {};
-                        const currentPts = (typeof user.gamePoints.get === 'function') ? user.gamePoints.get(contribution.gameId) : user.gamePoints[contribution.gameId];
+                        if (!user.gamePoints) user.gamePoints = new Map();
                         
-                        if (typeof user.gamePoints.set === 'function') {
-                            user.gamePoints.set(contribution.gameId, (currentPts || 0) + 50);
-                        } else { 
-                            user.gamePoints[contribution.gameId] = (currentPts || 0) + 50; 
-                            user.markModified('gamePoints'); 
+                        // Mongoose strict typing handler for Maps vs POJOs
+                        if (typeof user.gamePoints.get === 'function') {
+                            user.gamePoints.set(contribution.gameId, (user.gamePoints.get(contribution.gameId) || 0) + 1);
+                        } else {
+                            user.gamePoints[contribution.gameId] = (user.gamePoints[contribution.gameId] || 0) + 1;
+                            user.markModified('gamePoints');
                         }
                     }
-                    user.mailbox.push({
-                        direction: 'INBOUND',
-                        subject: `Contribution Approved! (+50 pts)`,
-                        content: `Your submission for ${contribution.itemCategory} was approved!`,
-                        adminUsername: interaction.member.user.username,
-                        adminAvatar: adminAvatar,
-                        date: new Date()
-                    });
+                    user.mailbox.push({ direction: 'INBOUND', subject: 'Contribution Approved! (+1 pt)', content: `Your submission for ${contribution.itemCategory} was approved!`, adminUsername: interaction.member.user.username, adminAvatar: adminAvatar, date: new Date() });
                     await user.save();
                 }
 
-                return res.send({
-                    type: InteractionResponseType.UPDATE_MESSAGE,
-                    data: { content: `✅ **Approved by <@${interaction.member.user.id}>**`, components: [] }
-                });
+                // EXACTLY ONE RESPONSE FIRED AT THE VERY END
+                return res.send({ type: InteractionResponseType.UPDATE_MESSAGE, data: { content: `✅ **Approved by <@${interaction.member.user.id}>**`, components: [] } });
             }
 
             if (action === 'deny') {
                 await Contribution.updateOne({ _id: contribution._id }, { $set: { status: 'rejected' } });
-
                 if (user) {
-                    user.mailbox.push({
-                        direction: 'INBOUND',
-                        subject: 'Contribution Denied',
-                        content: `Your submission for ${contribution.itemCategory} was reviewed and rejected.`,
-                        adminUsername: interaction.member.user.username,
-                        adminAvatar: adminAvatar,
-                        date: new Date()
-                    });
+                    user.mailbox.push({ direction: 'INBOUND', subject: 'Contribution Denied', content: `Your submission for ${contribution.itemCategory} was reviewed and rejected.`, adminUsername: interaction.member.user.username, adminAvatar: adminAvatar, date: new Date() });
                     await user.save();
                 }
-
-                return res.send({
-                    type: InteractionResponseType.UPDATE_MESSAGE,
-                    data: { content: `❌ **Denied by <@${interaction.member.user.id}>**`, components: [] }
-                });
+                return res.send({ type: InteractionResponseType.UPDATE_MESSAGE, data: { content: `❌ **Denied by <@${interaction.member.user.id}>**`, components: [] } });
             }
-
-            if (action === 'deny') {
-                contribution.status = 'rejected';
-                await contribution.save();
-
-                return res.send({
-                    type: InteractionResponseType.UPDATE_MESSAGE,
-                    data: {
-                        content: `❌ **Denied by <@${interaction.member.user.id}>**`,
-                        components: []
-                    }
-                });
-            }
-
-            if (action === 'tweak') {
-                // Pops up a text input modal right inside Discord for the admin to edit
-                return res.send({
-                    type: InteractionResponseType.MODAL,
-                    data: {
-                        custom_id: `modal_tweak_${contributionId}`,
-                        title: "Tweak Contribution",
-                        components: [{
-                            type: 1,
-                            components: [{
-                                type: 4,
-                                custom_id: "tweaked_data",
-                                label: "Edit the submission JSON:",
-                                style: 2,
-                                min_length: 1,
-                                max_length: 4000,
-                                value: JSON.stringify(contribution.data, null, 2),
-                                required: true
-                            }]
-                        }]
-                    }
-                });
-            }
-        } catch (err) {
+        } catch (err) { 
             console.error("Interaction error:", err);
+            return res.send({ type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE, data: { content: `❌ **Error processing action.**`, flags: 64 } });
         }
     }
 
-    // Handle Modal Submissions (from the Tweak button)
     if (interaction.type === InteractionType.MODAL_SUBMIT) {
         const customId = interaction.data.custom_id;
         
-        // Modal: Tweak Contribution (Secured)
+        if (customId.startsWith('modal_replymail_')) {
+            const userId = customId.split('_')[2];
+            const replyText = interaction.data.components[0].components[0].value;
+            const user = await User.findById(userId);
+            if (user) {
+                user.mailbox.push({
+                    direction: 'INBOUND',
+                    subject: 'Message from Admin',
+                    content: replyText,
+                    adminUsername: interaction.member.user.username,
+                    adminAvatar: interaction.member.user.avatar ? `https://cdn.discordapp.com/avatars/${interaction.member.user.id}/${interaction.member.user.avatar}.png` : 'https://cdn.discordapp.com/embed/avatars/0.png',
+                    date: new Date()
+                });
+                await user.save();
+            }
+            return res.send({ type: InteractionResponseType.UPDATE_MESSAGE, data: { content: `✅ **Replied by <@${interaction.member.user.id}>:**\n>${replyText.split('\n').join('\n> ')}`, components: [] } });
+        }
+        
         if (customId.startsWith('modal_tweak_')) {
             const contributionId = customId.split('_')[2];
             const newJsonDataRaw = interaction.data.components[0].components[0].value;
@@ -279,74 +256,55 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
             try {
                 const parsedData = JSON.parse(newJsonDataRaw); 
                 const contribution = await Contribution.findById(contributionId);
-                if (!contribution) throw new Error("Contribution not found.");
-
-                // 1. Force the status update and overwrite data
                 await Contribution.updateOne({ _id: contribution._id }, { $set: { status: 'approved', data: parsedData } });
-                contribution.data = parsedData; // Update local var for the execution below
+                contribution.data = parsedData;
 
-                const user = await User.findOne({ discordId: contribution.submitterDiscordId });
-                const adminAvatar = interaction.member.user.avatar ? `https://cdn.discordapp.com/avatars/${interaction.member.user.id}/${interaction.member.user.avatar}.png` : 'https://cdn.discordapp.com/embed/avatars/0.png';
-
-                // 2. Fixed Game Creation vs Updating logic
                 if (contribution.itemCategory === 'Game' && contribution.actionType === 'CREATE') {
                     const existing = await Game.findOne({ id: contribution.gameId });
                     if (!existing) await Game.create(contribution.data);
                 } else if (contribution.gameId) {
                     const game = await Game.findOne({ id: contribution.gameId });
                     if (game) {
-                        const catKey = contribution.itemCategory.toLowerCase() + 's';
-                        const catArray = game[catKey] || game[contribution.itemCategory.toLowerCase()];
-                        if (catArray) {
-                            if (contribution.actionType === 'CREATE') { catArray.push({ ...contribution.data, _id: new mongoose.Types.ObjectId() }); }
-                            else if (contribution.actionType === 'EDIT') {
-                                const idx = catArray.findIndex(item => item._id?.toString() === contribution.targetIdentifier || item.title === contribution.targetIdentifier);
-                                if (idx !== -1) catArray[idx] = { ...catArray[idx], ...contribution.data };
+                        if (contribution.itemCategory === 'Overview') {
+                            if (contribution.data.overview_text) game.overview_text = contribution.data.overview_text;
+                            if (contribution.data.new_player_guide) game.new_player_guide = contribution.data.new_player_guide;
+                        } else {
+                            const catKey = contribution.itemCategory.toLowerCase() + 's';
+                            const catArray = game[catKey] || game[contribution.itemCategory.toLowerCase()];
+                            if (catArray) {
+                                if (contribution.actionType === 'CREATE') catArray.push({ ...contribution.data, _id: new mongoose.Types.ObjectId() });
+                                else if (contribution.actionType === 'EDIT') {
+                                    const idx = catArray.findIndex(item => item._id?.toString() === contribution.targetIdentifier || item.title === contribution.targetIdentifier);
+                                    if (idx !== -1) catArray[idx] = { ...catArray[idx], ...contribution.data };
+                                }
+                                game.markModified(catKey);
                             }
-                            else if (contribution.actionType === 'DELETE') {
-                                const idx = catArray.findIndex(item => item._id?.toString() === contribution.targetIdentifier || item.title === contribution.targetIdentifier);
-                                if (idx !== -1) catArray.splice(idx, 1);
-                            }
-                            game.markModified(catKey);
-                            await game.save();
                         }
+                        await game.save();
                     }
                 }
 
-                // 3. Safely handle points for both Map and POJO types
+                const user = await User.findOne({ discordId: contribution.submitterDiscordId });
                 if (user) {
-                    user.totalPoints = (user.totalPoints || 0) + 50;
+                    user.totalPoints = (user.totalPoints || 0) + 1; // Exactly +1 point assigned
                     if (contribution.gameId) {
-                        if (!user.gamePoints) user.gamePoints = {};
-                        const currentPts = (typeof user.gamePoints.get === 'function') ? user.gamePoints.get(contribution.gameId) : user.gamePoints[contribution.gameId];
+                        if (!user.gamePoints) user.gamePoints = new Map();
                         
-                        if (typeof user.gamePoints.set === 'function') {
-                            user.gamePoints.set(contribution.gameId, (currentPts || 0) + 50);
-                        } else { 
-                            user.gamePoints[contribution.gameId] = (currentPts || 0) + 50; 
-                            user.markModified('gamePoints'); 
+                        // Mongoose strict typing handler
+                        if (typeof user.gamePoints.get === 'function') {
+                            user.gamePoints.set(contribution.gameId, (user.gamePoints.get(contribution.gameId) || 0) + 1);
+                        } else {
+                            user.gamePoints[contribution.gameId] = (user.gamePoints[contribution.gameId] || 0) + 1;
+                            user.markModified('gamePoints');
                         }
                     }
-                    user.mailbox.push({
-                        direction: 'INBOUND',
-                        subject: 'Contribution Approved! (+50 pts)',
-                        content: `Your submission for ${contribution.itemCategory} was tweaked and approved by an admin!`,
-                        adminUsername: interaction.member.user.username,
-                        adminAvatar: adminAvatar,
-                        date: new Date()
-                    });
+                    user.mailbox.push({ direction: 'INBOUND', subject: 'Contribution Approved! (+1 pt)', content: `Your submission for ${contribution.itemCategory} was tweaked and approved by an admin!`, adminUsername: interaction.member.user.username, adminAvatar: interaction.member.user.avatar ? `https://cdn.discordapp.com/avatars/${interaction.member.user.id}/${interaction.member.user.avatar}.png` : 'https://cdn.discordapp.com/embed/avatars/0.png', date: new Date() });
                     await user.save();
                 }
 
-                return res.send({
-                    type: InteractionResponseType.UPDATE_MESSAGE,
-                    data: { content: `✏️ ✅ **Tweaked & Approved by <@${interaction.member.user.id}>**`, components: [] }
-                });
+                return res.send({ type: InteractionResponseType.UPDATE_MESSAGE, data: { content: `✏️ ✅ **Tweaked & Approved by <@${interaction.member.user.id}>**`, components: [] } });
             } catch (error) {
-                return res.send({
-                    type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-                    data: { content: `❌ **Failed to save tweak!**\n\`${error.message}\``, flags: 64 }
-                });
+                return res.send({ type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE, data: { content: `❌ **Failed to save tweak! Invalid JSON syntax.**\n\`${error.message}\``, flags: 64 } });
             }
         }
     }
