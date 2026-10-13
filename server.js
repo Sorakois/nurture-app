@@ -495,12 +495,14 @@ app.get('/api/mailbox', async (req, res) => {
         const contributions = await Contribution.find({ submitterDiscordId: user.discordId }).lean();
         
         let allItems = user.mailbox.map(m => ({
+            id: m._id,
             direction: m.direction,
             subject: m.subject,
             content: m.content,
             adminUsername: m.adminUsername,
             adminAvatar: m.adminAvatar,
-            date: m.date || new Date()
+            date: m.date || new Date(),
+            read: m.read || false
         }));
 
         // Dynamically inject all outgoing contributions into the mailbox view
@@ -521,11 +523,13 @@ app.get('/api/mailbox', async (req, res) => {
             }
 
             allItems.push({
+                id: c._id,
                 direction: 'OUTBOUND_CONTRIBUTION',
                 subject: `Suggested ${c.itemCategory} for ${c.gameId || 'Unknown'}`,
                 content: (c.targetIdentifier && c.targetIdentifier !== 'N/A' ? `Target: ${c.targetIdentifier}\n\n` : '') + dataLines.join('\n'),
                 status: c.status || 'pending',
-                date: c.createdAt || c._id.getTimestamp()
+                date: c.createdAt || c._id.getTimestamp(),
+                read: true
             });
         });
 
@@ -584,16 +588,29 @@ app.post('/api/mailbox/send', async (req, res) => {
     }
 });
 
-app.post('/api/mailbox/clear', async (req, res) => {
+app.post('/api/mailbox/mark-read', async (req, res) => {
     const token = req.cookies.nurture_session;
     if (!token) return res.status(401).json({ error: "Unauthorized" });
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
-        await User.updateOne({ _id: decoded.userId }, { $set: { mailbox: [] } });
+        const user = await User.findById(decoded.userId);
+        const { messageIds } = req.body;
+        
+        if (messageIds && messageIds.length > 0) {
+            user.mailbox.forEach(m => {
+                if (messageIds.includes(m._id.toString())) m.read = true;
+            });
+        } else {
+            // If array is empty, mark all as read
+            user.mailbox.forEach(m => m.read = true);
+        }
+        
+        user.markModified('mailbox');
+        await user.save();
         res.json({ success: true });
     } catch (err) {
-        res.status(500).json({ error: "Failed to clear mailbox" });
+        res.status(500).json({ error: "Failed to update mailbox" });
     }
 });
 

@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <button class="modal-close" onclick="closeMailboxModal()">×</button>
                 <h2 class="modal-title" style="display: flex; justify-content: space-between; align-items: center;">
                     📬 User Mailbox
-                    <span onclick="clearMailbox()" style="font-size: 0.45em; color: #ff5555; cursor: pointer; border: 1px solid #ff5555; padding: 4px 10px; border-radius: 12px; font-weight: normal; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,85,85,0.1)'" onmouseout="this.style.background='transparent'">Clear All</span>
+                    <span onclick="markAllRead()" style="font-size: 0.45em; color: #aaa; cursor: pointer; border: 1px solid #3a3a45; padding: 4px 10px; border-radius: 12px; font-weight: normal; transition: background 0.2s;" onmouseover="this.style.background='#3a3a45'" onmouseout="this.style.background='transparent'">Mark All Read</span>
                 </h2>
                 <div id="mailboxContent" style="max-height: 350px; overflow-y: auto; margin-bottom: 15px;">Loading messages...</div>
                 <button style="width:100%; padding:10px; background:#4C3A90; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="openComposeModal()">Compose New Message to Staff</button>
@@ -156,13 +156,24 @@ function openMailboxModal() {
     document.getElementById('mailboxContent').innerHTML = '<p style="color:#aaa;">Loading messages...</p>';
     setTimeout(loadMailboxMessages, 50); 
 }
-async function clearMailbox() {
-    if (!confirm("Are you sure you want to clear all your messages and notifications?")) return;
+async function markAsRead(id, element) {
     try {
-        await fetch('/api/mailbox/clear', { method: 'POST' });
-        loadMailboxMessages(); // Refreshes the UI instantly
+        await fetch('/api/mailbox/mark-read', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messageIds: [id] }) });
+        element.style.borderLeft = '1px solid #3a3a45'; // Remove unread highlight
+        element.onclick = null;
+        element.style.cursor = 'default';
+        const badge = element.querySelector('.new-badge');
+        if (badge) badge.style.display = 'none';
+        fetchUnreadMailCount(); // Updates the top nav counter instantly
+    } catch(e) {}
+}
+
+async function markAllRead() {
+    try {
+        await fetch('/api/mailbox/mark-read', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messageIds: [] }) });
+        loadMailboxMessages(); 
         document.getElementById('unreadBadge').style.display = 'none';
-    } catch (e) { alert("Failed to clear mailbox."); }
+    } catch (e) { alert("Failed to mark messages as read."); }
 }
 function closeMailboxModal() { document.getElementById('mailboxModal').classList.remove('active'); }
 function openComposeModal() { document.getElementById('composeModal').classList.add('active'); }
@@ -242,13 +253,17 @@ async function loadMailboxMessages() {
                 senderInfo = `<b>📤 You</b>`;
             }
 
+            const isUnread = !m.read && m.direction === 'INBOUND';
+            const unreadHighlight = isUnread ? 'border-left: 4px solid #FF5E5B; cursor: pointer;' : 'border-left: 1px solid #3a3a45;';
+            const newBadge = isUnread ? `<span class="new-badge" style="background:#FF5E5B; color:#fff; padding:2px 6px; border-radius:10px; font-size:0.7em; font-weight:bold; margin-left:8px; vertical-align:middle;">NEW</span>` : '';
+
             // Strict text escaping to prevent HTML/XSS execution inside the mailbox
             const escapeMail = (text) => (text || '').replace(/[&<>"']/g, match => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[match]));
 
             return `
-            <div style="background:#1f1f28; border:1px solid #3a3a45; padding:12px; border-radius:8px; margin-bottom:10px;">
+            <div style="background:#1f1f28; border:1px solid #3a3a45; ${unreadHighlight} padding:12px; border-radius:8px; margin-bottom:10px;" ${isUnread ? `onclick="markAsRead('${m.id}', this)"` : ''}>
                 <div style="display:flex; justify-content:space-between; font-size:0.85em; color:#aaa; margin-bottom:8px; align-items:center;">
-                    <div>${senderInfo} — ${escapeMail(m.subject)} ${statusBadge}</div>
+                    <div>${senderInfo} — ${escapeMail(m.subject)} ${statusBadge} ${newBadge}</div>
                     <span>${new Date(m.date).toLocaleDateString()}</span>
                 </div>
                 <div style="color:#fff; font-size:0.95em; white-space:pre-wrap;">${escapeMail(m.content)}</div>

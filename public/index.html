@@ -848,14 +848,15 @@
         }
 
         const escapeHtml = (text) => {
+            if (!text) return ''; // Prevents the fatal crash if data is missing
             const map = {
-                '&': '&',
-                '<': '<',
-                '>': '>',
-                '"': '"',
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
                 "'": '&#39;'
             };
-            return text.replace(/[&<>"']/g, (m) => map[m]);
+            return text.toString().replace(/[&<>"']/g, (m) => map[m]);
         };
 
         const debouncedSearch = debounce(searchGames, 300);
