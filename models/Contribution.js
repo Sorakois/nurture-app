@@ -6,10 +6,10 @@ const contributionSchema = new mongoose.Schema({
     gameId: { type: String }, 
     itemCategory: { type: String, enum: ['Game', 'Guide', 'Asset', 'Community', 'Mod'], required: true },
     
-    // NEW: What is the user trying to do?
+    // What is the user trying to do?
     actionType: { type: String, enum: ['CREATE', 'EDIT', 'DELETE'], required: true },
     
-    // NEW: If EDIT or DELETE, which item are they targeting?
+    // If EDIT or DELETE, which item are they targeting?
     targetIdentifier: { type: String }, 
     
     data: { type: mongoose.Schema.Types.Mixed, required: true }, // The proposed new/edited data

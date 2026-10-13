@@ -8,7 +8,7 @@ itemsDown.forEach(e => animateWithRandomNumber(e, -1080, 1080));
 const itemsUp = [".light1", ".light2", ".light3", ".light9", ".light10", ".light17"];
 itemsUp.forEach(e => animateWithRandomNumber(e, 1080, -1080));
 
-// --- NEW: Global Background Pause on Modal Open ---
+// --- Global Background Pause on Modal Open ---
 document.addEventListener('DOMContentLoaded', () => {
     const modalObserver = new MutationObserver(() => {
         if (typeof gsap === 'undefined') return;

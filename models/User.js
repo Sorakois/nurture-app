@@ -11,7 +11,7 @@ const userSchema = new mongoose.Schema({
     lastContributionDate: { type: Date },
     starredGames: [{ type: String }],
     
-    // NEW: Two-way mailbox system
+    // Two-way mailbox system
     mailbox: [{
         messageId: { type: mongoose.Schema.Types.ObjectId, auto: true },
         direction: { type: String, enum: ['INBOUND', 'OUTBOUND'], required: true }, // INBOUND = Admin to User, OUTBOUND = User to Admin
