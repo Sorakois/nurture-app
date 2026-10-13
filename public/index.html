@@ -1044,11 +1044,15 @@
         }
 
         async function submitInfoEdit() {
+            // Safely extract the game name and ID even if the game is a raw string or new Apple App Store search
+            const gName = typeof currentGameForModal === 'string' ? currentGameForModal : (currentGameForModal.name || 'Unknown');
+            const gId = (currentGameForModal && currentGameForModal.id) ? currentGameForModal.id : gName.toLowerCase().replace(/[^a-z0-9]/g, '-');
+
             const payload = {
-                gameId: currentGameForModal.id,
-                itemCategory: 'Overview',
+                gameId: gId,
+                itemCategory: 'Overview', // Safely passes MongoDB Contribution schema validation
                 actionType: 'EDIT',
-                targetIdentifier: currentGameForModal.name || 'Game Data',
+                targetIdentifier: gName,
                 data: {
                     trailer_id: document.getElementById('editTrailer').value.trim(),
                     commitMessage: document.getElementById('editCommit').value.trim(),
@@ -1063,10 +1067,17 @@
             };
 
             try {
-                await fetch('/api/contribute', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+                const response = await fetch('/api/contribute', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.error || 'Server rejected submission');
+                }
                 alert("Data update suggested successfully! Awaiting Admin Approval.");
                 document.getElementById('editInfoModal').classList.remove('active');
-            } catch (e) { alert("Failed to submit."); }
+            } catch (e) { 
+                alert("Failed to submit: " + e.message); 
+                console.error(e);
+            }
         }
 
         window.addEventListener('online', () => fetchInitialData());

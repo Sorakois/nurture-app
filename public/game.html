@@ -603,8 +603,8 @@
                 };
 
                 const config = sectionConfig[currentSection];
-                const contributeSvg = `<svg onclick="openGameSuggestModal('${config.dbKey}')" style="width:24px;height:24px;fill:#ffffff;float:right;cursor:pointer;" title="Contribute to ${config.title}" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>`;
-                const headerHtml = `<h2>${config.title} ${contributeSvg}</h2>`;
+                const contributeSvg = `<button onclick="openGameSuggestModal('${config.dbKey}')" style="padding: 6px 12px; background: #4C3A90; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.6em; transition: background 0.2s;" onmouseover="this.style.background='#5c47ac'" onmouseout="this.style.background='#4C3A90'">+ Add New</button>`;
+                const headerHtml = `<h2 style="display: flex; justify-content: space-between; align-items: center;">${config.title} ${contributeSvg}</h2>`;
 
                 if (!config || !config.data || config.data.length === 0) {
                     contentArea.innerHTML = headerHtml + `<p style="color: #aaa;">No items found.</p>`;
@@ -634,7 +634,10 @@
                 // Strict HTML escaping to prevent XSS execution inside the UI
                 const safeStr = (text) => (text || '').toString().replace(/[&<>"']/g, m => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[m]));
 
-                const cardsHtml = filteredData.map(item => {
+                // Store the current items globally so the modal can fetch them when clicked
+                currentDisplayedItems = filteredData;
+
+                const cardsHtml = filteredData.map((item, index) => {
                     // 1. Primary Meta (Author, Format, Platform, or Version)
                     let metaVal = item[config.metaKey];
                     if (Array.isArray(metaVal)) metaVal = metaVal.join(', ');
@@ -649,6 +652,13 @@
                         let subDiscordId = item.submitterDiscordId || '';
                         submitterHtml = `<span style="color:#7A6BB5; font-size: 0.9em; margin-left: 10px;">| Submitted by <span style="color:#9d8ec7; cursor:pointer; text-decoration:underline;" onclick="event.preventDefault(); event.stopPropagation(); openUserProfileModal('${subDiscordId}', '${safeSubName}')">${safeSubName}</span></span>`;
                     }
+                    
+                    // 3. The new individual edit pencil button
+                    const editBtnHtml = `
+                        <div style="margin-left: auto; padding-left: 15px; display: flex; align-items: center;">
+                            <svg onclick="event.preventDefault(); event.stopPropagation(); openGameSuggestModal('${config.dbKey}', ${index})" style="width:20px;height:20px;fill:#aaa;cursor:pointer;transition:fill 0.2s;" onmouseover="this.style.fill='#fff'" onmouseout="this.style.fill='#aaa'" title="Suggest Edit" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                        </div>
+                    `;
 
                     return `
                         <a href="${safeStr(item.url || item.download_url || '#')}" target="_blank" class="item-card">
@@ -657,6 +667,7 @@
                                 <div class="item-title">${safeStr(item.title || item.name)}</div>
                                 <div class="item-meta">${primaryMeta}${submitterHtml}</div>
                             </div>
+                            ${editBtnHtml}
                         </a>
                     `;
                 }).join('');
@@ -728,12 +739,17 @@
         }
 
         let currentSuggestCategory = '';
-        function openGameSuggestModal(category) {
+        let currentSuggestAction = 'CREATE';
+        let currentSuggestTarget = null;
+        let currentDisplayedItems = []; // Populated during renderContent()
+
+        function openGameSuggestModal(category, itemIndex = null) {
             currentSuggestCategory = category;
-            document.getElementById('gsCategory').textContent = category;
             document.getElementById('gsCommit').value = '';
             
             if (category === 'Overview') {
+                currentSuggestAction = 'EDIT';
+                currentSuggestTarget = 'Overview Data';
                 document.getElementById('gsStandardInputs').style.display = 'none';
                 document.getElementById('gsOverviewText').style.display = 'block';
                 document.getElementById('gsNewPlayerGuide').style.display = 'block';
@@ -743,27 +759,41 @@
                 document.getElementById('gsStandardInputs').style.display = 'flex';
                 document.getElementById('gsOverviewText').style.display = 'none';
                 document.getElementById('gsNewPlayerGuide').style.display = 'none';
-                document.getElementById('gsTitle').value = '';
-                document.getElementById('gsAuthor').value = '';
-                document.getElementById('gsUrl').value = '';
+                
+                if (itemIndex !== null && currentDisplayedItems[itemIndex]) {
+                    // Editing an existing item
+                    currentSuggestAction = 'EDIT';
+                    const item = currentDisplayedItems[itemIndex];
+                    currentSuggestTarget = item._id || item.title || item.name;
+                    document.getElementById('gsTitle').value = item.title || item.name || '';
+                    document.getElementById('gsAuthor').value = item.author || item.platform || item.type || item.version || '';
+                    document.getElementById('gsUrl').value = item.url || item.download_url || '';
+                } else {
+                    // Creating a brand new item
+                    currentSuggestAction = 'CREATE';
+                    currentSuggestTarget = null;
+                    document.getElementById('gsTitle').value = '';
+                    document.getElementById('gsAuthor').value = '';
+                    document.getElementById('gsUrl').value = '';
+                }
             }
             document.getElementById('gameSuggestModal').classList.add('active');
         }
 
         async function submitGameSuggestion() {
-            const commitMessage = document.getElementById('gsCommit').value;
+            const commitMessage = document.getElementById('gsCommit').value.trim();
             let dataPayload = {};
 
             if (currentSuggestCategory === 'Overview') {
                 dataPayload = { 
-                    overview_text: document.getElementById('gsOverviewText').value, 
-                    new_player_guide: document.getElementById('gsNewPlayerGuide').value,
+                    overview_text: document.getElementById('gsOverviewText').value.trim(), 
+                    new_player_guide: document.getElementById('gsNewPlayerGuide').value.trim(),
                     commitMessage 
                 };
             } else {
-                const title = document.getElementById('gsTitle').value;
-                const author = document.getElementById('gsAuthor').value;
-                const url = document.getElementById('gsUrl').value;
+                const title = document.getElementById('gsTitle').value.trim();
+                const author = document.getElementById('gsAuthor').value.trim();
+                const url = document.getElementById('gsUrl').value.trim();
                 if (!title || !url) return alert("Title and URL are required.");
                 dataPayload = { title, url, author, platform: author, type: author, version: author, commitMessage };
             }
@@ -771,15 +801,20 @@
             const payload = {
                 gameId: gameData.id,
                 itemCategory: currentSuggestCategory,
-                actionType: currentSuggestCategory === 'Overview' ? 'EDIT' : 'CREATE',
+                actionType: currentSuggestAction,
+                targetIdentifier: currentSuggestTarget || (dataPayload.title || 'New Item'),
                 data: dataPayload
             };
 
             try {
-                await fetch('/api/contribute', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+                const response = await fetch('/api/contribute', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.error || 'Server rejected submission');
+                }
                 alert("Suggestion submitted successfully! Awaiting Admin Approval.");
                 document.getElementById('gameSuggestModal').classList.remove('active');
-            } catch (e) { alert("Failed to submit."); }
+            } catch (e) { alert("Failed to submit: " + e.message); }
         }
 
         initPage();
