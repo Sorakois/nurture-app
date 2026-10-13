@@ -15,14 +15,28 @@ require('dotenv').config();
 
 const app = express();
 
-// Serverless-optimized MongoDB connection
-if (mongoose.connection.readyState === 0) {
-    mongoose.connect(process.env.MONGODB_URI).then(() => {
-        console.log("Connected to MongoDB Atlas");
-    }).catch((err) => {
-        console.error("Database connection error:", err);
+// Serverless-optimized MongoDB connection (Middleware Pattern)
+const connectDB = async () => {
+    // If already connected (readyState 1) or connecting (readyState 2), skip
+    if (mongoose.connection.readyState >= 1) return;
+    
+    // Connect and enforce a 5-second timeout so it never hangs infinitely
+    await mongoose.connect(process.env.MONGODB_URI, { 
+        serverSelectionTimeoutMS: 5000 
     });
-}
+    console.log("Connected to MongoDB Atlas");
+};
+
+app.use(async (req, res, next) => {
+    try {
+        // Force the server to wait for the DB before running ANY route
+        await connectDB();
+        next();
+    } catch (err) {
+        console.error("Database connection error:", err);
+        res.status(500).json({ error: "Database connection failed" });
+    }
+});
 
 app.use(cookieParser());
 app.use(express.json({ limit: '10mb' }));
