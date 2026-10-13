@@ -634,13 +634,19 @@
                 const safeStr = (text) => (text || '').toString().replace(/[&<>"']/g, m => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[m]));
 
                 const cardsHtml = filteredData.map(item => {
+                    // 1. Primary Meta (Author, Format, Platform, or Version)
                     let metaVal = item[config.metaKey];
                     if (Array.isArray(metaVal)) metaVal = metaVal.join(', ');
-
                     let metaHtml = safeStr(metaVal);
-                    // Make authors/submitters clickable links that search by username
-                    if (config.metaKey === 'author' || config.metaKey === 'submitter') {
-                        metaHtml = `<span style="color:#9d8ec7; cursor:pointer; text-decoration:underline;" onclick="event.preventDefault(); event.stopPropagation(); openUserProfileModal(null, '${safeStr(metaVal)}')">${safeStr(metaVal)}</span>`;
+                    let primaryMeta = metaHtml ? `${config.metaPrefix}${metaHtml}` : '';
+
+                    // 2. Contributor / Submitter (The Nurture User)
+                    let submitterHtml = '';
+                    let subName = item.submitterUsername || item.submitter;
+                    if (subName) {
+                        let safeSubName = safeStr(subName);
+                        let subDiscordId = item.submitterDiscordId || '';
+                        submitterHtml = `<span style="color:#7A6BB5; font-size: 0.9em; margin-left: 10px;">| Submitted by <span style="color:#9d8ec7; cursor:pointer; text-decoration:underline;" onclick="event.preventDefault(); event.stopPropagation(); openUserProfileModal('${subDiscordId}', '${safeSubName}')">${safeSubName}</span></span>`;
                     }
 
                     return `
@@ -648,7 +654,7 @@
                             <img src="${getItemIcon(item, currentSection)}" class="item-icon" alt="icon" onerror="this.src='/Assets/placeholder.png'">
                             <div class="item-details">
                                 <div class="item-title">${safeStr(item.title || item.name)}</div>
-                                <div class="item-meta">${config.metaPrefix}${metaHtml}</div>
+                                <div class="item-meta">${primaryMeta}${submitterHtml}</div>
                             </div>
                         </a>
                     `;

@@ -195,7 +195,14 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                             const catKey = contribution.itemCategory.toLowerCase() + 's';
                             const catArray = game[catKey] || game[contribution.itemCategory.toLowerCase()];
                             if (catArray) {
-                                if (contribution.actionType === 'CREATE') catArray.push({ ...contribution.data, _id: new mongoose.Types.ObjectId() });
+                                if (contribution.actionType === 'CREATE') {
+                                    catArray.push({ 
+                                        ...contribution.data, 
+                                        submitterUsername: contribution.submitterUsername,
+                                        submitterDiscordId: contribution.submitterDiscordId,
+                                        _id: new mongoose.Types.ObjectId() 
+                                    });
+                                }
                                 else if (contribution.actionType === 'EDIT') {
                                     const idx = catArray.findIndex(item => item._id?.toString() === contribution.targetIdentifier || item.title === contribution.targetIdentifier);
                                     if (idx !== -1) catArray[idx] = { ...catArray[idx], ...contribution.data };
@@ -290,7 +297,14 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                             const catKey = contribution.itemCategory.toLowerCase() + 's';
                             const catArray = game[catKey] || game[contribution.itemCategory.toLowerCase()];
                             if (catArray) {
-                                if (contribution.actionType === 'CREATE') catArray.push({ ...contribution.data, _id: new mongoose.Types.ObjectId() });
+                                if (contribution.actionType === 'CREATE') {
+                                    catArray.push({ 
+                                        ...contribution.data, 
+                                        submitterUsername: contribution.submitterUsername,
+                                        submitterDiscordId: contribution.submitterDiscordId,
+                                        _id: new mongoose.Types.ObjectId() 
+                                    });
+                                }
                                 else if (contribution.actionType === 'EDIT') {
                                     const idx = catArray.findIndex(item => item._id?.toString() === contribution.targetIdentifier || item.title === contribution.targetIdentifier);
                                     if (idx !== -1) catArray[idx] = { ...catArray[idx], ...contribution.data };
