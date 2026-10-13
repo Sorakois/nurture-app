@@ -789,7 +789,8 @@
 
             const payload = {
                 gameId: gameData.id,
-                itemCategory: currentSuggestCategory,
+                // Automatically swaps 'Overview' to 'Game' to pass validation, but leaves 'Guide', 'Asset', etc alone
+                itemCategory: currentSuggestCategory === 'Overview' ? 'Game' : currentSuggestCategory,
                 actionType: currentSuggestAction,
                 targetIdentifier: currentSuggestTarget || (dataPayload.title || 'New Item'),
                 data: dataPayload
