@@ -502,13 +502,16 @@
                 <button onclick="lookupGame()" style="padding:10px 15px; background:#4C3A90; color:white; border:none; border-radius:8px; cursor:pointer;">Lookup</button>
             </div>
 
-            <div style="display:flex; flex-direction:column; gap:10px;">
-                <input type="text" id="sgName" placeholder="Game Name" style="padding:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; color:white;">
-                <input type="text" id="sgDev" placeholder="Developer" style="padding:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; color:white;">
-                <input type="text" id="sgTags" placeholder="Tags (comma separated)" style="padding:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; color:white;">
-                <textarea id="sgDesc" placeholder="Overview Description" style="height:100px; padding:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; color:white; resize:none;"></textarea>
-                <input type="hidden" id="sgIcon">
+            <div style="display:flex; gap: 15px; margin-bottom: 10px;">
+                <img id="sgIconPreview" src="/Assets/placeholder.png" style="width: 100px; height: 100px; border-radius: 12px; object-fit: cover; border: 1px solid #3a3a45; display: none;">
+                <div style="display:flex; flex-direction:column; gap:10px; flex-grow: 1;">
+                    <input type="text" id="sgName" placeholder="Game Name" style="padding:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; color:white;">
+                    <input type="text" id="sgDev" placeholder="Developer" style="padding:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; color:white;">
+                    <input type="text" id="sgTags" placeholder="Tags (comma separated)" style="padding:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; color:white;">
+                </div>
             </div>
+            <textarea id="sgDesc" placeholder="Overview Description" style="width:100%; height:100px; padding:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; color:white; resize:none; box-sizing:border-box;"></textarea>
+            <input type="hidden" id="sgIcon">
 
             <button onclick="submitSuggestion()" style="width:100%; margin-top:15px; padding:12px; background:#FF5E5B; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">Submit to Admins</button>
         </div>
@@ -906,6 +909,11 @@
                     document.getElementById('sgTags').value = data.tags.join(', ');
                     document.getElementById('sgDesc').value = data.overview_text;
                     document.getElementById('sgIcon').value = data.icon_url;
+                    
+                    // Reveal the visual preview
+                    const preview = document.getElementById('sgIconPreview');
+                    preview.src = data.icon_url;
+                    preview.style.display = 'block';
                 } else alert("Game not found in Apple Database. Please fill manually.");
             } catch (e) { alert("Lookup failed."); }
         }

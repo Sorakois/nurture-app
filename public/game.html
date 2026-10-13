@@ -622,16 +622,19 @@
 
                 const filterHtml = buildFilterBar(config.data, config.catKey);
 
+                // Strict HTML escaping to prevent XSS execution inside the UI
+                const safeStr = (text) => (text || '').toString().replace(/[&<>"']/g, m => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[m]));
+
                 const cardsHtml = filteredData.map(item => {
                     let metaVal = item[config.metaKey];
                     if (Array.isArray(metaVal)) metaVal = metaVal.join(', ');
 
                     return `
-                        <a href="${item.url || item.download_url || '#'}" target="_blank" class="item-card">
+                        <a href="${safeStr(item.url || item.download_url || '#')}" target="_blank" class="item-card">
                             <img src="${getItemIcon(item, currentSection)}" class="item-icon" alt="icon" onerror="this.src='/Assets/placeholder.png'">
                             <div class="item-details">
-                                <div class="item-title">${item.title || item.name}</div>
-                                <div class="item-meta">${config.metaPrefix}${metaVal}</div>
+                                <div class="item-title">${safeStr(item.title || item.name)}</div>
+                                <div class="item-meta">${config.metaPrefix}${safeStr(metaVal)}</div>
                             </div>
                         </a>
                     `;

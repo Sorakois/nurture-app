@@ -169,13 +169,16 @@ async function loadMailboxMessages() {
                 senderInfo = `<b>📤 You</b>`;
             }
 
+            // Strict text escaping to prevent HTML/XSS execution inside the mailbox
+            const escapeMail = (text) => (text || '').replace(/[&<>"']/g, match => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[match]));
+
             return `
             <div style="background:#1f1f28; border:1px solid #3a3a45; padding:12px; border-radius:8px; margin-bottom:10px;">
                 <div style="display:flex; justify-content:space-between; font-size:0.85em; color:#aaa; margin-bottom:8px; align-items:center;">
-                    <div>${senderInfo} — ${m.subject} ${statusBadge}</div>
+                    <div>${senderInfo} — ${escapeMail(m.subject)} ${statusBadge}</div>
                     <span>${new Date(m.date).toLocaleDateString()}</span>
                 </div>
-                <div style="color:#fff; font-size:0.95em; white-space:pre-wrap;">${m.content}</div>
+                <div style="color:#fff; font-size:0.95em; white-space:pre-wrap;">${escapeMail(m.content)}</div>
             </div>
             `;
         }).join('');
