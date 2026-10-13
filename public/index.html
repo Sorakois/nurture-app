@@ -730,12 +730,14 @@
             }
         };
 
-        function renderStars(val) {
+        function renderStars(val, count) {
             const num = Math.round(parseFloat(val));
             if (isNaN(num) || num < 1) return '<span style="color:#888; font-size: 0.85em;">N/A</span>';
             const filled = '★'.repeat(num);
             const empty = '☆'.repeat(5 - num);
-            return `<span class="star-display"><span style="color:#ffc107;">${filled}</span><span style="color:#555;">${empty}</span></span>`;
+            const exactVal = parseFloat(val).toFixed(1);
+            const countText = count ? `<div style="font-size:0.5em; color:#aaa; margin-top:4px; font-family:sans-serif;">${exactVal}/5 (${count} rating${count !== 1 ? 's' : ''})</div>` : '';
+            return `<div style="display:flex; flex-direction:column; align-items:center; line-height:1;"><span class="star-display"><span style="color:#ffc107;">${filled}</span><span style="color:#555;">${empty}</span></span>${countText}</div>`;
         }
 
         function openGameModal(game, cardElement) {
@@ -760,7 +762,6 @@
                 videoContainer.style.display = 'none';
             }
             
-            // Render highly reliable PNG fallback thumbnails instead of raw SVGs
             const esrbImages = {
                 'E': '<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/ESRB_Everyone.svg/150px-ESRB_Everyone.svg.png" style="height:35px;">',
                 'T': '<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/cb/ESRB_Teen.svg/150px-ESRB_Teen.svg.png" style="height:35px;">',
@@ -768,12 +769,12 @@
             };
             modalAge.innerHTML = esrbImages[game.ratings?.age] || '<span style="font-size:1.1em; font-weight:bold; color:#ffc107;">N/A</span>';
             
-            // Render integer ratings into visual stars
-            modalF2P.innerHTML = renderStars(game.ratings?.f2p);
-            modalAFK.innerHTML = renderStars(game.ratings?.afk);
-            modalStory.innerHTML = renderStars(game.ratings?.story);
-            modalGameplay.innerHTML = renderStars(game.ratings?.gameplay);
-            modalOverall.innerHTML = renderStars(game.ratings?.overall);
+            // Render integer ratings into visual stars with appended database review counts
+            modalF2P.innerHTML = renderStars(game.ratings?.f2p, game.rating_counts?.f2p);
+            modalAFK.innerHTML = renderStars(game.ratings?.afk, game.rating_counts?.afk);
+            modalStory.innerHTML = renderStars(game.ratings?.story, game.rating_counts?.story);
+            modalGameplay.innerHTML = renderStars(game.ratings?.gameplay, game.rating_counts?.gameplay);
+            modalOverall.innerHTML = renderStars(game.ratings?.overall, game.rating_counts?.total_reviews);
             
             gameModal.classList.add('active');
         }
