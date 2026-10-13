@@ -273,9 +273,21 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                 } else if (contribution.gameId) {
                     const game = await Game.findOne({ id: contribution.gameId });
                     if (game) {
-                        if (contribution.itemCategory === 'Overview') {
-                            if (contribution.data.overview_text) game.overview_text = contribution.data.overview_text;
-                            if (contribution.data.new_player_guide) game.new_player_guide = contribution.data.new_player_guide;
+                        if (contribution.itemCategory === 'Overview' || contribution.itemCategory === 'Game') {
+                            let updates = {};
+                            
+                            if (contribution.data.overview_text !== undefined) updates.overview_text = contribution.data.overview_text;
+                            if (contribution.data.new_player_guide !== undefined) updates.new_player_guide = contribution.data.new_player_guide;
+                            
+                            // Keep the starter guide and the trailer completely separate
+                            if (contribution.data.new_player_video_id !== undefined) updates.new_player_video_id = contribution.data.new_player_video_id;
+                            if (contribution.data.trailer_id !== undefined) updates.trailer_id = contribution.data.trailer_id; 
+                            
+                            if (contribution.data.age !== undefined) {
+                                updates['ratings.age'] = contribution.data.age;
+                            }
+                            
+                            await Game.collection.updateOne({ id: contribution.gameId }, { $set: updates });
                         } else {
                             const catKey = contribution.itemCategory.toLowerCase() + 's';
                             const catArray = game[catKey] || game[contribution.itemCategory.toLowerCase()];
@@ -297,9 +309,10 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                                     if (idx !== -1) catArray.splice(idx, 1);
                                 }
                                 game.markModified(catKey);
+                                await game.save(); // Only save if we manipulated the array via Mongoose
                             }
                         }
-                        await game.save();
+                        // Destructive outer game.save() removed from here
                     }
                 }
 
@@ -375,9 +388,20 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                 } else if (contribution.gameId) {
                     const game = await Game.findOne({ id: contribution.gameId });
                     if (game) {
-                        if (contribution.itemCategory === 'Overview') {
-                            if (contribution.data.overview_text) game.overview_text = contribution.data.overview_text;
-                            if (contribution.data.new_player_guide) game.new_player_guide = contribution.data.new_player_guide;
+                        if (contribution.itemCategory === 'Overview' || contribution.itemCategory === 'Game') {
+                            let updates = {};
+                            
+                            if (contribution.data.overview_text !== undefined) updates.overview_text = contribution.data.overview_text;
+                            if (contribution.data.new_player_guide !== undefined) updates.new_player_guide = contribution.data.new_player_guide;
+                            
+                            if (contribution.data.new_player_video_id !== undefined) updates.new_player_video_id = contribution.data.new_player_video_id;
+                            if (contribution.data.trailer_id !== undefined) updates.trailer_id = contribution.data.trailer_id; 
+                            
+                            if (contribution.data.age !== undefined) {
+                                updates['ratings.age'] = contribution.data.age;
+                            }
+                            
+                            await Game.collection.updateOne({ id: contribution.gameId }, { $set: updates });
                         } else {
                             const catKey = contribution.itemCategory.toLowerCase() + 's';
                             const catArray = game[catKey] || game[contribution.itemCategory.toLowerCase()];
@@ -394,10 +418,14 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                                     const idx = catArray.findIndex(item => item._id?.toString() === contribution.targetIdentifier || item.title === contribution.targetIdentifier);
                                     if (idx !== -1) catArray[idx] = { ...catArray[idx], ...contribution.data };
                                 }
+                                else if (contribution.actionType === 'DELETE') {
+                                    const idx = catArray.findIndex(item => item._id?.toString() === contribution.targetIdentifier || item.title === contribution.targetIdentifier);
+                                    if (idx !== -1) catArray.splice(idx, 1);
+                                }
                                 game.markModified(catKey);
+                                await game.save();
                             }
                         }
-                        await game.save();
                     }
                 }
 
