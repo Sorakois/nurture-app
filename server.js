@@ -697,7 +697,24 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                     const game = await Game.findOne({ id: contribution.gameId });
                     if (game) {
                         if (contribution.itemCategory === 'Overview') {
-                            game.overview_text = contribution.data.overview_text;
+                            if (contribution.data.overview_text) game.overview_text = contribution.data.overview_text;
+                            if (contribution.data.new_player_guide) game.new_player_guide = contribution.data.new_player_guide;
+                        } else if (contribution.itemCategory === 'GameInfo') {
+                            // Automatically update the trailer and ratings data
+                            if (contribution.data.trailer_id !== undefined) game.trailer_id = contribution.data.trailer_id;
+                            
+                            if (!game.ratings) game.ratings = {};
+                            if (contribution.data.ratings) {
+                                game.ratings = { ...game.ratings, ...contribution.data.ratings };
+                                
+                                // Auto-calculate the new Overall Average
+                                const r = game.ratings;
+                                const scores = [r.f2p, r.afk, r.story, r.gameplay].map(Number).filter(n => !isNaN(n) && n > 0);
+                                if (scores.length > 0) {
+                                    game.ratings.overall = (scores.reduce((a,b) => a+b, 0) / scores.length).toFixed(1) + '/5';
+                                }
+                            }
+                            game.markModified('ratings');
                         } else {
                             const catKey = contribution.itemCategory.toLowerCase() + 's';
                             const catArray = game[catKey] || game[contribution.itemCategory.toLowerCase()];
@@ -797,7 +814,24 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                     const game = await Game.findOne({ id: contribution.gameId });
                     if (game) {
                         if (contribution.itemCategory === 'Overview') {
-                            game.overview_text = contribution.data.overview_text;
+                            if (contribution.data.overview_text) game.overview_text = contribution.data.overview_text;
+                            if (contribution.data.new_player_guide) game.new_player_guide = contribution.data.new_player_guide;
+                        } else if (contribution.itemCategory === 'GameInfo') {
+                            // Automatically update the trailer and ratings data
+                            if (contribution.data.trailer_id !== undefined) game.trailer_id = contribution.data.trailer_id;
+                            
+                            if (!game.ratings) game.ratings = {};
+                            if (contribution.data.ratings) {
+                                game.ratings = { ...game.ratings, ...contribution.data.ratings };
+                                
+                                // Auto-calculate the new Overall Average
+                                const r = game.ratings;
+                                const scores = [r.f2p, r.afk, r.story, r.gameplay].map(Number).filter(n => !isNaN(n) && n > 0);
+                                if (scores.length > 0) {
+                                    game.ratings.overall = (scores.reduce((a,b) => a+b, 0) / scores.length).toFixed(1) + '/5';
+                                }
+                            }
+                            game.markModified('ratings');
                         } else {
                             const catKey = contribution.itemCategory.toLowerCase() + 's';
                             const catArray = game[catKey] || game[contribution.itemCategory.toLowerCase()];

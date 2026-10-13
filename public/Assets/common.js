@@ -8,6 +8,29 @@ itemsDown.forEach(e => animateWithRandomNumber(e, -1080, 1080));
 const itemsUp = [".light1", ".light2", ".light3", ".light9", ".light10", ".light17"];
 itemsUp.forEach(e => animateWithRandomNumber(e, 1080, -1080));
 
+// --- NEW: Global Background Pause on Modal Open ---
+document.addEventListener('DOMContentLoaded', () => {
+    const modalObserver = new MutationObserver(() => {
+        if (typeof gsap === 'undefined') return;
+        
+        // Checks if ANY modal on the screen has the 'active' class
+        const anyModalActive = document.querySelectorAll('.modal-overlay.active').length > 0;
+        
+        if (anyModalActive) {
+            gsap.globalTimeline.pause(); // Freezes all background frame rendering instantly
+        } else {
+            gsap.globalTimeline.play();  // Resumes seamlessly when the modal closes
+        }
+    });
+    
+    // Monitors the entire DOM for class changes on modals efficiently
+    modalObserver.observe(document.body, { 
+        attributes: true, 
+        subtree: true, 
+        attributeFilter: ['class'] 
+    });
+});
+
 // --- UI Render Helpers ---
 function renderLoggedOutUI(container) {
     container.innerHTML = `

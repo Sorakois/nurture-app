@@ -456,14 +456,14 @@
             <button class="modal-close" id="closeModal">×</button>
             <h2 class="modal-title" id="modalGameTitle">Game Title</h2>
             
-            <div class="video-container">
+            <div class="video-container" id="modalVideoContainer" style="display:none;">
                 <iframe id="modalTrailer" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
             </div>
             
             <div class="ratings-grid">
-                <div class="rating-box">
+                <div class="rating-box" style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
                     <div class="rating-label">Age Rating</div>
-                    <div class="rating-value" id="modalAge">-</div>
+                    <div class="rating-value" id="modalAge" style="margin-top: 5px;">-</div>
                 </div>
                 <div class="rating-box">
                     <div class="rating-label">F2P Rating</div>
@@ -486,6 +486,34 @@
                     <div class="rating-value" id="modalOverall">-</div>
                 </div>
             </div>
+
+            <button onclick="openEditInfoModal()" style="width:100%; margin-top:20px; padding:12px; background:#4C3A90; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; transition: background 0.2s;" onmouseover="this.style.background='#5c47ac'" onmouseout="this.style.background='#4C3A90'">✏️ Suggest Data Update</button>
+        </div>
+    </div>
+
+    <!-- Suggest Info Edit Modal -->
+    <div id="editInfoModal" class="modal-overlay">
+        <div class="modal-window" style="max-width: 500px;">
+            <button class="modal-close" onclick="document.getElementById('editInfoModal').classList.remove('active')">×</button>
+            <h2 class="modal-title">Suggest Data Update</h2>
+            
+            <input type="text" id="editTrailer" placeholder="YouTube Trailer Video ID (e.g. dQw4w9WgXcQ)" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; color:white; box-sizing:border-box;">
+            
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:10px;">
+                <select id="editAge" style="padding:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; color:white;">
+                    <option value="">Age Rating...</option>
+                    <option value="E">E (Everyone)</option>
+                    <option value="T">T (Teen)</option>
+                    <option value="M">M (Mature 17+)</option>
+                </select>
+                <input type="number" id="editF2P" placeholder="F2P Rating (1-5)" min="1" max="5" style="padding:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; color:white;">
+                <input type="number" id="editAFK" placeholder="AFK Rating (1-5)" min="1" max="5" style="padding:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; color:white;">
+                <input type="number" id="editStory" placeholder="Story Rating (1-5)" min="1" max="5" style="padding:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; color:white;">
+                <input type="number" id="editGameplay" placeholder="Gameplay Rating (1-5)" min="1" max="5" style="padding:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; color:white;">
+            </div>
+            
+            <input type="text" id="editCommit" placeholder="What was updated (e.g. Added Trailer)" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #3a3a45; background:#1f1f28; color:white; box-sizing:border-box;">
+            <button onclick="submitInfoEdit()" style="width:100%; padding:12px; background:#FF5E5B; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">Submit Update</button>
         </div>
     </div>
 
@@ -596,6 +624,7 @@
 
         const API_BASE = window.location.origin + '/api';
         let currentTrailerId = ''; 
+        let currentGameForModal = null;
 
         const debounce = (func, wait) => {
             let timeout;
@@ -675,36 +704,39 @@
         };
 
         function openGameModal(game, cardElement) {
+            currentGameForModal = game; // Store globally for the Edit button
             const rect = cardElement.getBoundingClientRect();
-            const cardCenterX = rect.left + rect.width / 2;
-            const cardCenterY = rect.top + rect.height / 2;
-            const viewportCenterX = window.innerWidth / 2;
-            const viewportCenterY = window.innerHeight / 2;
             
-            const deltaX = cardCenterX - viewportCenterX;
-            const deltaY = cardCenterY - viewportCenterY;
-            
-            modalWindowContent.style.setProperty('--start-x', `${deltaX}px`);
-            modalWindowContent.style.setProperty('--start-y', `${deltaY}px`);
+            modalWindowContent.style.setProperty('--start-x', `${(rect.left + rect.width / 2) - (window.innerWidth / 2)}px`);
+            modalWindowContent.style.setProperty('--start-y', `${(rect.top + rect.height / 2) - (window.innerHeight / 2)}px`);
 
             modalGameTitle.textContent = game.name || 'Unknown Game';
             
-            if (game.trailer_id && currentTrailerId !== game.trailer_id) {
-                modalTrailer.src = `https://www.youtube-nocookie.com/embed/${game.trailer_id}?autoplay=1`;
-                currentTrailerId = game.trailer_id;
-            } else if (!game.trailer_id) {
+            const videoContainer = document.getElementById('modalVideoContainer');
+            if (game.trailer_id) {
+                if (currentTrailerId !== game.trailer_id) {
+                    modalTrailer.src = `https://www.youtube-nocookie.com/embed/${game.trailer_id}?autoplay=1`;
+                    currentTrailerId = game.trailer_id;
+                }
+                videoContainer.style.display = 'block';
+            } else {
                 modalTrailer.src = ''; 
                 currentTrailerId = '';
+                videoContainer.style.display = 'none';
             }
             
-            // Map the age ratings properly
-            const esrbMap = { 'E': 'E (Everyone)', 'T': 'T (Teen)', 'M': 'M (Mature 17+)' };
-            modalAge.textContent = esrbMap[game.ratings?.age] || (game.ratings?.age || 'N/A');
+            // Map the age ratings to official ESRB images
+            const esrbImages = {
+                'E': '<img src="https://upload.wikimedia.org/wikipedia/commons/2/22/ESRB_Everyone.svg" style="height:35px;">',
+                'T': '<img src="https://upload.wikimedia.org/wikipedia/commons/c/cb/ESRB_Teen.svg" style="height:35px;">',
+                'M': '<img src="https://upload.wikimedia.org/wikipedia/commons/4/4b/ESRB_Mature_17%2B.svg" style="height:35px;">'
+            };
+            modalAge.innerHTML = esrbImages[game.ratings?.age] || '<span style="font-size:1.1em; font-weight:bold; color:#ffc107;">N/A</span>';
             
-            modalF2P.textContent = game.ratings?.f2p || 'N/A';
-            modalAFK.textContent = game.ratings?.afk || 'N/A';
-            modalStory.textContent = game.ratings?.story || 'N/A';
-            modalGameplay.textContent = game.ratings?.gameplay || 'N/A';
+            modalF2P.textContent = game.ratings?.f2p ? `${game.ratings.f2p}/5` : 'N/A';
+            modalAFK.textContent = game.ratings?.afk ? `${game.ratings.afk}/5` : 'N/A';
+            modalStory.textContent = game.ratings?.story ? `${game.ratings.story}/5` : 'N/A';
+            modalGameplay.textContent = game.ratings?.gameplay ? `${game.ratings.gameplay}/5` : 'N/A';
             modalOverall.textContent = game.ratings?.overall || 'N/A';
             
             gameModal.classList.add('active');
@@ -940,6 +972,49 @@
                 await fetch('/api/contribute', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
                 alert("Game suggested successfully! Awaiting Admin Approval.");
                 document.getElementById('suggestModal').classList.remove('active');
+            } catch (e) { alert("Failed to submit."); }
+        }
+
+        function openEditInfoModal() {
+            if (!cachedSession.discordId) return alert('Must be logged in to suggest edits!');
+            if (!currentGameForModal) return;
+            
+            document.getElementById('gameModal').classList.remove('active');
+            
+            // Pre-fill existing data
+            document.getElementById('editTrailer').value = currentGameForModal.trailer_id || '';
+            document.getElementById('editAge').value = currentGameForModal.ratings?.age || '';
+            document.getElementById('editF2P').value = currentGameForModal.ratings?.f2p || '';
+            document.getElementById('editAFK').value = currentGameForModal.ratings?.afk || '';
+            document.getElementById('editStory').value = currentGameForModal.ratings?.story || '';
+            document.getElementById('editGameplay').value = currentGameForModal.ratings?.gameplay || '';
+            document.getElementById('editCommit').value = '';
+            
+            document.getElementById('editInfoModal').classList.add('active');
+        }
+
+        async function submitInfoEdit() {
+            const payload = {
+                gameId: currentGameForModal.id,
+                itemCategory: 'GameInfo',
+                actionType: 'EDIT',
+                data: {
+                    trailer_id: document.getElementById('editTrailer').value.trim(),
+                    commitMessage: document.getElementById('editCommit').value.trim(),
+                    ratings: {
+                        age: document.getElementById('editAge').value,
+                        f2p: document.getElementById('editF2P').value,
+                        afk: document.getElementById('editAFK').value,
+                        story: document.getElementById('editStory').value,
+                        gameplay: document.getElementById('editGameplay').value
+                    }
+                }
+            };
+
+            try {
+                await fetch('/api/contribute', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+                alert("Data update suggested successfully! Awaiting Admin Approval.");
+                document.getElementById('editInfoModal').classList.remove('active');
             } catch (e) { alert("Failed to submit."); }
         }
 
