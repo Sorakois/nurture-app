@@ -758,7 +758,10 @@
             }
 
             const gridItem = document.createElement('div');
-                gridItem.className = 'grid-item'; // Removed the 'no-data' class assignment
+                // We are wrapping everything back inside this loop!
+            filteredGames.forEach(game => {
+                const gridItem = document.createElement('div');
+                gridItem.className = 'grid-item'; 
                 
                 const gameName = typeof game === 'string' ? game : game.name;
                 const iconUrl = typeof game === 'object' && game.banner_url ? game.banner_url : '/Assets/placeholder.png';
@@ -805,6 +808,7 @@
                 });
                 
                 gameGrid.appendChild(gridItem);
+            });
 
             // Append Suggest Game Box
             const suggestCard = document.createElement('div');
