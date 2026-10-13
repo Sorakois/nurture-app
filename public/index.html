@@ -405,11 +405,11 @@
         </div>
     </div>
 
-    <div class="main-wrapper" id="mainWrapper">
-        <!-- Invisible spacer counterbalances the leaderboard for perfect centering -->
-        <div class="leaderboard-spacer" style="width: 280px; min-width: 280px; display: block;"></div>
+    <div class="main-wrapper" id="mainWrapper" style="justify-content: center; gap: 40px;">
+        <!-- Pinned ID so JS can move the spacer to the opposite side of the leaderboard -->
+        <div id="lbSpacer" class="leaderboard-spacer" style="width: 280px; min-width: 280px; display: block; flex-shrink: 0;"></div>
 
-        <div style="flex-grow: 1;">
+        <div style="flex-grow: 1; max-width: 950px;">
             
             <div class="about-us" style="padding-top: 20px;">
                 <h1 style="font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 2.5em; margin-bottom: 20px;">

@@ -322,8 +322,11 @@
         <a href="/" style="color: #aaa; text-decoration: none; display: inline-block; margin-bottom: 20px;">
             ← Back to All Games
         </a>
-        <div style="display: flex; max-width: 1300px; margin: 0 auto; gap: 20px; padding: 0 20px;">
-            <div style="flex-grow: 1;">
+        <div class="main-wrapper" id="mainWrapper" style="display: flex; max-width: 1400px; margin: 0 auto; justify-content: center; gap: 40px; padding: 0;">
+            <!-- Invisible spacer counterbalances the game leaderboard -->
+            <div id="lbSpacer" class="leaderboard-spacer" style="width: 280px; min-width: 280px; display: block; flex-shrink: 0;"></div>
+
+            <div style="flex-grow: 1; max-width: 950px;">
                 <div class="game-header">
                     <div class="header-left">
                         <img src="/Assets/placeholder.png" alt="Game Icon" id="gameIcon">

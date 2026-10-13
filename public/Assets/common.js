@@ -204,14 +204,28 @@ function applySettings() {
     if (!raw) return;
     const { showLb, lbSide } = JSON.parse(raw);
     
-    // Apply UI visibility
     const lbEl = document.getElementById('leaderboardSidebar');
+    const spacerEl = document.getElementById('lbSpacer'); // Grab the invisible spacer
+    
     if (lbEl) {
-        lbEl.style.display = showLb ? 'block' : 'none';
-        lbEl.style.order = lbSide === 'left' ? '-1' : '1';
+        if (showLb) {
+            lbEl.style.display = 'flex';
+            if (spacerEl) spacerEl.style.display = 'block';
+            
+            // Swap both elements around the center content to maintain perfect symmetry
+            if (lbSide === 'left') {
+                lbEl.style.order = '-1';
+                if (spacerEl) spacerEl.style.order = '1';
+            } else {
+                lbEl.style.order = '1';
+                if (spacerEl) spacerEl.style.order = '-1';
+            }
+        } else {
+            lbEl.style.display = 'none';
+            if (spacerEl) spacerEl.style.display = 'none';
+        }
     }
 
-    // Sync modal inputs so they match the saved state
     const toggle = document.getElementById('toggleLeaderboard');
     const select = document.getElementById('selectLbSide');
     if (toggle) toggle.checked = showLb;
