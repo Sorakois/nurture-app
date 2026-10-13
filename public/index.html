@@ -127,16 +127,17 @@
             border-radius: 5px;
         }
 
-        /* Graying-out games with no data */
-        /* .grid-item.no-data {
-            filter: grayscale(100%);
-            opacity: 0.4;
+        /* For no-data games */
+        .grid-item.no-data {
+            filter: grayscale(80%);
+            opacity: 0.5;
         }
 
         .grid-item.no-data:hover {
-            transform: none; 
-            opacity: 0.6;
-        } */
+            filter: grayscale(20%);
+            opacity: 0.95;
+            transform: translateY(-5px);
+        }
 
         .title-wrapper {
             display: flex;
@@ -762,8 +763,12 @@
             } else {
                 filteredGames.forEach(game => {
                     if (!game) return;
+                    
+                    // Determine if the game is completely empty
+                    const hasData = typeof game === 'object' && !!(game.overview_text || (game.guides && game.guides.length) || (game.assets && game.assets.length) || (game.communities && game.communities.length) || (game.mods && game.mods.length) || game.trailer_id || game.ratings);
+                    
                     const gridItem = document.createElement('div');
-                    gridItem.className = 'grid-item'; 
+                    gridItem.className = `grid-item ${hasData ? '' : 'no-data'}`; 
                     
                     const gameName = typeof game === 'string' ? game : (game.name || 'Unknown Game');
                     const gameId = game.id || '';
