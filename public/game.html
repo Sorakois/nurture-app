@@ -322,11 +322,8 @@
         <a href="/" style="color: #aaa; text-decoration: none; display: inline-block; margin-bottom: 20px;">
             ← Back to All Games
         </a>
-        <div class="main-wrapper" id="mainWrapper" style="display: flex; max-width: 1400px; margin: 0 auto; justify-content: center; gap: 40px; padding: 0;">
-            <!-- Invisible spacer counterbalances the game leaderboard -->
-            <div id="lbSpacer" class="leaderboard-spacer" style="width: 280px; min-width: 280px; display: block; flex-shrink: 0;"></div>
-
-            <div style="flex-grow: 1; max-width: 950px;">
+        <div class="main-wrapper" id="mainWrapper" style="display: flex; max-width: 1400px; margin: 0 auto; gap: 30px; padding: 0 20px;">
+            <div style="flex-grow: 1; min-width: 0;">
                 <div class="game-header">
                     <div class="header-left">
                         <img src="/Assets/placeholder.png" alt="Game Icon" id="gameIcon">
@@ -546,14 +543,14 @@
                 mfContainer.style.display = 'grid';
                 
                 mfContainer.innerHTML = gameData.mini_focuses.map(focus => `
-                    <a href="${focus.url}" target="_blank" style="display: flex; align-items: center; gap: 15px; background: linear-gradient(135deg, #4C3A90 0%, #2a2a35 100%); padding: 18px; border-radius: 12px; text-decoration: none; border: 1px solid #7A6BB5;">
-                        <img src="${focus.icon || '/Assets/placeholder.png'}" style="width: 50px; height: 50px; border-radius: 8px; object-fit: cover; border: 1px solid #3a3a45;">
-                        <div>
-                            <div style="font-weight: bold; font-size: 1.1em; color: #fff; margin-bottom: 4px;">${focus.title}</div>
-                            <div style="font-size: 0.85em; color: #ccc;">${focus.description}</div>
+                        <div style="display: flex; align-items: center; gap: 15px; background: linear-gradient(135deg, #4C3A90 0%, #2a2a35 100%); padding: 18px; border-radius: 12px; border: 1px solid #7A6BB5; user-select: none;">
+                            <img src="${focus.icon || '/Assets/placeholder.png'}" style="width: 50px; height: 50px; border-radius: 8px; object-fit: cover; border: 1px solid #3a3a45;">
+                            <div>
+                                <div style="font-weight: bold; font-size: 1.1em; color: #fff; margin-bottom: 4px;">${focus.title}</div>
+                                <div style="font-size: 0.85em; color: #ccc;">${focus.description}</div>
+                            </div>
                         </div>
-                    </a>
-                `).join('');
+                    `).join('');
             } else {
                 // Hide entirely on Overview, Assets, Communities, and Mods
                 mfContainer.style.display = 'none';
@@ -680,13 +677,13 @@
                 if (gameData.mini_focuses && gameData.mini_focuses.length > 0) {
                     mfContainer.style.display = 'grid';
                     mfContainer.innerHTML = gameData.mini_focuses.map(focus => `
-                        <a href="${focus.url}" target="_blank" style="display: flex; align-items: center; gap: 15px; background: linear-gradient(135deg, #4C3A90 0%, #2a2a35 100%); padding: 18px; border-radius: 12px; text-decoration: none; border: 1px solid #7A6BB5;">
+                        <div style="display: flex; align-items: center; gap: 15px; background: linear-gradient(135deg, #4C3A90 0%, #2a2a35 100%); padding: 18px; border-radius: 12px; border: 1px solid #7A6BB5; user-select: none;">
                             <img src="${focus.icon || '/Assets/placeholder.png'}" style="width: 50px; height: 50px; border-radius: 8px; object-fit: cover; border: 1px solid #3a3a45;">
                             <div>
                                 <div style="font-weight: bold; font-size: 1.1em; color: #fff; margin-bottom: 4px;">${focus.title}</div>
                                 <div style="font-size: 0.85em; color: #ccc;">${focus.description}</div>
                             </div>
-                        </a>
+                        </div>
                     `).join('');
                 } else {
                     mfContainer.style.display = 'none';
