@@ -788,15 +788,18 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                             
                             if (contribution.data.overview_text !== undefined) updates.overview_text = contribution.data.overview_text;
                             if (contribution.data.new_player_guide !== undefined) updates.new_player_guide = contribution.data.new_player_guide;
-                            if (contribution.data.trailer_id !== undefined) updates.trailer_id = contribution.data.trailer_id;
                             
-                            // Safely isolate the Age rating into the ratings object
-                            if (contribution.data.age !== undefined && contribution.data.age !== '') {
+                            // Support both the legacy database key and the new key
+                            if (contribution.data.new_player_video_id !== undefined) updates.new_player_video_id = contribution.data.new_player_video_id;
+                            if (contribution.data.trailer_id !== undefined) updates.new_player_video_id = contribution.data.trailer_id; 
+                            
+                            // Forcefully apply the Age Rating, even if it's empty (to allow clearing a wrong rating)
+                            if (contribution.data.age !== undefined) {
                                 updates['ratings.age'] = contribution.data.age;
                             }
                             
-                            // Forcefully bypass strict Mongoose schema rules using the native Mongo driver
-                            await Game.collection.updateOne({ id: contribution.gameId }, { $set: updates });
+                            // Bulletproof schema bypass: Uses the exact Game _id and forces Mongoose to accept unmapped fields
+                            await Game.updateOne({ _id: game._id }, { $set: updates }, { strict: false });
                         } else {
                             const catKey = contribution.itemCategory.toLowerCase() + 's';
                             const catArray = game[catKey] || game[contribution.itemCategory.toLowerCase()];
@@ -909,15 +912,18 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                             
                             if (contribution.data.overview_text !== undefined) updates.overview_text = contribution.data.overview_text;
                             if (contribution.data.new_player_guide !== undefined) updates.new_player_guide = contribution.data.new_player_guide;
-                            if (contribution.data.trailer_id !== undefined) updates.trailer_id = contribution.data.trailer_id;
                             
-                            // Safely isolate the Age rating into the ratings object
-                            if (contribution.data.age !== undefined && contribution.data.age !== '') {
+                            // Support both the legacy database key and the new key
+                            if (contribution.data.new_player_video_id !== undefined) updates.new_player_video_id = contribution.data.new_player_video_id;
+                            if (contribution.data.trailer_id !== undefined) updates.new_player_video_id = contribution.data.trailer_id; 
+                            
+                            // Forcefully apply the Age Rating, even if it's empty (to allow clearing a wrong rating)
+                            if (contribution.data.age !== undefined) {
                                 updates['ratings.age'] = contribution.data.age;
                             }
                             
-                            // Forcefully bypass strict Mongoose schema rules using the native Mongo driver
-                            await Game.collection.updateOne({ id: contribution.gameId }, { $set: updates });
+                            // Bulletproof schema bypass: Uses the exact Game _id and forces Mongoose to accept unmapped fields
+                            await Game.updateOne({ _id: game._id }, { $set: updates }, { strict: false });
                         } else {
                             const catKey = contribution.itemCategory.toLowerCase() + 's';
                             const catArray = game[catKey] || game[contribution.itemCategory.toLowerCase()];

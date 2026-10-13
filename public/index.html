@@ -766,10 +766,13 @@
             modalGameTitle.textContent = game.name || 'Unknown Game';
             
             const videoContainer = document.getElementById('modalVideoContainer');
-            if (game.trailer_id) {
-                if (currentTrailerId !== game.trailer_id) {
-                    modalTrailer.src = `https://www.youtube-nocookie.com/embed/${game.trailer_id}?autoplay=1`;
-                    currentTrailerId = game.trailer_id;
+            // Fetch the legacy key that actually exists in your database!
+            const vidId = game.new_player_video_id || game.trailer_id;
+            
+            if (vidId) {
+                if (currentTrailerId !== vidId) {
+                    modalTrailer.src = `https://www.youtube-nocookie.com/embed/${vidId}?autoplay=1`;
+                    currentTrailerId = vidId;
                 }
                 videoContainer.style.display = 'block';
             } else {
@@ -1116,7 +1119,7 @@ function openRateGameModal() {
             
             document.getElementById('gameModal').classList.remove('active');
             
-            document.getElementById('editTrailer').value = currentGameForModal.trailer_id || '';
+            document.getElementById('editTrailer').value = currentGameForModal.new_player_video_id || currentGameForModal.trailer_id || '';
             document.getElementById('editAge').value = currentGameForModal.ratings?.age || '';
             document.getElementById('editCommit').value = '';
             
@@ -1133,14 +1136,13 @@ function openRateGameModal() {
             if (rawTrailer.includes('v=')) parsedTrailerId = rawTrailer.split('v=')[1].split('&')[0];
             else if (rawTrailer.includes('youtu.be/')) parsedTrailerId = rawTrailer.split('youtu.be/')[1].split('?')[0];
 
-            // Stripped of the ratings to pass cleanly to Discord
             const payload = {
                 gameId: gId,
                 itemCategory: 'Game', 
                 actionType: 'EDIT',
                 targetIdentifier: gName, 
                 data: {
-                    trailer_id: parsedTrailerId,
+                    new_player_video_id: parsedTrailerId,
                     age: document.getElementById('editAge').value,
                     commitMessage: document.getElementById('editCommit').value.trim()
                 }
