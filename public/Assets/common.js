@@ -33,9 +33,9 @@ function renderLoggedInUI(container, user) {
     const settingsSvg = `<svg viewBox="0 0 24 24"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.06-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.73,8.87C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.06,0.94l-2.03,1.58c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.43-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.49-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>`;
     
     container.innerHTML = `
-        <div class="user-profile-badge">
+        <div class="user-profile-badge" style="cursor:pointer;" onclick="openUserProfileModal('${user.discordId}')" title="View My Contributions">
             <img src="${avatarUrl}" class="user-avatar"><span class="user-name">${user.username}</span>
-            <a href="/auth/logout" class="sign-out-btn" onclick="clearCachedAuth()">Sign Out</a>
+            <a href="/auth/logout" class="sign-out-btn" onclick="event.stopPropagation(); clearCachedAuth()">Sign Out</a>
         </div>
         <button class="social-button mailbox-button" onclick="openMailboxModal()" style="border:none; cursor:pointer; font-family:inherit;">
             ${mailboxSvg} <span class="sub-text">Mailbox <span id="unreadBadge" style="display:none; background:#ff5555; border-radius:10px; padding:2px 6px; margin-left:4px;">0</span></span>
@@ -112,6 +112,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 <button style="width:100%; margin-top:10px; padding:10px; background:#FF5E5B; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="sendMail()">Send Message</button>
             </div>
         </div>
+        <div id="userProfileModal" class="modal-overlay">
+            <div class="modal-window" style="max-width: 500px;">
+                <button class="modal-close" onclick="closeUserProfileModal()">×</button>
+                <div style="display:flex; align-items:center; gap: 15px; margin-bottom: 20px;">
+                    <img id="upAvatar" src="/Assets/placeholder.png" style="width: 60px; height: 60px; border-radius: 50%; border: 2px solid #7A6BB5; object-fit: cover;">
+                    <div>
+                        <h2 class="modal-title" style="margin:0; border:none; padding:0 0 5px 0;" id="upUsername">Loading...</h2>
+                        <div style="color: #ffc107; font-weight: bold; font-size: 1.1em;" id="upPoints">...</div>
+                    </div>
+                </div>
+                <h3 style="border-bottom: 1px solid #3a3a45; padding-bottom: 8px; margin-top: 0;">Approved Contributions</h3>
+                <div id="upContributions" style="max-height: 300px; overflow-y: auto; padding-right: 5px;"></div>
+            </div>
+        </div>
         <div id="settingsModal" class="modal-overlay">
             <div class="modal-window" style="max-width: 400px;">
                 <button class="modal-close" onclick="closeSettingsModal()">×</button>
@@ -144,6 +158,54 @@ function openComposeModal() { document.getElementById('composeModal').classList.
 function closeComposeModal() { document.getElementById('composeModal').classList.remove('active'); }
 function openSettingsModal() { document.getElementById('settingsModal').classList.add('active'); }
 function closeSettingsModal() { document.getElementById('settingsModal').classList.remove('active'); }
+
+async function openUserProfileModal(discordId, username = null) {
+    const query = discordId || username;
+    if (!query) return;
+    
+    document.getElementById('userProfileModal').classList.add('active');
+    const container = document.getElementById('upContributions');
+    container.innerHTML = '<p style="color:#aaa;">Loading profile...</p>';
+    
+    try {
+        const res = await fetch(`/api/profile/${encodeURIComponent(query)}`);
+        if (!res.ok) {
+            container.innerHTML = '<p style="color:#ff5555;">User not found or is an external author.</p>';
+            document.getElementById('upUsername').textContent = username || 'Unknown User';
+            document.getElementById('upAvatar').src = '/Assets/placeholder.png';
+            document.getElementById('upPoints').textContent = '0 pts';
+            return;
+        }
+        
+        const data = await res.json();
+        const escapeTxt = (txt) => (txt || '').toString().replace(/[&<>"']/g, m => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[m]));
+        
+        document.getElementById('upUsername').textContent = data.username;
+        document.getElementById('upAvatar').src = data.avatar ? `https://cdn.discordapp.com/avatars/${data.discordId}/${data.avatar}.png` : 'https://cdn.discordapp.com/embed/avatars/0.png';
+        document.getElementById('upPoints').textContent = `${data.totalPoints} pts`;
+        
+        if (!data.contributions || data.contributions.length === 0) {
+            container.innerHTML = '<p style="color:#888;">No approved contributions yet.</p>';
+            return;
+        }
+        
+        container.innerHTML = data.contributions.map(c => {
+            const tabMap = { 'Guide': 'guides', 'Asset': 'assets', 'Community': 'communities', 'Mod': 'mods', 'Game': 'overview' };
+            const tab = tabMap[c.category] || 'overview';
+            const link = c.gameId ? `/games/${c.gameId}?tab=${tab}` : '/';
+            return `
+                <a href="${link}" style="display:flex; justify-content:space-between; align-items:center; background:#2a2a35; padding:12px; border:1px solid #3a3a45; border-radius:8px; margin-bottom:8px; text-decoration:none; color:white; transition:border 0.2s;" onmouseover="this.style.borderColor='#7A6BB5'" onmouseout="this.style.borderColor='#3a3a45'">
+                    <div>
+                        <div style="font-weight:bold; color:#9d8ec7; margin-bottom:4px;">${escapeTxt(c.target)}</div>
+                        <div style="font-size:0.8em; color:#888;">${c.category} • ${c.gameId || 'General'}</div>
+                    </div>
+                    <span style="font-size:1.2em; color:#7A6BB5;">➔</span>
+                </a>
+            `;
+        }).join('');
+    } catch (e) { container.innerHTML = '<p style="color:#ff5555;">Failed to load profile.</p>'; }
+}
+function closeUserProfileModal() { document.getElementById('userProfileModal').classList.remove('active'); }
 
 async function loadMailboxMessages() {
     const container = document.getElementById('mailboxContent');

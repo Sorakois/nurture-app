@@ -692,8 +692,41 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
     }
 });
 
-// --- AUTH ROUTES ---
+// --- PUBLIC PROFILE ROUTES ---
+app.get('/api/profile/:query', async (req, res) => {
+    try {
+        const query = validateInput.sanitizeString(req.params.query);
+        
+        // Lookup by discordId first, then exact username fallback
+        let user = await User.findOne({ discordId: query }).lean();
+        if (!user) user = await User.findOne({ username: new RegExp(`^${query}$`, 'i') }).lean();
+        
+        if (!user) return res.status(404).json({ error: "User not found" });
 
+        // Fetch their approved contributions
+        const contributions = await Contribution.find({ submitterDiscordId: user.discordId, status: 'approved' })
+            .sort({ createdAt: -1 })
+            .limit(25)
+            .lean();
+
+        res.json({
+            username: user.username,
+            avatar: user.avatar,
+            discordId: user.discordId,
+            totalPoints: user.totalPoints || 0,
+            contributions: contributions.map(c => ({
+                gameId: c.gameId,
+                category: c.itemCategory,
+                target: c.targetIdentifier || (c.data && (c.data.title || c.data.name)) || 'Unknown Submission',
+                date: c.createdAt || c._id.getTimestamp()
+            }))
+        });
+    } catch (err) {
+        res.status(500).json({ error: "Failed to load profile" });
+    }
+});
+
+// --- AUTH ROUTES ---
 app.get('/auth/discord', (req, res) => {
     const clientId = process.env.DISCORD_CLIENT_ID;
     const redirectUri = encodeURIComponent(process.env.DISCORD_REDIRECT_URI);
@@ -792,14 +825,14 @@ app.get('/auth/discord/callback', async (req, res) => {
         const sessionToken = jwt.sign(
             { userId: user._id, discordId: user.discordId, isNurtureMember: user.isNurtureMember }, 
             process.env.JWT_SECRET, 
-            { expiresIn: '7d' } 
+            { expiresIn: '365d' } // Extended to 1 Year
         );
 
         res.cookie('nurture_session', sessionToken, { 
             httpOnly: true, 
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict', // <--- PREVENTS CSRF ATTACKS
-            maxAge: 7 * 24 * 60 * 60 * 1000 
+            secure: process.env.NODE_ENV === 'production', 
+            sameSite: 'lax', // Safely allows cookies on external link clicks
+            maxAge: 365 * 24 * 60 * 60 * 1000 
         });
 
         res.redirect('/');
@@ -837,7 +870,8 @@ app.get('/auth/logout', (req, res) => {
     res.clearCookie('nurture_session', {
         path: '/',
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production'
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax'
     });
     res.redirect('/');
 });

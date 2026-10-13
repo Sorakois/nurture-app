@@ -538,7 +538,7 @@
                     lbList.innerHTML = '<div class="lb-row" style="justify-content:center;color:#ccc;font-weight:bold;">NEW! Could be you!</div>';
                 } else {
                     lbList.innerHTML = lbData.top10.map((u, i) => `
-                        <div class="lb-row">
+                        <div class="lb-row" style="cursor:pointer; transition:border 0.2s;" onmouseover="this.style.borderColor='#7A6BB5'" onmouseout="this.style.borderColor='#3a3a45'" onclick="openUserProfileModal('${u.discordId}')">
                             <div style="font-weight:bold; color:#7A6BB5; width:25px;">#${i+1}</div>
                             <img src="${u.avatar ? `https://cdn.discordapp.com/avatars/${u.discordId}/${u.avatar}.png` : '/Assets/placeholder.png'}" class="lb-avatar">
                             <div class="lb-info"><div class="lb-name">${u.username}</div></div>
