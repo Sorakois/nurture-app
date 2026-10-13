@@ -140,6 +140,21 @@ app.get('/api/games/search/:term', async (req, res) => {
     }
 });
 
+app.get('/api/history/:gameId/:identifier', async (req, res) => {
+    try {
+        const history = await Contribution.find({ 
+            gameId: req.params.gameId, 
+            targetIdentifier: req.params.identifier,
+            status: 'approved'
+        }).sort({ createdAt: -1 }).lean();
+        
+        res.json(history);
+    } catch (err) {
+        console.error("History fetch error:", err);
+        res.status(500).json({ error: "Failed to fetch history" });
+    }
+});
+
 // --- UPDATED DISCORD INTERACTIONS (APPROVE / DENY / REPLY LOGIC) ---
 app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY), async (req, res) => {
     const interaction = req.body;

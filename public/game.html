@@ -360,7 +360,13 @@
     <div id="gameSuggestModal" class="modal-overlay">
         <div class="modal-window" style="max-width: 600px;">
             <button class="modal-close" onclick="document.getElementById('gameSuggestModal').classList.remove('active')">×</button>
-            <h2 class="modal-title" id="gsCategoryTitle">Suggest Update</h2>
+            
+            <h2 class="modal-title" style="display:flex; justify-content:space-between; align-items:center;">
+                <span id="gsCategoryTitle">Suggest Update</span>
+                <svg id="gsHistoryBtn" style="display:none; width:26px; height:26px; fill:#aaa; cursor:pointer; transition:fill 0.2s;" onmouseover="this.style.fill='#fff'" onmouseout="this.style.fill='#aaa'" title="View Edit History" viewBox="0 0 24 24" onclick="viewEditHistory()">
+                    <path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/>
+                </svg>
+            </h2>
             
             <div id="gsStandardInputs" style="display:flex; flex-direction:column; gap:10px;">
                 <input type="text" id="gsTitle" placeholder="Link Title / Resource Name" style="padding:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; color:white;">
@@ -373,6 +379,15 @@
             
             <input type="text" id="gsCommit" placeholder="What was added / changed: (e.g. Fixed typo)" style="width:100%; padding:10px; margin-top:10px; border-radius:8px; border:1px solid #3a3a45; background:#1f1f28; color:white; box-sizing:border-box;">
             <button onclick="submitGameSuggestion()" style="width:100%; margin-top:15px; padding:12px; background:#4C3A90; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; transition: background 0.2s;" onmouseover="this.style.background='#5c47ac'" onmouseout="this.style.background='#4C3A90'">Submit Update</button>
+        </div>
+    </div>
+
+    <!-- History Modal -->
+    <div id="historyModal" class="modal-overlay">
+        <div class="modal-window" style="max-width: 600px;">
+            <button class="modal-close" onclick="document.getElementById('historyModal').classList.remove('active')">×</button>
+            <h2 class="modal-title">Edit History</h2>
+            <div id="historyContent" style="max-height: 400px; overflow-y: auto; padding-right: 10px;"></div>
         </div>
     </div>
 
@@ -744,9 +759,15 @@
             currentSuggestCategory = category;
             document.getElementById('gsCommit').value = '';
             
+            const titleEl = document.getElementById('gsCategoryTitle');
+            const historyBtn = document.getElementById('gsHistoryBtn');
+            
             if (category === 'Overview') {
                 currentSuggestAction = 'EDIT';
                 currentSuggestTarget = 'Overview Data';
+                titleEl.textContent = 'Edit Overview';
+                historyBtn.style.display = 'block'; // Overview is always an edit
+                
                 document.getElementById('gsStandardInputs').style.display = 'none';
                 document.getElementById('gsOverviewText').style.display = 'block';
                 document.getElementById('gsNewPlayerGuide').style.display = 'block';
@@ -760,6 +781,9 @@
                 if (itemIndex !== null && currentDisplayedItems[itemIndex]) {
                     // Setup Edit Logic for specific item
                     currentSuggestAction = 'EDIT';
+                    titleEl.textContent = 'Edit Item';
+                    historyBtn.style.display = 'block';
+                    
                     const item = currentDisplayedItems[itemIndex];
                     currentSuggestTarget = item._id || item.title || item.name;
                     document.getElementById('gsTitle').value = item.title || item.name || '';
@@ -768,13 +792,49 @@
                 } else {
                     // Setup Create Logic
                     currentSuggestAction = 'CREATE';
+                    titleEl.textContent = 'Add New Item';
+                    historyBtn.style.display = 'none'; // Hide history for brand new items
                     currentSuggestTarget = null;
+                    
                     document.getElementById('gsTitle').value = '';
                     document.getElementById('gsAuthor').value = '';
                     document.getElementById('gsUrl').value = '';
                 }
             }
             document.getElementById('gameSuggestModal').classList.add('active');
+        }
+
+        async function viewEditHistory() {
+            if (!currentSuggestTarget) return;
+            document.getElementById('historyModal').classList.add('active');
+            const content = document.getElementById('historyContent');
+            content.innerHTML = '<p style="color:#aaa;">Loading history...</p>';
+
+            try {
+                const res = await fetch(`/api/history/${gameData.id}/${encodeURIComponent(currentSuggestTarget)}`);
+                const history = await res.json();
+                
+                if (!history || history.length === 0) {
+                    content.innerHTML = '<p style="color:#888;">No edit history found for this item.</p>';
+                    return;
+                }
+
+                content.innerHTML = history.map(h => {
+                    const date = new Date(h.createdAt || h.date || Date.now()).toLocaleString();
+                    const msg = h.data?.commitMessage || 'No commit message provided.';
+                    return `
+                    <div style="background:#1f1f28; border:1px solid #3a3a45; padding:12px; border-radius:8px; margin-bottom:10px;">
+                        <div style="display:flex; justify-content:space-between; font-size:0.85em; color:#aaa; margin-bottom:8px;">
+                            <div><strong style="color:#7A6BB5;">${escapeHtml(h.submitterUsername || 'Unknown')}</strong> • ${h.actionType}</div>
+                            <span>${date}</span>
+                        </div>
+                        <div style="color:#ddd; font-size:0.95em; border-left: 2px solid #4C3A90; padding-left: 10px;">${escapeHtml(msg)}</div>
+                    </div>
+                    `;
+                }).join('');
+            } catch (e) {
+                content.innerHTML = '<p style="color:#ff5555;">Failed to load history.</p>';
+            }
         }
 
         async function submitGameSuggestion() {

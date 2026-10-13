@@ -579,7 +579,7 @@
         let isLoading = false;
         let isSearching = false;
 
-        async function fetchInitialData() {
+        async function fetchInitialData(silent = false) {
             try {
                 const lbRes = await fetch('/api/leaderboard');
                 const lbData = await lbRes.json();
