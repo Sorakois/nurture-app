@@ -1044,17 +1044,23 @@
         }
 
         async function submitInfoEdit() {
-            // Safely extract the game name and ID even if the game is a raw string or new Apple App Store search
+            // 1. Safely extract the game name and ID to prevent database crashes
             const gName = typeof currentGameForModal === 'string' ? currentGameForModal : (currentGameForModal.name || 'Unknown');
             const gId = (currentGameForModal && currentGameForModal.id) ? currentGameForModal.id : gName.toLowerCase().replace(/[^a-z0-9]/g, '-');
 
+            // 2. Automatically parse out the YouTube Video ID if a full URL is pasted
+            let rawTrailer = document.getElementById('editTrailer').value.trim();
+            let parsedTrailerId = rawTrailer;
+            if (rawTrailer.includes('v=')) parsedTrailerId = rawTrailer.split('v=')[1].split('&')[0];
+            else if (rawTrailer.includes('youtu.be/')) parsedTrailerId = rawTrailer.split('youtu.be/')[1].split('?')[0];
+
             const payload = {
                 gameId: gId,
-                itemCategory: 'Overview', // Safely passes MongoDB Contribution schema validation
+                itemCategory: 'Overview',
                 actionType: 'EDIT',
                 targetIdentifier: gName,
                 data: {
-                    trailer_id: document.getElementById('editTrailer').value.trim(),
+                    trailer_id: parsedTrailerId,
                     commitMessage: document.getElementById('editCommit').value.trim(),
                     ratings: {
                         age: document.getElementById('editAge').value,

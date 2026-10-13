@@ -422,7 +422,8 @@ app.post('/api/contribute', async (req, res) => {
         res.json({ success: true, message: "Contribution submitted for review!" });
     } catch (err) {
         console.error("Contribution error:", err);
-        res.status(500).json({ error: "Failed to process contribution." });
+        // Expose the raw error message to the frontend alert
+        res.status(500).json({ error: err.message || "Failed to process contribution." });
     }
 });
 

@@ -603,48 +603,37 @@
                 };
 
                 const config = sectionConfig[currentSection];
-                const contributeSvg = `<button onclick="openGameSuggestModal('${config.dbKey}')" style="padding: 6px 12px; background: #4C3A90; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.6em; transition: background 0.2s;" onmouseover="this.style.background='#5c47ac'" onmouseout="this.style.background='#4C3A90'">+ Add New</button>`;
-                const headerHtml = `<h2 style="display: flex; justify-content: space-between; align-items: center;">${config.title} ${contributeSvg}</h2>`;
+                const addNewBtn = `<button onclick="openGameSuggestModal('${config.dbKey}')" style="padding: 6px 12px; background: #4C3A90; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.6em; transition: background 0.2s;" onmouseover="this.style.background='#5c47ac'" onmouseout="this.style.background='#4C3A90'">+ Add New</button>`;
+                const headerHtml = `<h2 style="display: flex; justify-content: space-between; align-items: center;">${config.title} ${addNewBtn}</h2>`;
 
                 if (!config || !config.data || config.data.length === 0) {
                     contentArea.innerHTML = headerHtml + `<p style="color: #aaa;">No items found.</p>`;
                     contentArea.style.opacity = 1;
                     return;
                 }
-                // Override the simple h2 injected lower down with our new headerHtml
-                config.title = config.title + " " + contributeSvg;
 
                 const filteredData = activeFilter === 'All' 
                     ? config.data 
                     : config.data.filter(item => {
                         const val = item[config.catKey];
                         if (!val) return false;
-                        
-                        if (Array.isArray(val)) {
-                            return val.includes(activeFilter);
-                        }
-                        if (typeof val === 'string' && val.includes(',')) {
-                            return val.split(',').map(s => s.trim()).includes(activeFilter);
-                        }
+                        if (Array.isArray(val)) return val.includes(activeFilter);
+                        if (typeof val === 'string' && val.includes(',')) return val.split(',').map(s => s.trim()).includes(activeFilter);
                         return val === activeFilter;
                     });
 
                 const filterHtml = buildFilterBar(config.data, config.catKey);
-
-                // Strict HTML escaping to prevent XSS execution inside the UI
                 const safeStr = (text) => (text || '').toString().replace(/[&<>"']/g, m => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[m]));
 
-                // Store the current items globally so the modal can fetch them when clicked
+                // Store globally so the modal knows what to edit
                 currentDisplayedItems = filteredData;
 
                 const cardsHtml = filteredData.map((item, index) => {
-                    // 1. Primary Meta (Author, Format, Platform, or Version)
                     let metaVal = item[config.metaKey];
                     if (Array.isArray(metaVal)) metaVal = metaVal.join(', ');
                     let metaHtml = safeStr(metaVal);
                     let primaryMeta = metaHtml ? `${config.metaPrefix}${metaHtml}` : '';
 
-                    // 2. Contributor / Submitter (The Nurture User)
                     let submitterHtml = '';
                     let subName = item.submitterUsername || item.submitter;
                     if (subName) {
@@ -653,7 +642,7 @@
                         submitterHtml = `<span style="color:#7A6BB5; font-size: 0.9em; margin-left: 10px;">| Submitted by <span style="color:#9d8ec7; cursor:pointer; text-decoration:underline;" onclick="event.preventDefault(); event.stopPropagation(); openUserProfileModal('${subDiscordId}', '${safeSubName}')">${safeSubName}</span></span>`;
                     }
                     
-                    // 3. The new individual edit pencil button
+                    // Individual edit pencil
                     const editBtnHtml = `
                         <div style="margin-left: auto; padding-left: 15px; display: flex; align-items: center;">
                             <svg onclick="event.preventDefault(); event.stopPropagation(); openGameSuggestModal('${config.dbKey}', ${index})" style="width:20px;height:20px;fill:#aaa;cursor:pointer;transition:fill 0.2s;" onmouseover="this.style.fill='#fff'" onmouseout="this.style.fill='#aaa'" title="Suggest Edit" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
@@ -673,7 +662,7 @@
                 }).join('');
 
                 contentArea.innerHTML = `
-                    <h2>${config.title}</h2>
+                    ${headerHtml}
                     ${filterHtml}
                     <div class="items-list">
                         ${cardsHtml || '<p style="color: #888;">No items match this filter.</p>'}
@@ -741,7 +730,7 @@
         let currentSuggestCategory = '';
         let currentSuggestAction = 'CREATE';
         let currentSuggestTarget = null;
-        let currentDisplayedItems = []; // Populated during renderContent()
+        let currentDisplayedItems = []; 
 
         function openGameSuggestModal(category, itemIndex = null) {
             currentSuggestCategory = category;
@@ -761,7 +750,7 @@
                 document.getElementById('gsNewPlayerGuide').style.display = 'none';
                 
                 if (itemIndex !== null && currentDisplayedItems[itemIndex]) {
-                    // Editing an existing item
+                    // Setup Edit Logic for specific item
                     currentSuggestAction = 'EDIT';
                     const item = currentDisplayedItems[itemIndex];
                     currentSuggestTarget = item._id || item.title || item.name;
@@ -769,7 +758,7 @@
                     document.getElementById('gsAuthor').value = item.author || item.platform || item.type || item.version || '';
                     document.getElementById('gsUrl').value = item.url || item.download_url || '';
                 } else {
-                    // Creating a brand new item
+                    // Setup Create Logic
                     currentSuggestAction = 'CREATE';
                     currentSuggestTarget = null;
                     document.getElementById('gsTitle').value = '';
