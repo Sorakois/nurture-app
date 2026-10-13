@@ -697,7 +697,7 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                 } else if (contribution.gameId) {
                     const game = await Game.findOne({ id: contribution.gameId });
                     if (game) {
-                        if (contribution.itemCategory === 'Overview') {
+                        if (contribution.itemCategory === 'Overview' || contribution.itemCategory === 'Game') {
                             // 1. Standard Overview Updates
                             if (contribution.data.overview_text !== undefined) game.overview_text = contribution.data.overview_text;
                             if (contribution.data.new_player_guide !== undefined) game.new_player_guide = contribution.data.new_player_guide;
@@ -815,7 +815,7 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                 } else if (contribution.gameId) {
                     const game = await Game.findOne({ id: contribution.gameId });
                     if (game) {
-                        if (contribution.itemCategory === 'Overview') {
+                        if (contribution.itemCategory === 'Overview' || contribution.itemCategory === 'Game') {
                             // 1. Standard Overview Updates
                             if (contribution.data.overview_text !== undefined) game.overview_text = contribution.data.overview_text;
                             if (contribution.data.new_player_guide !== undefined) game.new_player_guide = contribution.data.new_player_guide;

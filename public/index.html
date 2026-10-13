@@ -1056,7 +1056,8 @@
 
             const payload = {
                 gameId: gId,
-                itemCategory: 'Overview',
+                // Was previously -> itemCategory: 'Overview'
+                itemCategory: 'Game', 
                 actionType: 'EDIT',
                 targetIdentifier: gName,
                 data: {
