@@ -1048,7 +1048,7 @@
                 gameId: currentGameForModal.id,
                 itemCategory: 'GameInfo',
                 actionType: 'EDIT',
-                targetIdentifier: currentGameForModal.name, // THIS PREVENTS THE DATABASE CRASH!
+                targetIdentifier: currentGameForModal.name || 'Game Data',
                 data: {
                     trailer_id: document.getElementById('editTrailer').value.trim(),
                     commitMessage: document.getElementById('editCommit').value.trim(),
