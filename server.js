@@ -379,7 +379,7 @@ app.post('/api/user/star', async (req, res) => {
     if (!token) return res.status(401).json({ error: 'Unauthorized' });
 
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
         const user = await User.findById(decoded.userId);
         const { gameId } = req.body;
 
@@ -847,7 +847,7 @@ app.get('/api/auth/me', async (req, res) => {
     if (!token) return res.status(401).json({ authenticated: false });
 
     try {
-        const decoded = jwt.verify(sessionToken, process.env.JWT_SECRET, { algorithms: ['HS256'] });
+        const decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
         const user = await User.findById(decoded.userId);
         
         if (!user) return res.status(401).json({ authenticated: false });
@@ -862,6 +862,7 @@ app.get('/api/auth/me', async (req, res) => {
             }
         });
     } catch (err) {
+        console.error("Auth validation error:", err);
         res.status(401).json({ authenticated: false });
     }
 });
