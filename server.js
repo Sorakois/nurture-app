@@ -155,6 +155,81 @@ app.get('/api/history/:gameId/:identifier', async (req, res) => {
     }
 });
 
+app.post('/api/games/:id/rate', async (req, res) => {
+    const sessionToken = req.cookies.nurture_session;
+    if (!sessionToken) return res.status(401).json({ error: "Must be signed in to rate." });
+
+    try {
+        const decoded = jwt.verify(sessionToken, process.env.JWT_SECRET);
+        const user = await User.findById(decoded.userId);
+        if (!user) return res.status(401).json({ error: "User not found." });
+
+        const gameId = req.params.id;
+        const { f2p, afk, story, gameplay } = req.body;
+
+        const game = await Game.findOne({ id: gameId }).lean();
+        if (!game) return res.status(404).json({ error: "Game not found." });
+
+        let userRatings = game.user_ratings || [];
+        
+        // 1. Find if the user already rated this game to enforce the 1-rating limit
+        const existingIdx = userRatings.findIndex(r => r.discordId === user.discordId);
+        const newScore = { discordId: user.discordId, f2p: Number(f2p), afk: Number(afk), story: Number(story), gameplay: Number(gameplay) };
+        
+        if (existingIdx !== -1) {
+            userRatings[existingIdx] = newScore; // Overwrite their old rating
+        } else {
+            userRatings.push(newScore); // Log their first rating
+        }
+
+        // 2. Mathematically recalculate the averages from scratch
+        const totals = { f2p: 0, afk: 0, story: 0, gameplay: 0 };
+        const counts = { f2p: 0, afk: 0, story: 0, gameplay: 0 };
+
+        userRatings.forEach(r => {
+            ['f2p', 'afk', 'story', 'gameplay'].forEach(cat => {
+                if (r[cat] > 0) {
+                    totals[cat] += r[cat];
+                    counts[cat]++;
+                }
+            });
+        });
+
+        const newRatings = { ...game.ratings }; // Preserve Age Rating
+        const newCounts = { total_reviews: userRatings.length };
+        let overallTotal = 0;
+        let overallCount = 0;
+
+        ['f2p', 'afk', 'story', 'gameplay'].forEach(cat => {
+            if (counts[cat] > 0) {
+                newRatings[cat] = (totals[cat] / counts[cat]).toFixed(1);
+                newCounts[cat] = counts[cat];
+                overallTotal += totals[cat] / counts[cat];
+                overallCount++;
+            } else {
+                newRatings[cat] = null;
+                newCounts[cat] = 0;
+            }
+        });
+
+        if (overallCount > 0) {
+            newRatings.overall = (overallTotal / overallCount).toFixed(1);
+        }
+        
+        // 3. Forcefully bypass schema restrictions to permanently save the new fields
+        await Game.updateOne(
+            { id: gameId }, 
+            { $set: { ratings: newRatings, rating_counts: newCounts, user_ratings: userRatings } }, 
+            { strict: false }
+        );
+
+        res.json({ success: true, ratings: newRatings, rating_counts: newCounts, user_ratings: userRatings });
+    } catch (err) {
+        console.error("Rating error:", err);
+        res.status(500).json({ error: "Failed to save rating." });
+    }
+});
+
 // --- UPDATED DISCORD INTERACTIONS (APPROVE / DENY / REPLY LOGIC) ---
 app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY), async (req, res) => {
     const interaction = req.body;
@@ -716,46 +791,17 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                         if (contribution.itemCategory === 'Overview' || contribution.itemCategory === 'Game') {
                             let updates = {};
                             
-                            // 1. Standard Updates
                             if (contribution.data.overview_text !== undefined) updates.overview_text = contribution.data.overview_text;
                             if (contribution.data.new_player_guide !== undefined) updates.new_player_guide = contribution.data.new_player_guide;
                             if (contribution.data.trailer_id !== undefined) updates.trailer_id = contribution.data.trailer_id;
                             
-                            // 2. Dynamic Ratings Math
-                            if (contribution.data.ratings) {
-                                const r = game.ratings || {};
-                                const c = game.rating_counts || {};
-                                
-                                updates.ratings = { ...r };
-                                updates.rating_counts = { ...c };
-                                
-                                if (contribution.data.ratings.age) updates.ratings.age = contribution.data.ratings.age;
-                                
-                                let hasNewRating = false;
-                                ['f2p', 'afk', 'story', 'gameplay'].forEach(cat => {
-                                    const newVal = parseFloat(contribution.data.ratings[cat]);
-                                    if (!isNaN(newVal) && newVal > 0) {
-                                        const currentAvg = parseFloat(r[cat]) || 0;
-                                        const currentCount = parseInt(c[cat]) || 0;
-                                        
-                                        // Calculate the new running average
-                                        updates.ratings[cat] = ((currentAvg * currentCount) + newVal) / (currentCount + 1);
-                                        updates.rating_counts[cat] = currentCount + 1;
-                                        hasNewRating = true;
-                                    }
-                                });
-
-                                if (hasNewRating) {
-                                    updates.rating_counts.total_reviews = (c.total_reviews || 0) + 1;
-                                    const scores = ['f2p', 'afk', 'story', 'gameplay'].map(cat => parseFloat(updates.ratings[cat])).filter(n => !isNaN(n));
-                                    if (scores.length > 0) {
-                                        updates.ratings.overall = (scores.reduce((a,b) => a+b, 0) / scores.length).toFixed(1);
-                                    }
-                                }
+                            // Safely preserve existing ratings but update the Age if suggested
+                            if (contribution.data.age !== undefined) {
+                                updates.ratings = { ...(game.ratings || {}), age: contribution.data.age };
                             }
                             
-                            // Forcefully bypass Mongoose schema rules to save the new fields
-                            await Game.updateOne({ _id: game._id }, { $set: updates }, { strict: false });
+                            // Forcefully bypass strict schema rules
+                            await Game.updateOne({ id: contribution.gameId }, { $set: updates }, { strict: false });
                         } else {
                             const catKey = contribution.itemCategory.toLowerCase() + 's';
                             const catArray = game[catKey] || game[contribution.itemCategory.toLowerCase()];
@@ -866,46 +912,17 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                         if (contribution.itemCategory === 'Overview' || contribution.itemCategory === 'Game') {
                             let updates = {};
                             
-                            // 1. Standard Updates
                             if (contribution.data.overview_text !== undefined) updates.overview_text = contribution.data.overview_text;
                             if (contribution.data.new_player_guide !== undefined) updates.new_player_guide = contribution.data.new_player_guide;
                             if (contribution.data.trailer_id !== undefined) updates.trailer_id = contribution.data.trailer_id;
                             
-                            // 2. Dynamic Ratings Math
-                            if (contribution.data.ratings) {
-                                const r = game.ratings || {};
-                                const c = game.rating_counts || {};
-                                
-                                updates.ratings = { ...r };
-                                updates.rating_counts = { ...c };
-                                
-                                if (contribution.data.ratings.age) updates.ratings.age = contribution.data.ratings.age;
-                                
-                                let hasNewRating = false;
-                                ['f2p', 'afk', 'story', 'gameplay'].forEach(cat => {
-                                    const newVal = parseFloat(contribution.data.ratings[cat]);
-                                    if (!isNaN(newVal) && newVal > 0) {
-                                        const currentAvg = parseFloat(r[cat]) || 0;
-                                        const currentCount = parseInt(c[cat]) || 0;
-                                        
-                                        // Calculate the new running average
-                                        updates.ratings[cat] = ((currentAvg * currentCount) + newVal) / (currentCount + 1);
-                                        updates.rating_counts[cat] = currentCount + 1;
-                                        hasNewRating = true;
-                                    }
-                                });
-
-                                if (hasNewRating) {
-                                    updates.rating_counts.total_reviews = (c.total_reviews || 0) + 1;
-                                    const scores = ['f2p', 'afk', 'story', 'gameplay'].map(cat => parseFloat(updates.ratings[cat])).filter(n => !isNaN(n));
-                                    if (scores.length > 0) {
-                                        updates.ratings.overall = (scores.reduce((a,b) => a+b, 0) / scores.length).toFixed(1);
-                                    }
-                                }
+                            // Safely preserve existing ratings but update the Age if suggested
+                            if (contribution.data.age !== undefined) {
+                                updates.ratings = { ...(game.ratings || {}), age: contribution.data.age };
                             }
                             
-                            // Forcefully bypass Mongoose schema rules to save the new fields
-                            await Game.updateOne({ _id: game._id }, { $set: updates }, { strict: false });
+                            // Forcefully bypass strict schema rules
+                            await Game.updateOne({ id: contribution.gameId }, { $set: updates }, { strict: false });
                         } else {
                             const catKey = contribution.itemCategory.toLowerCase() + 's';
                             const catArray = game[catKey] || game[contribution.itemCategory.toLowerCase()];

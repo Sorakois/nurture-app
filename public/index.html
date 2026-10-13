@@ -497,6 +497,44 @@
     </div>
 
     <!-- Suggest Info Edit Modal -->
+    <!-- Game Info Action Buttons (Inside gameModal) -->
+    <!-- Look for the single "Suggest Data Update" button near line 286 and replace it with this: -->
+    <div style="display: flex; gap: 10px; margin-top: 20px;">
+        <button onclick="openRateGameModal()" style="flex: 1; padding:12px; background:#ffc107; color:#000; border:none; border-radius:8px; font-weight:bold; cursor:pointer; transition: background 0.2s;" onmouseover="this.style.background='#e0a800'" onmouseout="this.style.background='#ffc107'">⭐ Rate Game</button>
+        <button onclick="openEditInfoModal()" style="flex: 1; padding:12px; background:#4C3A90; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; transition: background 0.2s;" onmouseover="this.style.background='#5c47ac'" onmouseout="this.style.background='#4C3A90'">✏️ Suggest Data</button>
+    </div>
+
+    <!-- Live Rating Modal -->
+    <div id="rateGameModal" class="modal-overlay">
+        <div class="modal-window" style="max-width: 400px; text-align: center;">
+            <button class="modal-close" onclick="document.getElementById('rateGameModal').classList.remove('active')">×</button>
+            <h2 class="modal-title">Rate Game</h2>
+            <div style="font-size: 0.85em; color: #aaa; margin-bottom: 15px;">Your new ratings will overwrite your previous votes for this game.</div>
+            
+            <div style="display:flex; flex-direction:column; gap:15px; margin-bottom: 20px;">
+                <div style="padding:10px; background:#2a2a35; border:1px solid #3a3a45; border-radius:8px;">
+                    <div style="font-size:0.75em; color:#aaa; font-weight:bold;">F2P RATING</div>
+                    <div class="star-rating-input" id="liveF2P" data-val="0"><span class="star" data-rating="1">★</span><span class="star" data-rating="2">★</span><span class="star" data-rating="3">★</span><span class="star" data-rating="4">★</span><span class="star" data-rating="5">★</span></div>
+                </div>
+                <div style="padding:10px; background:#2a2a35; border:1px solid #3a3a45; border-radius:8px;">
+                    <div style="font-size:0.75em; color:#aaa; font-weight:bold;">AFK RATING</div>
+                    <div class="star-rating-input" id="liveAFK" data-val="0"><span class="star" data-rating="1">★</span><span class="star" data-rating="2">★</span><span class="star" data-rating="3">★</span><span class="star" data-rating="4">★</span><span class="star" data-rating="5">★</span></div>
+                </div>
+                <div style="padding:10px; background:#2a2a35; border:1px solid #3a3a45; border-radius:8px;">
+                    <div style="font-size:0.75em; color:#aaa; font-weight:bold;">STORY RATING</div>
+                    <div class="star-rating-input" id="liveStory" data-val="0"><span class="star" data-rating="1">★</span><span class="star" data-rating="2">★</span><span class="star" data-rating="3">★</span><span class="star" data-rating="4">★</span><span class="star" data-rating="5">★</span></div>
+                </div>
+                <div style="padding:10px; background:#2a2a35; border:1px solid #3a3a45; border-radius:8px;">
+                    <div style="font-size:0.75em; color:#aaa; font-weight:bold;">GAMEPLAY RATING</div>
+                    <div class="star-rating-input" id="liveGameplay" data-val="0"><span class="star" data-rating="1">★</span><span class="star" data-rating="2">★</span><span class="star" data-rating="3">★</span><span class="star" data-rating="4">★</span><span class="star" data-rating="5">★</span></div>
+                </div>
+            </div>
+            
+            <button onclick="submitLiveRating()" style="width:100%; padding:12px; background:#ffc107; color:#000; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">Submit Rating Live</button>
+        </div>
+    </div>
+
+    <!-- Suggest Info Edit Modal (Stripped of Ratings) -->
     <div id="editInfoModal" class="modal-overlay">
         <div class="modal-window" style="max-width: 500px;">
             <button class="modal-close" onclick="document.getElementById('editInfoModal').classList.remove('active')">×</button>
@@ -504,41 +542,15 @@
             
             <input type="text" id="editTrailer" placeholder="YouTube Trailer Video ID (e.g. dQw4w9WgXcQ)" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; color:white; box-sizing:border-box;">
             
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:10px;">
-                <select id="editAge" style="padding:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; color:white; height: 100%;">
-                    <option value="">Age Rating...</option>
-                    <option value="E">E (Everyone)</option>
-                    <option value="T">T (Teen)</option>
-                    <option value="M">M (Mature 17+)</option>
-                </select>
-                <div style="padding:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; text-align:center;">
-                    <div style="font-size:0.7em; color:#aaa; text-transform:uppercase; font-weight:bold;">F2P Rating</div>
-                    <div class="star-rating-input" id="editF2P" data-val="0">
-                        <span class="star" data-rating="1">★</span><span class="star" data-rating="2">★</span><span class="star" data-rating="3">★</span><span class="star" data-rating="4">★</span><span class="star" data-rating="5">★</span>
-                    </div>
-                </div>
-                <div style="padding:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; text-align:center;">
-                    <div style="font-size:0.7em; color:#aaa; text-transform:uppercase; font-weight:bold;">AFK Rating</div>
-                    <div class="star-rating-input" id="editAFK" data-val="0">
-                        <span class="star" data-rating="1">★</span><span class="star" data-rating="2">★</span><span class="star" data-rating="3">★</span><span class="star" data-rating="4">★</span><span class="star" data-rating="5">★</span>
-                    </div>
-                </div>
-                <div style="padding:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; text-align:center;">
-                    <div style="font-size:0.7em; color:#aaa; text-transform:uppercase; font-weight:bold;">Story Rating</div>
-                    <div class="star-rating-input" id="editStory" data-val="0">
-                        <span class="star" data-rating="1">★</span><span class="star" data-rating="2">★</span><span class="star" data-rating="3">★</span><span class="star" data-rating="4">★</span><span class="star" data-rating="5">★</span>
-                    </div>
-                </div>
-                <div style="padding:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; text-align:center; grid-column: span 2;">
-                    <div style="font-size:0.7em; color:#aaa; text-transform:uppercase; font-weight:bold;">Gameplay Rating</div>
-                    <div class="star-rating-input" id="editGameplay" data-val="0">
-                        <span class="star" data-rating="1">★</span><span class="star" data-rating="2">★</span><span class="star" data-rating="3">★</span><span class="star" data-rating="4">★</span><span class="star" data-rating="5">★</span>
-                    </div>
-                </div>
-            </div>
+            <select id="editAge" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; color:white;">
+                <option value="">Age Rating...</option>
+                <option value="E">E (Everyone)</option>
+                <option value="T">T (Teen)</option>
+                <option value="M">M (Mature 17+)</option>
+            </select>
             
             <input type="text" id="editCommit" placeholder="What was updated (e.g. Added Trailer)" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #3a3a45; background:#1f1f28; color:white; box-sizing:border-box;">
-            <button onclick="submitInfoEdit()" style="width:100%; padding:12px; background:#FF5E5B; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">Submit Update</button>
+            <button onclick="submitInfoEdit()" style="width:100%; padding:12px; background:#FF5E5B; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">Submit Update to Discord</button>
         </div>
     </div>
 
@@ -735,8 +747,7 @@
             if (isNaN(num) || num < 1) return '<span style="color:#888; font-size: 0.85em;">N/A</span>';
             const filled = '★'.repeat(num);
             const empty = '☆'.repeat(5 - num);
-            const exactVal = parseFloat(val).toFixed(1);
-            const countText = count ? `<div style="font-size:0.5em; color:#aaa; margin-top:4px; font-family:sans-serif;">${exactVal}/5 (${count} rating${count !== 1 ? 's' : ''})</div>` : '';
+            const countText = count ? `<div style="font-size:0.7em; color:#aaa; margin-top:8px; font-family:sans-serif; text-transform:none;">(${count} rating${count !== 1 ? 's' : ''})</div>` : '';
             return `<div style="display:flex; flex-direction:column; align-items:center; line-height:1;"><span class="star-display"><span style="color:#ffc107;">${filled}</span><span style="color:#555;">${empty}</span></span>${countText}</div>`;
         }
 
@@ -1028,6 +1039,72 @@
             });
         });
 
+function openRateGameModal() {
+            if (!cachedSession.discordId) return alert('Must be logged in to rate!');
+            if (!currentGameForModal) return;
+            
+            document.getElementById('gameModal').classList.remove('active');
+            
+            // Try to pre-fill if the user has already rated this game in the past
+            let userExisting = { f2p: 0, afk: 0, story: 0, gameplay: 0 };
+            if (currentGameForModal.user_ratings) {
+                const existing = currentGameForModal.user_ratings.find(r => r.discordId === cachedSession.discordId);
+                if (existing) userExisting = existing;
+            }
+
+            setStarRating('liveF2P', userExisting.f2p);
+            setStarRating('liveAFK', userExisting.afk);
+            setStarRating('liveStory', userExisting.story);
+            setStarRating('liveGameplay', userExisting.gameplay);
+
+            document.getElementById('rateGameModal').classList.add('active');
+        }
+
+        async function submitLiveRating() {
+            const payload = {
+                f2p: document.getElementById('liveF2P').getAttribute('data-val'),
+                afk: document.getElementById('liveAFK').getAttribute('data-val'),
+                story: document.getElementById('liveStory').getAttribute('data-val'),
+                gameplay: document.getElementById('liveGameplay').getAttribute('data-val')
+            };
+
+            try {
+                const res = await fetch(`/api/games/${currentGameForModal.id}/rate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.error || 'Failed to submit rating');
+                }
+
+                const updatedData = await res.json();
+                
+                // Instantly update the local state to match the new server averages
+                currentGameForModal.ratings = updatedData.ratings;
+                currentGameForModal.rating_counts = updatedData.rating_counts;
+                currentGameForModal.user_ratings = updatedData.user_ratings;
+
+                // Sync the main array so changes persist if you close and reopen
+                const gIdx = allGames.findIndex(g => g.id === currentGameForModal.id);
+                if (gIdx !== -1) {
+                    allGames[gIdx].ratings = updatedData.ratings;
+                    allGames[gIdx].rating_counts = updatedData.rating_counts;
+                    allGames[gIdx].user_ratings = updatedData.user_ratings;
+                }
+
+                alert("Rating saved! Averages have been updated live.");
+                document.getElementById('rateGameModal').classList.remove('active');
+                
+                // Re-open the Info Modal instantly to show off the new numbers
+                openGameModal(currentGameForModal, { getBoundingClientRect: () => ({ left: window.innerWidth/2, top: window.innerHeight/2, width: 0, height: 0 }) });
+            } catch (e) {
+                alert("Error: " + e.message);
+            }
+        }
+
         function openEditInfoModal() {
             if (!cachedSession.discordId) return alert('Must be logged in to suggest edits!');
             if (!currentGameForModal) return;
@@ -1038,18 +1115,11 @@
             document.getElementById('editAge').value = currentGameForModal.ratings?.age || '';
             document.getElementById('editCommit').value = '';
             
-            setStarRating('editF2P', currentGameForModal.ratings?.f2p);
-            setStarRating('editAFK', currentGameForModal.ratings?.afk);
-            setStarRating('editStory', currentGameForModal.ratings?.story);
-            setStarRating('editGameplay', currentGameForModal.ratings?.gameplay);
-            
             document.getElementById('editInfoModal').classList.add('active');
         }
 
         async function submitInfoEdit() {
             if (!currentGameForModal) return alert("Error: No game selected.");
-            
-            // Strictly enforce names and IDs so the database never receives a blank payload
             const gName = typeof currentGameForModal === 'string' ? currentGameForModal : (currentGameForModal.name || 'Unknown Game');
             const gId = (currentGameForModal && currentGameForModal.id) ? currentGameForModal.id : gName.toLowerCase().replace(/[^a-z0-9]/g, '-');
 
@@ -1058,25 +1128,18 @@
             if (rawTrailer.includes('v=')) parsedTrailerId = rawTrailer.split('v=')[1].split('&')[0];
             else if (rawTrailer.includes('youtu.be/')) parsedTrailerId = rawTrailer.split('youtu.be/')[1].split('?')[0];
 
+            // Stripped of the ratings to pass cleanly to Discord
             const payload = {
                 gameId: gId,
-                itemCategory: 'Game', // Required to pass Mongoose DB schema validation
+                itemCategory: 'Game', 
                 actionType: 'EDIT',
-                targetIdentifier: gName, // Must not be blank
+                targetIdentifier: gName, 
                 data: {
                     trailer_id: parsedTrailerId,
-                    commitMessage: document.getElementById('editCommit').value.trim(),
-                    ratings: {
-                        age: document.getElementById('editAge').value,
-                        f2p: document.getElementById('editF2P').getAttribute('data-val'),
-                        afk: document.getElementById('editAFK').getAttribute('data-val'),
-                        story: document.getElementById('editStory').getAttribute('data-val'),
-                        gameplay: document.getElementById('editGameplay').getAttribute('data-val')
-                    }
+                    age: document.getElementById('editAge').value,
+                    commitMessage: document.getElementById('editCommit').value.trim()
                 }
             };
-
-            console.log("Sending payload to backend:", payload); // Debug logging
 
             try {
                 const response = await fetch('/api/contribute', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
@@ -1088,7 +1151,6 @@
                 document.getElementById('editInfoModal').classList.remove('active');
             } catch (e) { 
                 alert("Failed to submit: " + e.message); 
-                console.error("Submission Error:", e);
             }
         }
 
