@@ -89,39 +89,45 @@
         }
 
         .grid-item {
-            background: radial-gradient(circle at top, rgba(157, 142, 199, 0.12), transparent 70%), rgba(30, 25, 43, 0.9);
-            border: 1px solid rgba(157, 142, 199, 0.22);
-            border-radius: 22px 8px 22px 8px;
+            background-color: #1e192b;
+            border: 1px solid rgba(157, 142, 199, 0.24);
+            border-radius: 20px 6px 20px 6px;
             padding: 15px;
             text-align: center;
             cursor: pointer;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
-            transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+            transform: translateZ(0);
+            transition: transform 0.16s ease-out, border-color 0.16s ease-out, background-color 0.16s ease-out;
         }
 
         .grid-item:hover {
-            transform: translateY(-6px);
-            border-radius: 10px 24px 10px 24px;
-            border-color: #b8a6e8;
-            background: radial-gradient(circle at top, rgba(157, 142, 199, 0.22), transparent 70%), rgba(38, 32, 56, 0.95);
-            box-shadow: 0 12px 28px rgba(122, 107, 181, 0.28);
+            transform: translate3d(0, -5px, 0);
+            border-color: #d0c2f7;
+            background-color: #27203a;
         }
 
         .grid-item img {
             width: 100%;
             height: auto;
             border-radius: 14px 4px 14px 4px;
+            display: block;
         }
 
+        /* Keep filter strictly on img with static opacity on card to avoid scroll repaint lag */
         .grid-item.no-data {
-            filter: grayscale(80%);
             opacity: 0.5;
         }
 
+        .grid-item.no-data img {
+            filter: grayscale(80%);
+        }
+
         .grid-item.no-data:hover {
-            filter: grayscale(15%);
             opacity: 0.95;
-            transform: translateY(-6px);
+            transform: translate3d(0, -5px, 0);
+        }
+
+        .grid-item.no-data:hover img {
+            filter: none;
         }
 
         .title-wrapper {
@@ -654,43 +660,73 @@
             <button class="modal-close" onclick="document.getElementById('editInfoModal').classList.remove('active')">×</button>
             <h2 class="modal-title">Suggest Data Update</h2>
             
-            <input type="text" id="editTrailer" placeholder="YouTube Trailer Video ID (e.g. dQw4w9WgXcQ)" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; color:white; box-sizing:border-box;">
+            <input type="text" id="editTrailer" class="floral-input" placeholder="YouTube Trailer Video ID or URL" style="margin-bottom:10px;">
             
-            <select id="editAge" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; color:white;">
+            <select id="editAge" class="floral-select" style="margin-bottom:10px;">
                 <option value="">Age Rating...</option>
                 <option value="E">E (Everyone)</option>
                 <option value="T">T (Teen)</option>
                 <option value="M">M (Mature 17+)</option>
             </select>
             
-            <input type="text" id="editCommit" placeholder="What was updated (e.g. Added Trailer)" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #3a3a45; background:#1f1f28; color:white; box-sizing:border-box;">
+            <div class="req-field-row" style="margin-bottom:14px;">
+                <input type="text" id="editCommit" class="floral-input" placeholder="What was updated (e.g. Added Trailer)">
+                <span class="req-icon" title="Required Field">
+                    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                </span>
+            </div>
             <button class="btn-floral blossom" onclick="submitInfoEdit()" style="width:100%; padding:12px;">Submit Update to Discord</button>
         </div>
     </div>
 
-    <!-- Suggest Game Modal -->
+    <!-- Suggest Game Modal (With Emphasized Lookup & Required Icons) -->
     <div id="suggestModal" class="modal-overlay">
         <div class="modal-window" style="max-width: 600px;">
             <button class="modal-close" onclick="document.getElementById('suggestModal').classList.remove('active')">×</button>
             <h2 class="modal-title">Suggest a New Game</h2>
             
-            <div style="display:flex; gap:10px; margin-bottom: 15px;">
-                <input type="text" id="suggestSearch" placeholder="Type game name to auto-fill..." style="flex-grow:1; padding:10px; border-radius:8px; border:1px solid #3a3a45; background:#1f1f28; color:white;">
-                <button class="btn-floral" onclick="lookupGame()" style="padding:10px 18px;">Lookup</button>
-            </div>
-
-            <div style="display:flex; gap: 15px; margin-bottom: 10px;">
-                <img id="sgIconPreview" src="/Assets/placeholder.png" style="width: 100px; height: 100px; border-radius: 12px; object-fit: cover; border: 1px solid #3a3a45; display: none;">
-                <div style="display:flex; flex-direction:column; gap:10px; flex-grow: 1;">
-                    <input type="text" id="sgName" placeholder="Game Name" style="padding:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; color:white;">
-                    <input type="text" id="sgDev" placeholder="Developer" style="padding:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; color:white;">
-                    <input type="text" id="sgTags" placeholder="Tags (comma separated)" style="padding:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; color:white;">
+            <!-- Emphasized Auto-Fill Lookup Callout -->
+            <div class="lookup-callout-box">
+                <div class="lookup-callout-header">
+                    <div class="lookup-callout-title">✨ Quick Auto-Fill Lookup</div>
+                    <span class="lookup-badge">Recommended Step 1</span>
+                </div>
+                <div class="lookup-callout-sub">
+                    Search the game title below to automatically pull its official icon, developer, tags, and description!
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <input type="text" id="suggestSearch" class="floral-input" placeholder="Type a game name (e.g. Wuthering Waves)..." onkeydown="if(event.key==='Enter'){event.preventDefault(); lookupGame();}">
+                    <button class="btn-floral pollen" onclick="lookupGame()" style="padding:10px 20px; white-space:nowrap;">🔍 Auto-Fill</button>
                 </div>
             </div>
-            <textarea id="sgDesc" placeholder="Overview Description" style="width:100%; height:100px; padding:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; color:white; resize:none; box-sizing:border-box; margin-bottom:10px;"></textarea>
-            <input type="text" id="sgIcon" placeholder="Game Icon URL (Auto-fills on Lookup)" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; color:white; box-sizing:border-box;" oninput="document.getElementById('sgIconPreview').src = this.value || '/Assets/placeholder.png'; document.getElementById('sgIconPreview').style.display = 'block';">
-            <input type="text" id="sgCommit" placeholder="What was added: (e.g. Added starter guide)" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #3a3a45; background:#1f1f28; color:white; box-sizing:border-box;">
-            <button class="btn-floral blossom" onclick="submitSuggestion()" style="width:100%; margin-top:15px; padding:12px;">Submit to Admins</button>
+
+            <div style="display:flex; gap: 15px; margin-bottom: 10px; align-items: center;">
+                <img id="sgIconPreview" src="/Assets/placeholder.png" style="width: 100px; height: 100px; border-radius: 16px 5px 16px 5px; object-fit: cover; border: 1.5px solid #9d8ec7; display: none; flex-shrink: 0;">
+                <div style="display:flex; flex-direction:column; gap:10px; flex-grow: 1;">
+                    <div class="req-field-row">
+                        <input type="text" id="sgName" class="floral-input" placeholder="Game Name">
+                        <span class="req-icon" title="Required Field"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg></span>
+                    </div>
+                    <div class="req-field-row">
+                        <input type="text" id="sgDev" class="floral-input" placeholder="Developer">
+                        <span class="req-icon" title="Required Field"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg></span>
+                    </div>
+                    <input type="text" id="sgTags" class="floral-input" placeholder="Tags (comma separated, optional)">
+                </div>
+            </div>
+
+            <div class="req-field-row" style="margin-bottom:10px;">
+                <textarea id="sgDesc" class="floral-textarea" placeholder="Overview Description" style="height:95px; resize:none;"></textarea>
+                <span class="req-icon" title="Required Field"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg></span>
+            </div>
+
+            <div class="req-field-row" style="margin-bottom:10px;">
+                <input type="text" id="sgIcon" class="floral-input" placeholder="Game Icon URL (Auto-fills on Lookup)" oninput="document.getElementById('sgIconPreview').src = this.value || '/Assets/placeholder.png'; document.getElementById('sgIconPreview').style.display = 'block';">
+                <span class="req-icon" title="Required Field"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg></span>
+            </div>
+
+            <input type="text" id="sgCommit" class="floral-input" placeholder="Commit Note (Optional, e.g. Added via App Store Lookup)" style="margin-bottom:10px;">
+            <button class="btn-floral blossom" onclick="submitSuggestion()" style="width:100%; margin-top:10px; padding:12px;">Submit to Admins</button>
         </div>
     </div>
 
@@ -748,8 +784,11 @@
             try {
                 const data = await apiCall(`/games?limit=100`);
                 if (data.games) {
-                    allGames = data.games; 
-                    updateGrid(allGames);
+                    // Only rebuild the grid DOM if data actually changed
+                    if (!silent || JSON.stringify(data.games) !== JSON.stringify(allGames)) {
+                        allGames = data.games; 
+                        updateGrid(allGames);
+                    }
                 }
             } catch (error) {
                 showError('Failed to load games.');

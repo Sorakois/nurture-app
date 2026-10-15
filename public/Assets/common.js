@@ -1,4 +1,4 @@
-// --- Botanical & Purple Flower Background Engine (GSAP 3) ---
+// --- GPU-Optimized Botanical Background Engine (GSAP 3) ---
 document.addEventListener('DOMContentLoaded', () => {
     const bgContainer = document.querySelector('.background-container');
     if (!bgContainer || typeof gsap === 'undefined') return;
@@ -7,9 +7,9 @@ document.addEventListener('DOMContentLoaded', () => {
     layer.className = 'floral-bg-layer';
     bgContainer.appendChild(layer);
 
-    // 5-Petal Purple Flower SVG (Matches nurture_icon.ico) & Single Petal SVG
+    // Flat SVG fills (avoids duplicate <radialGradient> ID shader lag during scroll)
     const flowerSvg = `<svg viewBox="0 0 64 64" width="100%" height="100%">
-        <g fill="url(#petalGrad)" stroke="#4c3780" stroke-width="1.5">
+        <g fill="#b8a6e8" stroke="#4c3780" stroke-width="1.5">
             <path d="M32 6 C25 16, 22 24, 32 32 C42 24, 39 16, 32 6 Z"/>
             <path d="M32 6 C25 16, 22 24, 32 32 C42 24, 39 16, 32 6 Z" transform="rotate(72 32 32)"/>
             <path d="M32 6 C25 16, 22 24, 32 32 C42 24, 39 16, 32 6 Z" transform="rotate(144 32 32)"/>
@@ -18,74 +18,56 @@ document.addEventListener('DOMContentLoaded', () => {
         </g>
         <circle cx="32" cy="32" r="5" fill="#5e4796"/>
         <circle cx="32" cy="32" r="2.5" fill="#f6c85f"/>
-        <defs>
-            <radialGradient id="petalGrad" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stop-color="#7A6BB5"/>
-                <stop offset="70%" stop-color="#c3b3ed"/>
-                <stop offset="100%" stop-color="#e5dcff"/>
-            </radialGradient>
-        </defs>
     </svg>`;
 
     const singlePetalSvg = `<svg viewBox="0 0 32 32" width="100%" height="100%">
-        <path d="M16 2 C8 12, 6 22, 16 30 C26 22, 24 12, 16 2 Z" fill="#b8a6e8" opacity="0.85"/>
+        <path d="M16 2 C8 12, 6 22, 16 30 C26 22, 24 12, 16 2 Z" fill="#9d8ec7" opacity="0.8"/>
     </svg>`;
 
-    // 1. Spawn Drifting Flowers & Petals
-    for (let i = 0; i < 18; i++) {
+    // 8 Drifting Petals (Compositor-only transforms)
+    for (let i = 0; i < 8; i++) {
         const el = document.createElement('div');
         el.className = 'floating-petal';
-        const isFullFlower = i % 3 === 0;
-        const size = isFullFlower ? Math.random() * 18 + 18 : Math.random() * 12 + 10;
+        const isFullFlower = i % 2 === 0;
+        const size = isFullFlower ? 22 : 14;
         el.style.width = `${size}px`;
         el.style.height = `${size}px`;
         el.innerHTML = isFullFlower ? flowerSvg : singlePetalSvg;
         layer.appendChild(el);
 
-        const startX = Math.random() * window.innerWidth;
-        gsap.set(el, { x: startX, y: Math.random() * window.innerHeight, rotation: Math.random() * 360 });
+        gsap.set(el, { x: Math.random() * window.innerWidth, y: Math.random() * window.innerHeight, rotation: Math.random() * 360, force3D: true });
 
-        // Vertical fall loop
         gsap.to(el, {
-            y: window.innerHeight + 60,
-            rotation: `+=${Math.random() * 360 + 180}`,
-            duration: Math.random() * 18 + 14,
+            y: window.innerHeight + 50,
+            rotation: `+=${240}`,
+            duration: Math.random() * 16 + 16,
             ease: "none",
             repeat: -1,
+            force3D: true,
             onRepeat: () => {
-                gsap.set(el, { y: -60, x: Math.random() * window.innerWidth });
+                gsap.set(el, { y: -50, x: Math.random() * window.innerWidth });
             }
-        });
-
-        // Gentle horizontal breeze sway
-        gsap.to(el, {
-            x: `+=${Math.random() * 90 - 45}`,
-            duration: Math.random() * 4 + 3,
-            ease: "sine.inOut",
-            yoyo: true,
-            repeat: -1
         });
     }
 
-    // 2. Spawn Glowing Pollen / Firefly Spores
-    for (let i = 0; i < 14; i++) {
+    // 6 Firefly Spores
+    for (let i = 0; i < 6; i++) {
         const spore = document.createElement('div');
         spore.className = 'firefly-spore';
-        const size = Math.random() * 4 + 3;
-        spore.style.width = `${size}px`;
-        spore.style.height = `${size}px`;
+        spore.style.width = '4px';
+        spore.style.height = '4px';
         layer.appendChild(spore);
 
-        gsap.set(spore, { x: Math.random() * window.innerWidth, y: Math.random() * window.innerHeight, opacity: Math.random() * 0.6 + 0.1 });
+        gsap.set(spore, { x: Math.random() * window.innerWidth, y: Math.random() * window.innerHeight, opacity: 0.4, force3D: true });
 
         gsap.to(spore, {
-            y: `-=${Math.random() * 250 + 100}`,
-            x: `+=${Math.random() * 100 - 50}`,
-            opacity: Math.random() * 0.7 + 0.2,
-            duration: Math.random() * 10 + 8,
+            y: `-=160`,
+            opacity: 0.85,
+            duration: Math.random() * 8 + 8,
             ease: "sine.inOut",
             yoyo: true,
-            repeat: -1
+            repeat: -1,
+            force3D: true
         });
     }
 });
@@ -239,8 +221,13 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="modal-window" style="max-width: 500px;">
                 <button class="modal-close" onclick="closeComposeModal()">×</button>
                 <h2 class="modal-title">🌺 Message Staff</h2>
-                <input type="text" id="mailSubject" class="floral-input" placeholder="Subject..." style="margin-bottom:12px;">
-                <textarea id="mailContent" class="floral-textarea" placeholder="Write your message here..." style="height:130px; resize:none;"></textarea>
+                <input type="text" id="mailSubject" class="floral-input" placeholder="Subject (Optional)..." style="margin-bottom:12px;">
+                <div class="req-field-row">
+                    <textarea id="mailContent" class="floral-textarea" placeholder="Write your message here..." style="height:130px; resize:none;"></textarea>
+                    <span class="req-icon" title="Required Field">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                    </span>
+                </div>
                 <button class="btn-floral blossom" style="width:100%; margin-top:14px; padding:12px;" onclick="sendMail()">🌸 Send Message</button>
             </div>
         </div>

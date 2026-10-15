@@ -67,6 +67,7 @@ body {
 
 /* Removed CSS drop-shadow filter to eliminate modal composite lag */
 .floating-petal {
+    filter: drop-shadow();
     position: absolute;
     will-change: transform;
     opacity: 0.6;
@@ -669,4 +670,89 @@ body {
         padding: 2px 8px;
         font-size: 0.7em;
     }
+
+    /* === GPU SCROLL & HOVER OPTIMIZATIONS === */
+.floating-petal, .firefly-spore {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    filter: none !important;
+}
+
+/* === REQUIRED FIELD RED ICON INDICATOR === */
+.req-field-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+}
+
+.req-field-row > input,
+.req-field-row > textarea,
+.req-field-row > select {
+    flex: 1;
+    min-width: 0;
+}
+
+.req-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 7px 2px 7px 2px;
+    background: rgba(255, 77, 94, 0.16);
+    border: 1px solid rgba(255, 77, 94, 0.55);
+    color: #ff4d5e;
+    flex-shrink: 0;
+    cursor: help;
+}
+
+.req-icon svg {
+    width: 13px;
+    height: 13px;
+    fill: #ff4d5e;
+}
+
+/* === EMPHASIZED GAME LOOKUP CALLOUT BOX === */
+.lookup-callout-box {
+    background: linear-gradient(135deg, rgba(104, 78, 168, 0.28) 0%, rgba(246, 200, 95, 0.1) 100%);
+    border: 1.5px solid #f6c85f;
+    border-radius: 18px 6px 18px 6px;
+    padding: 14px 16px;
+    margin-bottom: 18px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+
+.lookup-callout-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+}
+
+.lookup-callout-title {
+    font-size: 0.9em;
+    font-weight: bold;
+    color: #f6c85f;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.lookup-badge {
+    background: #f6c85f;
+    color: #1a1228;
+    font-size: 0.68em;
+    font-weight: bold;
+    padding: 2px 8px;
+    border-radius: 8px 2px 8px 2px;
+    text-transform: uppercase;
+}
+
+.lookup-callout-sub {
+    font-size: 0.78em;
+    color: #d0c2f7;
+    margin-bottom: 10px;
+}
+
 }
