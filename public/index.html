@@ -153,6 +153,53 @@
             transition: font-size 0.2s ease;
         }
 
+        /* === 3D STATUS BADGES (NEW! / UPDATE! / EDITED!) === */
+        .card-badges-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+            margin-top: 8px;
+            min-height: 22px;
+            flex-wrap: wrap;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2px 7px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+            line-height: 1.2;
+            user-select: none;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.35);
+        }
+
+        /* Red NEW! badge with dark crimson bottom lip */
+        .status-badge.badge-new {
+            background-color: #ef2b2d;
+            color: #ffffff;
+            border-bottom: 3px solid #7a0b0c;
+        }
+
+        /* Orange UPDATE! badge with dark sienna bottom lip */
+        .status-badge.badge-update {
+            background-color: #ff851b;
+            color: #1a1228;
+            border-bottom: 3px solid #9c470b;
+        }
+
+        /* Gold EDITED! badge with dark olive-gold bottom lip */
+        .status-badge.badge-edited {
+            background-color: #ffd014;
+            color: #1a1228;
+            border-bottom: 3px solid #7d6708;
+        }
+
         /* Petal-shaped info button */
         .info-icon {
             display: inline-flex;
@@ -1401,6 +1448,30 @@
                     const isStarred = userStarredGames.includes(gameId);
                     const starColor = isStarred ? '#ffc107' : '#555';
 
+                    // Evaluate recency windows (7 days for NEW! and UPDATE!, 2 days for EDITED!)
+                    const nowMs = Date.now();
+                    const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+                    const TWO_DAYS_MS = 2 * 24 * 60 * 60 * 1000;
+
+                    const createdMs = game.createdAt ? new Date(game.createdAt).getTime() : 0;
+                    const updatedMs = game.last_major_update_date ? new Date(game.last_major_update_date).getTime() : 0;
+                    const editedMs = game.last_edited_at ? new Date(game.last_edited_at).getTime() : 0;
+
+                    const isNew = createdMs > 0 && (nowMs - createdMs) <= SEVEN_DAYS_MS;
+                    const isUpdated = updatedMs > 0 && (nowMs - updatedMs) <= SEVEN_DAYS_MS;
+                    const isEdited = editedMs > 0 && (nowMs - editedMs) <= TWO_DAYS_MS;
+
+                    let badgesHtml = '';
+                    if (isNew || isUpdated || isEdited) {
+                        badgesHtml = `
+                            <div class="card-badges-row">
+                                ${isNew ? '<span class="status-badge badge-new" title="Added within the last 7 days">NEW!</span>' : ''}
+                                ${isUpdated ? `<span class="status-badge badge-update" title="Major App Store update${game.latest_version ? ` (v${escapeHtml(game.latest_version)})` : ''} within the last 7 days">UPDATE!</span>` : ''}
+                                ${isEdited ? '<span class="status-badge badge-edited" title="Community data edited within the last 2 days">EDITED!</span>' : ''}
+                            </div>
+                        `;
+                    }
+
                     gridItem.innerHTML = `
                         <img src="${iconUrl}" alt="${escapeHtml(gameName)}" loading="lazy" onerror="this.src='/Assets/placeholder.png'">
                         <div class="title-wrapper">
@@ -1409,6 +1480,7 @@
                             <div class="info-icon" title="View Game Details">i</div>
                         </div>
                         ${developer ? `<div class="grid-item-dev">${escapeHtml(developer)}</div>` : ''}
+                        ${badgesHtml}
                     `;
                     
                     const starBtn = gridItem.querySelector('.star-btn');
@@ -1516,6 +1588,8 @@
             }
         });
 
+        let lookedUpPatchData = { latest_version: null, last_major_update_date: null };
+
         async function lookupGame() {
             const term = document.getElementById('suggestSearch').value;
             if (!term) return;
@@ -1529,7 +1603,11 @@
                     document.getElementById('sgDesc').value = data.overview_text;
                     document.getElementById('sgIcon').value = data.icon_url;
                     
-                    // Reveal the visual preview
+                    lookedUpPatchData = {
+                        latest_version: data.latest_version || null,
+                        last_major_update_date: data.last_major_update_date || null
+                    };
+                    
                     const preview = document.getElementById('sgIconPreview');
                     preview.src = data.icon_url;
                     preview.style.display = 'block';
@@ -1549,6 +1627,8 @@
                     tags: document.getElementById('sgTags').value.split(',').map(s=>s.trim()),
                     overview_text: document.getElementById('sgDesc').value,
                     banner_url: document.getElementById('sgIcon').value,
+                    latest_version: lookedUpPatchData.latest_version,
+                    last_major_update_date: lookedUpPatchData.last_major_update_date,
                     commitMessage: document.getElementById('sgCommit').value
                 }
             };

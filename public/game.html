@@ -379,6 +379,12 @@
                         <div>
                             <h1 class="game-title" id="gameTitle">Loading...</h1>
                             <p class="game-dev" id="gameDev">-</p>
+                            <div class="header-left">
+                                <img src="/Assets/placeholder.png" alt="Game Icon" id="gameIcon" referrerpolicy="no-referrer">
+                            <div>
+                            <h1 class="game-title" id="gameTitle">Loading...</h1>
+                            <p class="game-dev" id="gameDev">-</p>
+                            <div id="gamePatchMeta" style="margin-top: 8px; font-size: 0.85em; color: #d0c2f7; display: none;"></div>
                         </div>
                     </div>
 
@@ -866,6 +872,14 @@
                 document.getElementById('gameTitle').textContent = gameData.name;
                 document.getElementById('gameDev').textContent = gameData.developer;
                 document.getElementById('gameIcon').src = gameData.banner_url || '/Assets/placeholder.png';
+
+                const patchMetaEl = document.getElementById('gamePatchMeta');
+                if (patchMetaEl && gameData.last_major_update_date) {
+                    const formattedPatchDate = formatItemDate({ updatedAt: gameData.last_major_update_date });
+                    const verText = gameData.latest_version ? `v${gameData.latest_version} • ` : '';
+                    patchMetaEl.textContent = `Last Major Patch: ${verText}${formattedPatchDate}`;
+                    patchMetaEl.style.display = 'block';
+                }
 
                 const mfContainer = document.getElementById('miniFocusContainer');
                 if (gameData.mini_focuses && gameData.mini_focuses.length > 0) {

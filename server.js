@@ -68,10 +68,72 @@ const cleanEmptyArrays = (game) => {
     if (game.mini_focuses && game.mini_focuses.length === 0) delete game.mini_focuses;
     return game;
 };
-// --- API ROUTES ---
+
+// --- APP STORE MAJOR UPDATE DETECTOR (EXCLUDES BUG FIXES) ---
+const isMajorAppStoreUpdate = (appData) => {
+    if (!appData || !appData.currentVersionReleaseDate) return false;
+    const version = (appData.version || '').trim();
+    const notes = (appData.releaseNotes || '').trim();
+
+    // 1. Check if the patch notes are purely generic bug-fix/stability text
+    const bugFixOnlyRegex = /^(?:[-•*]\s*)?(?:minor\s+|various\s+|general\s+)?(?:bug\s*fix(?:es)?|issue\s*fix(?:es)?|fixed\s+(?:an?\s+|some\s+)?(?:bug|issue|crash|error)s?|stability\s+improvements?|performance\s+improvements?|optimization|text\s+fixes)(?:\s+and\s+(?:stability|performance|minor)\s+improvements?)*[\s.!]*$/i;
+    const hasContentKeywords = /\b(new|event|character|hero|cookie|chapter|story|season|banner|mode|collab|anniversary|feature|stage|boss|level|system|rework|balance|expansion|outfit|skin|costume|weapon|update\s+\d)\b/i.test(notes);
+
+    // Parse semantic version parts (e.g. "2.4.0" -> [2, 4, 0])
+    const verParts = version.split('.').map(p => parseInt(p.replace(/\D/g, ''), 10)).filter(n => !isNaN(n));
+    const isZeroPatchVer = verParts.length >= 2 && (verParts.length === 2 || verParts[2] === 0);
+
+    // Exclude if notes explicitly look like a minor bug fix and don't mention content
+    if (notes.length > 0 && notes.length < 180 && bugFixOnlyRegex.test(notes) && !isZeroPatchVer) {
+        return false;
+    }
+
+    // Include if version is a major/minor ".0" release OR patch notes describe new content
+    if (isZeroPatchVer || hasContentKeywords || notes.length >= 180) {
+        return true;
+    }
+
+    return false;
+};
+
+// Non-blocking background sync so existing games automatically stay updated with Apple App Store data
+let isSyncingAppStore = false;
+const syncAppStoreUpdatesBackground = async (games) => {
+    if (isSyncingAppStore) return;
+    isSyncingAppStore = true;
+
+    try {
+        const SIX_HOURS = 6 * 60 * 60 * 1000;
+        const now = Date.now();
+
+        // Check up to 3 stale games per cycle so we never hit Apple rate limits
+        const staleGames = games.filter(g => {
+            if (!g.name) return false;
+            const lastChecked = g.app_store_checked_at ? new Date(g.app_store_checked_at).getTime() : 0;
+            return (now - lastChecked) > SIX_HOURS;
+        }).slice(0, 3);
+
+        for (const g of staleGames) {
+            try {
+                const res = await axios.get(`https://itunes.apple.com/search?term=${encodeURIComponent(g.name)}&entity=software&limit=1`);
+                const updates = { app_store_checked_at: new Date().toISOString() };
+
+                if (res.data.results && res.data.results.length > 0) {
+                    const appData = res.data.results[0];
+                    if (isMajorAppStoreUpdate(appData)) {
+                        updates.last_major_update_date = appData.currentVersionReleaseDate;
+                        updates.latest_version = appData.version;
+                    }
+                }
+                await Game.collection.updateOne({ id: g.id }, { $set: updates });
+            } catch (e) {}
+        }
+    } finally {
+        isSyncingAppStore = false;
+    }
+};
 
 // --- API ROUTES ---
-
 app.get('/api/games', async (req, res) => {
     const page = Math.max(1, parseInt(req.query.page) || 1);
     const limit = Math.min(50, parseInt(req.query.limit) || 20);
@@ -80,6 +142,9 @@ app.get('/api/games', async (req, res) => {
     try {
         // Use native MongoDB driver to completely bypass Mongoose Schema stripping
         const allGames = await Game.collection.find({}).toArray();
+        
+        // Trigger non-blocking background check for App Store major updates
+        syncAppStoreUpdatesBackground(allGames);
         
         allGames.sort((a, b) => {
             const aData = hasGameData(a);
@@ -801,24 +866,30 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
             const user = await User.findOne({ discordId: contribution.submitterDiscordId });
             const adminAvatar = interaction.member.user.avatar ? `https://cdn.discordapp.com/avatars/${interaction.member.user.id}/${interaction.member.user.avatar}.png` : 'https://cdn.discordapp.com/embed/avatars/0.png';
 
+            // REMEMBER ME 1
             if (action === 'approve') {
                 await Contribution.updateOne({ _id: contribution._id }, { $set: { status: 'approved' } });
 
+                const nowIso = new Date().toISOString();
+
                 if (contribution.itemCategory === 'Game' && contribution.actionType === 'CREATE') {
-                    const existing = await Game.findOne({ id: contribution.gameId });
-                    if (!existing) await Game.create(contribution.data);
+                    const existing = await Game.collection.findOne({ id: contribution.gameId });
+                    if (!existing) {
+                        await Game.collection.insertOne({
+                            ...contribution.data,
+                            createdAt: nowIso
+                        });
+                    }
                 } else if (contribution.gameId) {
                     const game = await Game.findOne({ id: contribution.gameId });
                     if (game) {
-                        // REMEMBER ME 1
                         if (contribution.itemCategory === 'Overview' || contribution.itemCategory === 'Game') {
-                            let updates = {};
+                            let updates = { last_edited_at: nowIso };
                             
                             if (contribution.data.overview_text !== undefined) updates.overview_text = contribution.data.overview_text;
                             if (contribution.data.new_player_guide !== undefined) updates.new_player_guide = contribution.data.new_player_guide;
                             if (contribution.data.redeem_codes_url !== undefined) updates.redeem_codes_url = contribution.data.redeem_codes_url;
                             
-                            // Keep the starter guide and the trailer completely separate
                             if (contribution.data.new_player_video_id !== undefined) updates.new_player_video_id = contribution.data.new_player_video_id;
                             if (contribution.data.trailer_id !== undefined) updates.trailer_id = contribution.data.trailer_id; 
                             
@@ -831,7 +902,6 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                             const catKey = contribution.itemCategory.toLowerCase() + 's';
                             const catArray = game[catKey] || game[contribution.itemCategory.toLowerCase()];
                             if (catArray) {
-                                const nowIso = new Date().toISOString();
                                 if (contribution.actionType === 'CREATE') {
                                     catArray.push({ 
                                         ...contribution.data, 
@@ -857,6 +927,8 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                                 }
                                 game.markModified(catKey);
                                 await game.save();
+                                // Stamp last_edited_at on the parent game for the EDITED! badge
+                                await Game.collection.updateOne({ id: contribution.gameId }, { $set: { last_edited_at: nowIso } });
                             }
                         }
                     }
@@ -922,6 +994,7 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
             return res.send({ type: InteractionResponseType.UPDATE_MESSAGE, data: { content: `✅ **Replied by <@${interaction.member.user.id}>:**\n>${replyText.split('\n').join('\n> ')}`, components: [] } });
         }
         
+        // REMEMBER ME 2
         if (customId.startsWith('modal_tweak_')) {
             const contributionId = customId.split('_')[2];
             const newJsonDataRaw = interaction.data.components[0].components[0].value;
@@ -933,22 +1006,26 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                 const contribution = await Contribution.findById(contributionId);
                 await Contribution.updateOne({ _id: contribution._id }, { $set: { status: 'approved', data: parsedData } });
                 contribution.data = parsedData;
+const nowIso = new Date().toISOString();
 
                 if (contribution.itemCategory === 'Game' && contribution.actionType === 'CREATE') {
-                    const existing = await Game.findOne({ id: contribution.gameId });
-                    if (!existing) await Game.create(contribution.data);
+                    const existing = await Game.collection.findOne({ id: contribution.gameId });
+                    if (!existing) {
+                        await Game.collection.insertOne({
+                            ...contribution.data,
+                            createdAt: nowIso
+                        });
+                    }
                 } else if (contribution.gameId) {
                     const game = await Game.findOne({ id: contribution.gameId });
                     if (game) {
-                        // REMEMBER ME 2
                         if (contribution.itemCategory === 'Overview' || contribution.itemCategory === 'Game') {
-                            let updates = {};
+                            let updates = { last_edited_at: nowIso };
                             
                             if (contribution.data.overview_text !== undefined) updates.overview_text = contribution.data.overview_text;
                             if (contribution.data.new_player_guide !== undefined) updates.new_player_guide = contribution.data.new_player_guide;
                             if (contribution.data.redeem_codes_url !== undefined) updates.redeem_codes_url = contribution.data.redeem_codes_url;
                             
-                            // Keep the starter guide and the trailer completely separate
                             if (contribution.data.new_player_video_id !== undefined) updates.new_player_video_id = contribution.data.new_player_video_id;
                             if (contribution.data.trailer_id !== undefined) updates.trailer_id = contribution.data.trailer_id; 
                             
@@ -961,7 +1038,6 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                             const catKey = contribution.itemCategory.toLowerCase() + 's';
                             const catArray = game[catKey] || game[contribution.itemCategory.toLowerCase()];
                             if (catArray) {
-                                const nowIso = new Date().toISOString();
                                 if (contribution.actionType === 'CREATE') {
                                     catArray.push({ 
                                         ...contribution.data, 
@@ -987,6 +1063,8 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                                 }
                                 game.markModified(catKey);
                                 await game.save();
+                                // Stamp last_edited_at on the parent game for the EDITED! badge
+                                await Game.collection.updateOne({ id: contribution.gameId }, { $set: { last_edited_at: nowIso } });
                             }
                         }
                     }
@@ -1076,17 +1154,18 @@ app.get('/api/suggest/lookup', async (req, res) => {
         }
 
         const appData = response.data.results[0];
-        
-        // Filter out redundant Apple tags like "Games" or "Entertainment"
         const cleanGenres = appData.genres.filter(g => g !== 'Games' && g !== 'Entertainment');
+        const majorUpdate = isMajorAppStoreUpdate(appData);
 
         res.json({
             found: true,
             name: appData.trackName,
             developer: appData.artistName,
-            icon_url: appData.artworkUrl512, // High-res icon
+            icon_url: appData.artworkUrl512,
             tags: cleanGenres,
-            overview_text: appData.description
+            overview_text: appData.description,
+            latest_version: appData.version || null,
+            last_major_update_date: majorUpdate ? appData.currentVersionReleaseDate : null
         });
     } catch (err) {
         console.error("External lookup error:", err);
