@@ -322,7 +322,7 @@
                     <h2>Loading content...</h2>
                 </div>
             </div>
-            <div class="leaderboard-sidebar" id="leaderboardSidebar" style="margin-top: 20px; display: flex; flex-direction: column;">
+            <div class="leaderboard-sidebar" id="leaderboardSidebar" style="display: flex; flex-direction: column;">
                 <div class="lb-header">Game Leaderboard</div>
                 <div id="gameLeaderboardList" style="flex-grow: 1; overflow-y: auto; margin-bottom: 10px; padding-right: 5px;">
                     <div class="lb-row" style="justify-content:center;color:#ccc;">Loading game ranks...</div>
@@ -338,7 +338,6 @@
         <div class="modal-window" style="max-width: 600px;">
             <button class="modal-close" onclick="document.getElementById('gameSuggestModal').classList.remove('active')">×</button>
             
-            <!-- Added padding-right: 48px so the History button never collides with the absolute '×' button -->
             <h2 class="modal-title" style="display:flex; justify-content:space-between; align-items:center; padding-right: 48px;">
                 <span id="gsCategoryTitle">Suggest Update</span>
                 <button type="button" id="gsHistoryBtn" onclick="viewEditHistory()" title="View Edit History" style="display:none; align-items:center; gap:5px; background:rgba(157, 142, 199, 0.15); border:1px solid rgba(208, 194, 247, 0.4); border-radius:12px 4px 12px 4px; padding:5px 10px; color:#d0c2f7; font-family:inherit; font-size:0.48em; cursor:pointer; transition:all 0.15s ease;" onmouseover="this.style.background='#5e4796'; this.style.color='#fff'" onmouseout="this.style.background='rgba(157, 142, 199, 0.15)'; this.style.color='#d0c2f7'">
@@ -349,37 +348,31 @@
                 </button>
             </h2>
             
-            <div id="gsStandardInputs" style="display:flex; flex-direction:column; gap:10px;">
-                <div class="req-field-row">
-                    <input type="text" id="gsTitle" class="floral-input" placeholder="Link Title / Resource Name">
-                    <span class="req-icon" title="Required Field">
-                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
-                    </span>
+            <div class="modal-form-stack">
+                <div id="gsStandardInputs" class="modal-form-stack">
+                    <div class="req-field-row">
+                        <input type="text" id="gsTitle" class="floral-input" placeholder="Link Title / Resource Name">
+                        <span class="req-icon"></span>
+                    </div>
+                    <input type="text" id="gsAuthor" class="floral-input" placeholder="Author / Platform / Format / Version (Optional)">
+                    <div class="req-field-row">
+                        <input type="text" id="gsUrl" class="floral-input" placeholder="URL Link">
+                        <span class="req-icon"></span>
+                    </div>
                 </div>
-                <input type="text" id="gsAuthor" class="floral-input" placeholder="Author / Platform / Format / Version (Optional)">
-                <div class="req-field-row">
-                    <input type="text" id="gsUrl" class="floral-input" placeholder="URL Link">
-                    <span class="req-icon" title="Required Field">
-                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
-                    </span>
+                
+                <div id="gsOverviewWrap" class="req-field-row" style="display:none;">
+                    <textarea id="gsOverviewText" class="floral-textarea" placeholder="Edit Overview text..." style="height:150px; resize:vertical;"></textarea>
+                    <span class="req-icon"></span>
                 </div>
+                <input type="text" id="gsNewPlayerGuide" class="floral-input" placeholder="(OPTIONAL) New Player Guide URL (e.g. YouTube Link)" style="display:none;">
+                
+                <div class="req-field-row">
+                    <input type="text" id="gsCommit" class="floral-input" placeholder="What was added / changed: (e.g. Fixed typo)">
+                    <span class="req-icon"></span>
+                </div>
+                <button class="btn-floral blossom" onclick="submitGameSuggestion()" style="width:100%; margin-top:4px; padding:12px;">Submit Update</button>
             </div>
-            
-            <div id="gsOverviewWrap" class="req-field-row" style="display:none; margin-top:10px;">
-                <textarea id="gsOverviewText" class="floral-textarea" placeholder="Edit Overview text..." style="height:150px; resize:vertical;"></textarea>
-                <span class="req-icon" title="Required Field">
-                    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
-                </span>
-            </div>
-            <input type="text" id="gsNewPlayerGuide" class="floral-input" placeholder="(OPTIONAL) New Player Guide URL (e.g. YouTube Link)" style="display:none; margin-top:10px;">
-            
-            <div class="req-field-row" style="margin-top:10px;">
-                <input type="text" id="gsCommit" class="floral-input" placeholder="What was added / changed: (e.g. Fixed typo)">
-                <span class="req-icon" title="Required Field">
-                    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
-                </span>
-            </div>
-            <button class="btn-floral blossom" onclick="submitGameSuggestion()" style="width:100%; margin-top:15px; padding:12px;">Submit Update</button>
         </div>
     </div>
 

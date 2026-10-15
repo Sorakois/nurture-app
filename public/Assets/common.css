@@ -436,7 +436,9 @@ body {
     height: fit-content;
     box-sizing: border-box;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
-    position: relative;
+    position: sticky;
+    top: 24px;
+    align-self: flex-start;
     overflow: hidden;
 }
 
@@ -679,42 +681,79 @@ body {
     filter: none !important;
 }
 
-/* === REQUIRED FIELD RED ICON INDICATOR === */
-.req-field-row {
+/* === UNIFORM FORM STACK & SLEEK EMBEDDED REQUIRED BADGE === */
+.modal-form-stack {
     display: flex;
-    align-items: center;
-    gap: 8px;
+    flex-direction: column;
+    gap: 12px;
     width: 100%;
 }
 
-.req-field-row > input,
-.req-field-row > textarea,
-.req-field-row > select {
-    flex: 1;
-    min-width: 0;
+.floral-input, .floral-textarea, .floral-select {
+    margin: 0 !important;
+    display: block;
+    width: 100%;
 }
 
+.req-field-row {
+    position: relative;
+    display: block;
+    width: 100%;
+    margin: 0 !important;
+}
+
+.req-field-row > input,
+.req-field-row > select {
+    width: 100%;
+    padding-right: 84px !important;
+}
+
+.req-field-row > textarea {
+    width: 100%;
+    padding-right: 84px !important;
+}
+
+/* Subtle embedded rose badge inside the input instead of an external error box */
 .req-icon {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 22px;
-    height: 22px;
-    min-width: 22px;
-    max-width: 22px;
-    border-radius: 7px 2px 7px 2px;
-    background: rgba(255, 77, 94, 0.16);
-    border: 1px solid rgba(255, 77, 94, 0.55);
-    color: #ff4d5e;
-    flex-shrink: 0;
-    cursor: help;
+    padding: 2px 8px;
+    border-radius: 8px 2px 8px 2px;
+    background: rgba(217, 107, 152, 0.14);
+    border: 1px solid rgba(217, 107, 152, 0.38);
+    color: #f7a1c4;
+    font-size: 0.68em;
+    font-weight: bold;
+    letter-spacing: 0.4px;
+    pointer-events: none;
+    user-select: none;
 }
 
+/* Pin badge to the top-right corner when inside a multi-line textarea */
+.req-field-row > textarea + .req-icon {
+    top: 12px;
+    transform: none;
+}
+
+/* Hide the harsh exclamation SVG and render clean text */
 .req-icon svg {
-    width: 13px !important;
-    height: 13px !important;
-    fill: #ff4d5e !important;
-    display: block;
+    display: none !important;
+}
+
+.req-icon::after {
+    content: 'Required';
+}
+
+/* Highlight the badge softly when the user focuses the input */
+.req-field-row:focus-within .req-icon {
+    background: rgba(217, 107, 152, 0.28);
+    border-color: #f7a1c4;
+    color: #ffffff;
 }
 
 /* === EMPHASIZED GAME LOOKUP CALLOUT BOX === */

@@ -210,11 +210,11 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="modal-window" style="max-width: 600px;">
                 <button class="modal-close" onclick="closeMailboxModal()">×</button>
                 <h2 class="modal-title" style="display: flex; justify-content: space-between; align-items: center; padding-right: 42px;">
-                    <span>🌸 User Mailbox</span>
+                    <span>User Mailbox</span>
                     <button class="btn-floral" onclick="markAllRead()" style="font-size: 0.5em; padding: 6px 12px;">✓ Mark All Read</button>
                 </h2>
                 <div id="mailboxContent" style="max-height: 350px; overflow-y: auto; margin-bottom: 16px; padding-right: 4px;">Loading messages...</div>
-                <button class="btn-floral blossom" style="width:100%; padding:12px;" onclick="openComposeModal()">✉️ Compose New Message to Staff</button>
+                <button class="btn-floral blossom" style="width:100%; padding:12px;" onclick="openComposeModal()">Send New Message to Staff ✉️</button>
             </div>
         </div>
         <div id="composeModal" class="modal-overlay">

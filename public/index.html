@@ -511,63 +511,83 @@
 
         <div style="flex-grow: 1; max-width: 950px;">
             
-            <div class="about-us" style="padding-top: 20px;">
-                <h1 style="font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 2.5em; margin-bottom: 20px;">
-                    Nurture
-                </h1>
-                <p style="font-size: 1.2em; color: #cccccc;">
-                    Guides, Raw Assets, Communities, Mods, and more!
-                </p>
+            <!-- Hero Title & Search/Filter Bar Centered Naturally Above the Grid Row -->
+    <div style="max-width: 950px; margin: 0 auto; padding: 0 20px;">
+        <div class="about-us" style="padding: 28px 20px 15px 20px;">
+            <h1 style="font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 2.5em; margin: 0 0 12px 0;">
+                Nurture
+            </h1>
+            <p style="font-size: 1.2em; color: #cccccc; margin: 0;">
+                Guides, Raw Assets, Communities, Mods, and more!
+            </p>
+        </div>
+
+        <div class="search-container" style="display: flex; gap: 10px; justify-content: center; align-items: center; max-width: 800px; width: 100%; margin: 15px auto 25px auto;">
+            <div style="position: relative; display: flex; align-items: center; flex-grow: 1;">
+                <button id="searchToggle" style="background: none; border: none; cursor: pointer; padding: 0 10px; z-index: 10;" title="Toggle Search">
+                    <svg viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: #aaa;"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                </button>
+                <input type="text" class="search-input" placeholder="Search games..." id="searchInput" style="width: 100%; opacity: 1; padding: 12px 20px; transition: all 0.3s ease; flex-grow: 1;">
             </div>
-            <div class="search-container" style="display: flex; gap: 10px; justify-content: center; align-items: center; max-width: 800px; margin: 0 auto 20px auto;">
-                <div style="position: relative; display: flex; align-items: center; flex-grow: 1;">
-                    <button id="searchToggle" style="background: none; border: none; cursor: pointer; padding: 0 10px; z-index: 10;" title="Toggle Search">
-                        <svg viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: #aaa;"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-                    </button>
-                    <input type="text" class="search-input" placeholder="Search games..." id="searchInput" style="width: 100%; opacity: 1; padding: 12px 20px; transition: all 0.3s ease; flex-grow: 1;">
-                </div>
-                
-                <div class="tags-menu-wrapper" id="tagsMenuWrapper">
-                    <button type="button" class="tags-menu-trigger" id="tagsMenuBtn" onclick="toggleTagsMenu(event)">
-                        <span>✿ Filters</span>
-                        <span id="activeFilterCount" class="filter-count-badge" style="display:none;">0</span>
-                        <span style="font-size: 0.75em; color: #d0c2f7;">▼</span>
-                    </button>
+            
+            <div class="tags-menu-wrapper" id="tagsMenuWrapper">
+                <button type="button" class="tags-menu-trigger" id="tagsMenuBtn" onclick="toggleTagsMenu(event)">
+                    <span>✿ Filters</span>
+                    <span id="activeFilterCount" class="filter-count-badge" style="display:none;">0</span>
+                    <span style="font-size: 0.75em; color: #d0c2f7;">▼</span>
+                </button>
 
-                    <div class="tags-dropdown-panel" id="tagsDropdownPanel" onclick="event.stopPropagation()">
-                        <div class="tags-panel-header">
-                            <span style="font-size: 0.78em; color: #a99ec7; font-weight: bold;">Match Logic:</span>
-                            <div class="logic-toggle-group">
-                                <button type="button" id="logicOrBtn" class="logic-btn active" onclick="setFilterLogic('OR')">OR</button>
-                                <button type="button" id="logicAndBtn" class="logic-btn" onclick="setFilterLogic('AND')">AND</button>
-                            </div>
-                            <button type="button" class="clear-filters-btn" onclick="clearAllFilters()">Reset</button>
+                <div class="tags-dropdown-panel" id="tagsDropdownPanel" onclick="event.stopPropagation()">
+                    <div class="tags-panel-header">
+                        <span style="font-size: 0.78em; color: #a99ec7; font-weight: bold;">Match Logic:</span>
+                        <div class="logic-toggle-group">
+                            <button type="button" id="logicOrBtn" class="logic-btn active" onclick="setFilterLogic('OR')">OR</button>
+                            <button type="button" id="logicAndBtn" class="logic-btn" onclick="setFilterLogic('AND')">AND</button>
                         </div>
+                        <button type="button" class="clear-filters-btn" onclick="clearAllFilters()">Reset</button>
+                    </div>
 
-                        <div class="tags-section-title">🌸 Genre Tags</div>
-                        <div class="tags-pills-grid" id="genreTagsGrid">
-                            <button type="button" class="tag-pill" data-tag="RPG" onclick="toggleGenreTag('RPG', this)">RPG</button>
-                            <button type="button" class="tag-pill" data-tag="Action" onclick="toggleGenreTag('Action', this)">Action</button>
-                            <button type="button" class="tag-pill" data-tag="Turn-Based" onclick="toggleGenreTag('Turn-Based', this)">Turn-Based</button>
-                            <button type="button" class="tag-pill" data-tag="Tower Defense" onclick="toggleGenreTag('Tower Defense', this)">Tower Defense</button>
-                            <button type="button" class="tag-pill" data-tag="Rhythm" onclick="toggleGenreTag('Rhythm', this)">Rhythm</button>
-                            <button type="button" class="tag-pill" data-tag="City Builder" onclick="toggleGenreTag('City Builder', this)">City Builder</button>
-                        </div>
+                    <div class="tags-section-title">🌸 Genre Tags</div>
+                    <div class="tags-pills-grid" id="genreTagsGrid">
+                        <button type="button" class="tag-pill" data-tag="RPG" onclick="toggleGenreTag('RPG', this)">RPG</button>
+                        <button type="button" class="tag-pill" data-tag="Action" onclick="toggleGenreTag('Action', this)">Action</button>
+                        <button type="button" class="tag-pill" data-tag="Turn-Based" onclick="toggleGenreTag('Turn-Based', this)">Turn-Based</button>
+                        <button type="button" class="tag-pill" data-tag="Tower Defense" onclick="toggleGenreTag('Tower Defense', this)">Tower Defense</button>
+                        <button type="button" class="tag-pill" data-tag="Rhythm" onclick="toggleGenreTag('Rhythm', this)">Rhythm</button>
+                        <button type="button" class="tag-pill" data-tag="City Builder" onclick="toggleGenreTag('City Builder', this)">City Builder</button>
+                    </div>
 
-                        <div class="tags-divider"></div>
+                    <div class="tags-divider"></div>
 
-                        <div class="tags-section-title">🌿 Age Rating (ESRB)</div>
-                        <div class="tags-pills-grid" id="ageTagsGrid">
-                            <button type="button" class="tag-pill age-pill" data-age="E" onclick="toggleAgeTag('E', this)">E • Everyone</button>
-                            <button type="button" class="tag-pill age-pill" data-age="T" onclick="toggleAgeTag('T', this)">T • Teen</button>
-                            <button type="button" class="tag-pill age-pill" data-age="M" onclick="toggleAgeTag('M', this)">M • Mature 17+</button>
-                        </div>
+                    <div class="tags-section-title">🌿 Age Rating (ESRB)</div>
+                    <div class="tags-pills-grid" id="ageTagsGrid">
+                        <button type="button" class="tag-pill age-pill" data-age="E" onclick="toggleAgeTag('E', this)">E • Everyone</button>
+                        <button type="button" class="tag-pill age-pill" data-age="T" onclick="toggleAgeTag('T', this)">T • Teen</button>
+                        <button type="button" class="tag-pill age-pill" data-age="M" onclick="toggleAgeTag('M', this)">M • Mature 17+</button>
                     </div>
                 </div>
             </div>
-            <div class="grid-container" id="gameGrid">
-            </div>
         </div>
+    </div>
+
+    <!-- Main Content Row: Grid & Sticky PC Leaderboard aligned at the exact same top edge -->
+    <div class="main-wrapper" id="mainWrapper" style="justify-content: center; align-items: flex-start; gap: 30px; max-width: 1560px; padding: 0 24px 40px 24px;">
+        <!-- Flexible spacer keeps the grid dead-center on wide monitors and shrinks smoothly on laptops -->
+        <div id="lbSpacer" class="leaderboard-spacer" style="flex: 0 1 290px; width: 290px; min-width: 0; display: block;"></div>
+
+        <div style="flex: 1 1 950px; max-width: 950px; min-width: 0;">
+            <div class="grid-container" id="gameGrid" style="padding: 0;"></div>
+        </div>
+        
+        <!-- PC Leaderboard aligned flush with the top of the Game Grid -->
+        <div class="leaderboard-sidebar" id="leaderboardSidebar" style="display: flex; flex-direction: column;">
+            <div class="lb-header">Top Contributors</div>
+            <div id="leaderboardList" style="flex-grow: 1; overflow-y: auto; margin-bottom: 10px; padding-right: 5px;">
+                <div class="lb-row" style="justify-content:center;color:#ccc;font-weight:bold;">Loading ranks...</div>
+            </div>
+            <div id="userRankContainer"></div>
+        </div>
+    </div>
         
         <!-- Right Sidebar Leaderboard -->
         <div class="leaderboard-sidebar" id="leaderboardSidebar" style="display: flex; flex-direction: column;">
@@ -660,26 +680,27 @@
             <button class="modal-close" onclick="document.getElementById('editInfoModal').classList.remove('active')">×</button>
             <h2 class="modal-title">Suggest Data Update</h2>
             
-            <input type="text" id="editTrailer" class="floral-input" placeholder="YouTube Trailer Video ID or URL" style="margin-bottom:10px;">
-            
-            <select id="editAge" class="floral-select" style="margin-bottom:10px;">
-                <option value="">Age Rating...</option>
-                <option value="E">E (Everyone)</option>
-                <option value="T">T (Teen)</option>
-                <option value="M">M (Mature 17+)</option>
-            </select>
-            
-            <div class="req-field-row" style="margin-bottom:14px;">
-                <input type="text" id="editCommit" class="floral-input" placeholder="What was updated (e.g. Added Trailer)">
-                <span class="req-icon" title="Required Field">
-                    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
-                </span>
+            <div class="modal-form-stack">
+                <input type="text" id="editTrailer" class="floral-input" placeholder="YouTube Trailer Video ID or URL">
+                
+                <select id="editAge" class="floral-select">
+                    <option value="">Age Rating...</option>
+                    <option value="E">E (Everyone)</option>
+                    <option value="T">T (Teen)</option>
+                    <option value="M">M (Mature 17+)</option>
+                </select>
+                
+                <div class="req-field-row">
+                    <input type="text" id="editCommit" class="floral-input" placeholder="What was updated (e.g. Added Trailer)">
+                    <span class="req-icon"></span>
+                </div>
+                
+                <button class="btn-floral blossom" onclick="submitInfoEdit()" style="width:100%; padding:12px; margin-top:4px;">Submit Update to Discord</button>
             </div>
-            <button class="btn-floral blossom" onclick="submitInfoEdit()" style="width:100%; padding:12px;">Submit Update to Discord</button>
         </div>
     </div>
 
-    <!-- Suggest Game Modal (With Emphasized Lookup & Required Icons) -->
+    <!-- Suggest Game Modal -->
     <div id="suggestModal" class="modal-overlay">
         <div class="modal-window" style="max-width: 600px;">
             <button class="modal-close" onclick="document.getElementById('suggestModal').classList.remove('active')">×</button>
@@ -700,33 +721,36 @@
                 </div>
             </div>
 
-            <div style="display:flex; gap: 15px; margin-bottom: 10px; align-items: center;">
-                <img id="sgIconPreview" src="/Assets/placeholder.png" style="width: 100px; height: 100px; border-radius: 16px 5px 16px 5px; object-fit: cover; border: 1.5px solid #9d8ec7; display: none; flex-shrink: 0;">
-                <div style="display:flex; flex-direction:column; gap:10px; flex-grow: 1;">
-                    <div class="req-field-row">
-                        <input type="text" id="sgName" class="floral-input" placeholder="Game Name">
-                        <span class="req-icon" title="Required Field"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg></span>
+            <div class="modal-form-stack">
+                <div style="display:flex; gap: 12px; align-items: stretch;">
+                    <img id="sgIconPreview" src="/Assets/placeholder.png" style="width: 108px; height: 108px; border-radius: 16px 5px 16px 5px; object-fit: cover; border: 1.5px solid #9d8ec7; display: none; flex-shrink: 0; align-self: center;">
+                    <div class="modal-form-stack">
+                        <div class="req-field-row">
+                            <input type="text" id="sgName" class="floral-input" placeholder="Game Name">
+                            <span class="req-icon"></span>
+                        </div>
+                        <div class="req-field-row">
+                            <input type="text" id="sgDev" class="floral-input" placeholder="Developer">
+                            <span class="req-icon"></span>
+                        </div>
+                        <input type="text" id="sgTags" class="floral-input" placeholder="Tags (comma separated, optional)">
                     </div>
-                    <div class="req-field-row">
-                        <input type="text" id="sgDev" class="floral-input" placeholder="Developer">
-                        <span class="req-icon" title="Required Field"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg></span>
-                    </div>
-                    <input type="text" id="sgTags" class="floral-input" placeholder="Tags (comma separated, optional)">
                 </div>
-            </div>
 
-            <div class="req-field-row" style="margin-bottom:10px;">
-                <textarea id="sgDesc" class="floral-textarea" placeholder="Overview Description" style="height:95px; resize:none;"></textarea>
-                <span class="req-icon" title="Required Field"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg></span>
-            </div>
+                <div class="req-field-row">
+                    <textarea id="sgDesc" class="floral-textarea" placeholder="Overview Description" style="height:95px; resize:none;"></textarea>
+                    <span class="req-icon"></span>
+                </div>
 
-            <div class="req-field-row" style="margin-bottom:10px;">
-                <input type="text" id="sgIcon" class="floral-input" placeholder="Game Icon URL (Auto-fills on Lookup)" oninput="document.getElementById('sgIconPreview').src = this.value || '/Assets/placeholder.png'; document.getElementById('sgIconPreview').style.display = 'block';">
-                <span class="req-icon" title="Required Field"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg></span>
-            </div>
+                <div class="req-field-row">
+                    <input type="text" id="sgIcon" class="floral-input" placeholder="Game Icon URL (Auto-fills on Lookup)" oninput="document.getElementById('sgIconPreview').src = this.value || '/Assets/placeholder.png'; document.getElementById('sgIconPreview').style.display = 'block';">
+                    <span class="req-icon"></span>
+                </div>
 
-            <input type="text" id="sgCommit" class="floral-input" placeholder="Commit Note (Optional, e.g. Added via App Store Lookup)" style="margin-bottom:10px;">
-            <button class="btn-floral blossom" onclick="submitSuggestion()" style="width:100%; margin-top:10px; padding:12px;">Submit to Admins</button>
+                <input type="text" id="sgCommit" class="floral-input" placeholder="Commit Note (Optional, e.g. Added via App Store Lookup)">
+                
+                <button class="btn-floral blossom" onclick="submitSuggestion()" style="width:100%; margin-top:4px; padding:12px;">Submit to Admins</button>
+            </div>
         </div>
     </div>
 
