@@ -22,10 +22,31 @@ const SITE_CHANGELOGS = [
     }
 ];
 
+const CHANGELOG_STORAGE_KEY = 'nurture_collapsed_changelog_id';
+
+function formatReadableDate(dateInput) {
+    if (!dateInput) return '';
+    const months = ["Jan.", "Feb.", "Mar.", "Apr.", "May", "Jun.", "Jul.", "Aug.", "Sep.", "Oct.", "Nov.", "Dec."];
+    
+    // Parse YYYY-MM-DD directly to prevent UTC midnight timezone shift
+    if (typeof dateInput === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateInput.trim())) {
+        const [year, month, day] = dateInput.trim().split('-').map(Number);
+        return `${months[month - 1]} ${day}, ${year}`;
+    }
+
+    const d = new Date(dateInput);
+    if (isNaN(d.getTime())) return String(dateInput);
+    return `${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+}
+
+function getLatestChangelogId() {
+    if (!SITE_CHANGELOGS || SITE_CHANGELOGS.length === 0) return '';
+    return `${SITE_CHANGELOGS[0].version}_${SITE_CHANGELOGS[0].date}`;
+}
+
 function formatChangelogLine(line) {
     const safe = (line || '').replace(/[&<>"']/g, m => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[m]));
     
-    // Automatically converts any leading [TAG] (e.g. [NEW], [MOBILE], [UI], [FIX]) into a badge
     return safe.replace(/^\[([A-Za-z0-9_-]+)\]\s*/, (match, tag) => {
         const tagClass = tag.toLowerCase();
         return `<span class="cl-tag ${tagClass}">${tag.toUpperCase()}</span>`;
@@ -34,13 +55,14 @@ function formatChangelogLine(line) {
 
 function buildChangelogEntryHtml(entry) {
     const itemsHtml = (entry.changes || []).map(c => `<li>${formatChangelogLine(c)}</li>`).join('');
+    const formattedDate = formatReadableDate(entry.date);
     return `
         <div class="changelog-entry">
             <div class="changelog-entry-meta">
                 <div class="changelog-version-title">
                     ${entry.version} — ${entry.title}
                 </div>
-                <span class="changelog-date">${entry.date}</span>
+                <span class="changelog-date">${formattedDate}</span>
             </div>
             <ul class="changelog-list">${itemsHtml}</ul>
         </div>
@@ -52,12 +74,30 @@ function initChangelogs() {
     const olderContainer = document.getElementById('olderChangelogsContainer');
     const olderBtn = document.getElementById('olderChangelogsBtn');
     const headerVer = document.getElementById('clHeaderVersion');
+    const body = document.getElementById('changelogBody');
+    const toggleBtn = document.getElementById('clToggleText');
 
     if (!latestContainer || SITE_CHANGELOGS.length === 0) return;
 
     const newest = SITE_CHANGELOGS[0];
-    if (headerVer) headerVer.textContent = `${newest.version} • ${newest.date}`;
+    const readableNewestDate = formatReadableDate(newest.date);
+    if (headerVer) headerVer.textContent = `${newest.version} • ${readableNewestDate}`;
     latestContainer.innerHTML = buildChangelogEntryHtml(newest);
+
+    // Check if the user previously collapsed this exact changelog version
+    const currentId = getLatestChangelogId();
+    const collapsedId = localStorage.getItem(CHANGELOG_STORAGE_KEY);
+
+    if (body && toggleBtn) {
+        if (collapsedId === currentId) {
+            body.classList.add('collapsed');
+            toggleBtn.textContent = 'Expand ▼';
+        } else {
+            // New changelog detected (or never collapsed): expand by default
+            body.classList.remove('collapsed');
+            toggleBtn.textContent = 'Hide ▲';
+        }
+    }
 
     const olderList = SITE_CHANGELOGS.slice(1);
     if (olderList.length > 0 && olderContainer && olderBtn) {
@@ -73,8 +113,17 @@ function toggleChangelogBox() {
     const body = document.getElementById('changelogBody');
     const btn = document.getElementById('clToggleText');
     if (!body || !btn) return;
+    
     const isCollapsed = body.classList.toggle('collapsed');
     btn.textContent = isCollapsed ? 'Expand ▼' : 'Hide ▲';
+
+    // Save or clear collapsed state for the current latest changelog
+    const currentId = getLatestChangelogId();
+    if (isCollapsed && currentId) {
+        localStorage.setItem(CHANGELOG_STORAGE_KEY, currentId);
+    } else {
+        localStorage.removeItem(CHANGELOG_STORAGE_KEY);
+    }
 }
 
 function toggleOlderChangelogs() {

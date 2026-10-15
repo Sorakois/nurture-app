@@ -816,6 +816,7 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                             
                             if (contribution.data.overview_text !== undefined) updates.overview_text = contribution.data.overview_text;
                             if (contribution.data.new_player_guide !== undefined) updates.new_player_guide = contribution.data.new_player_guide;
+                            if (contribution.data.redeem_codes_url !== undefined) updates.redeem_codes_url = contribution.data.redeem_codes_url;
                             
                             // Keep the starter guide and the trailer completely separate
                             if (contribution.data.new_player_video_id !== undefined) updates.new_player_video_id = contribution.data.new_player_video_id;
@@ -830,17 +831,25 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                             const catKey = contribution.itemCategory.toLowerCase() + 's';
                             const catArray = game[catKey] || game[contribution.itemCategory.toLowerCase()];
                             if (catArray) {
+                                const nowIso = new Date().toISOString();
                                 if (contribution.actionType === 'CREATE') {
                                     catArray.push({ 
                                         ...contribution.data, 
                                         submitterUsername: contribution.submitterUsername,
                                         submitterDiscordId: contribution.submitterDiscordId,
+                                        updatedAt: nowIso,
                                         _id: new mongoose.Types.ObjectId() 
                                     });
                                 }
                                 else if (contribution.actionType === 'EDIT') {
                                     const idx = catArray.findIndex(item => item._id?.toString() === contribution.targetIdentifier || item.title === contribution.targetIdentifier);
-                                    if (idx !== -1) catArray[idx] = { ...catArray[idx], ...contribution.data };
+                                    if (idx !== -1) {
+                                        catArray[idx] = { 
+                                            ...catArray[idx], 
+                                            ...contribution.data,
+                                            updatedAt: nowIso
+                                        };
+                                    }
                                 }
                                 else if (contribution.actionType === 'DELETE') {
                                     const idx = catArray.findIndex(item => item._id?.toString() === contribution.targetIdentifier || item.title === contribution.targetIdentifier);
@@ -850,7 +859,6 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                                 await game.save();
                             }
                         }
-                        await game.save();
                     }
                 }
 
@@ -938,6 +946,7 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                             
                             if (contribution.data.overview_text !== undefined) updates.overview_text = contribution.data.overview_text;
                             if (contribution.data.new_player_guide !== undefined) updates.new_player_guide = contribution.data.new_player_guide;
+                            if (contribution.data.redeem_codes_url !== undefined) updates.redeem_codes_url = contribution.data.redeem_codes_url;
                             
                             // Keep the starter guide and the trailer completely separate
                             if (contribution.data.new_player_video_id !== undefined) updates.new_player_video_id = contribution.data.new_player_video_id;
@@ -952,17 +961,25 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                             const catKey = contribution.itemCategory.toLowerCase() + 's';
                             const catArray = game[catKey] || game[contribution.itemCategory.toLowerCase()];
                             if (catArray) {
+                                const nowIso = new Date().toISOString();
                                 if (contribution.actionType === 'CREATE') {
                                     catArray.push({ 
                                         ...contribution.data, 
                                         submitterUsername: contribution.submitterUsername,
                                         submitterDiscordId: contribution.submitterDiscordId,
+                                        updatedAt: nowIso,
                                         _id: new mongoose.Types.ObjectId() 
                                     });
                                 }
                                 else if (contribution.actionType === 'EDIT') {
                                     const idx = catArray.findIndex(item => item._id?.toString() === contribution.targetIdentifier || item.title === contribution.targetIdentifier);
-                                    if (idx !== -1) catArray[idx] = { ...catArray[idx], ...contribution.data };
+                                    if (idx !== -1) {
+                                        catArray[idx] = { 
+                                            ...catArray[idx], 
+                                            ...contribution.data,
+                                            updatedAt: nowIso
+                                        };
+                                    }
                                 }
                                 else if (contribution.actionType === 'DELETE') {
                                     const idx = catArray.findIndex(item => item._id?.toString() === contribution.targetIdentifier || item.title === contribution.targetIdentifier);
@@ -972,7 +989,6 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                                 await game.save();
                             }
                         }
-                        await game.save();
                     }
                 }
 
