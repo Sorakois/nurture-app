@@ -356,15 +356,40 @@
             margin: 14px 0;
         }
 
+        /* === HERO / CHANGELOG SHOWCASE AREA === */
+        .hero-showcase {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 32px 24px 22px 24px;
+            margin: 22px auto 10px auto;
+            background: radial-gradient(circle at 50% 0%, rgba(157, 142, 199, 0.2) 0%, rgba(30, 25, 43, 0.65) 70%);
+            border: 1px solid rgba(157, 142, 199, 0.28);
+            border-radius: 28px 10px 28px 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+        }
+
+        .hero-logo-img {
+            width: 118px;
+            height: 118px;
+            object-fit: contain;
+            margin-bottom: 14px;
+        }
+
+        /* === BOTANICAL (i) INFO MODAL & RATINGS GRID === */
         .video-container {
             position: relative;
             width: 100%;
             padding-bottom: 56.25%; 
             height: 0;
             margin-bottom: 20px;
-            border-radius: 8px;
+            border-radius: 18px 6px 18px 6px;
+            border: 1px solid rgba(208, 194, 247, 0.4);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
             overflow: hidden;
-            background: #000;
+            background: #0d0a14;
         }
 
         .video-container iframe {
@@ -378,60 +403,88 @@
 
         .ratings-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 12px;
+            width: 100%;
         }
 
         .rating-box {
-            background-color: #2a2a35; 
-            padding: 12px;
-            border-radius: 6px;
+            background: linear-gradient(145deg, rgba(42, 34, 62, 0.92) 0%, rgba(23, 18, 35, 0.96) 100%);
+            padding: 14px 10px;
+            border-radius: 16px 5px 16px 5px;
             text-align: center;
-            border: 1px solid #3a3a45;
+            border: 1px solid rgba(157, 142, 199, 0.28);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            min-width: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
 
         .rating-label {
-            font-size: 0.85em;
-            color: #aaa;
+            font-size: 0.76em;
+            color: #d0c2f7;
             text-transform: uppercase;
-            margin-bottom: 4px;
+            letter-spacing: 0.7px;
+            margin-bottom: 6px;
+            font-weight: bold;
         }
 
         .rating-value {
-            font-size: 1.25em;
+            font-size: 1.2em;
             font-weight: bold;
-            color: #ffc107;
+            color: #f6c85f;
+            max-width: 100%;
         }
 
         .rating-box.overall {
-            grid-column: span 3;
-            background: linear-gradient(135deg, #3a3a45 0%, #2a2a35 100%);
-            border: 1px solid #ffc107;
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, rgba(104, 78, 168, 0.38) 0%, rgba(217, 107, 152, 0.22) 55%, rgba(28, 22, 44, 0.95) 100%);
+            border: 1.5px solid rgba(246, 200, 95, 0.65);
+            border-radius: 18px 6px 18px 6px;
+            padding: 16px 12px;
+        }
+
+        .rating-box.overall .rating-label {
+            color: #ffe6a3;
+            font-size: 0.82em;
         }
 
         /* === STAR RATINGS === */
-        .star-rating-input { display: flex; gap: 4px; cursor: pointer; color: #3a3a45; font-size: 28px; justify-content: center; line-height: 1; margin-top: 5px; }
-        .star-rating-input .star:hover, .star-rating-input .star.active { color: #ffc107; }
-        .star-display { font-size: 1.3em; letter-spacing: 2px; }
+        .star-rating-input { display: flex; gap: 4px; cursor: pointer; color: rgba(157, 142, 199, 0.28); font-size: 28px; justify-content: center; line-height: 1; margin-top: 5px; }
+        .star-rating-input .star:hover, .star-rating-input .star.active { color: #f6c85f; }
+        .star-display { font-size: 1.25em; letter-spacing: 2px; white-space: nowrap; }
 
         /* === MOBILE RESPONSIVENESS === */
         @media (max-width: 768px) {
             .grid-container {
-                grid-template-columns: repeat(2, 1fr);
+                grid-template-columns: repeat(2, minmax(0, 1fr));
                 gap: 15px;
                 padding: 15px;
             }
             
             .grid-item-title {
-                font-size: 16px;
+                font-size: 15px;
             }
 
             .grid-item-dev {
-                font-size: 9px;
+                font-size: 10px;
             }
 
             .search-container, .suggestions {
                 width: 95%;
+            }
+
+            .hero-showcase {
+                padding: 24px 16px 18px 16px;
+                margin-top: 14px;
+            }
+
+            .hero-logo-img {
+                width: 92px;
+                height: 92px;
             }
 
             .about-us h1 {
@@ -440,6 +493,30 @@
 
             .about-us p {
                 font-size: 1em;
+            }
+
+            /* Wrap ratings into 2 columns on mobile so they never bleed out of the modal */
+            .ratings-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 8px;
+            }
+
+            /* Center the 5th box (Gameplay Rating) across both columns above Overall */
+            .ratings-grid .rating-box:nth-child(5) {
+                grid-column: 1 / -1;
+            }
+
+            .rating-box {
+                padding: 10px 6px;
+            }
+
+            .rating-label {
+                font-size: 0.7em;
+            }
+
+            .star-display {
+                font-size: 1.05em;
+                letter-spacing: 1px;
             }
         }
     </style>
@@ -509,11 +586,12 @@
 
     <!-- Hero Title & Search/Filter Bar Centered Above the Grid -->
     <div style="max-width: 950px; margin: 0 auto; padding: 0 20px;">
-        <div class="about-us" style="padding: 28px 20px 15px 20px;">
-            <h1 style="font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 2.5em; margin: 0 0 12px 0;">
+        <div class="about-us hero-showcase">
+            <img src="/Assets/nurture_icon.png" alt="Nurture Emblem" class="hero-logo-img">
+            <h1 style="font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 2.6em; margin: 0 0 10px 0;">
                 Nurture
             </h1>
-            <p style="font-size: 1.2em; color: #cccccc; margin: 0;">
+            <p style="font-size: 1.15em; color: #d0c2f7; margin: 0; max-width: 620px; line-height: 1.4;">
                 Guides, Raw Assets, Communities, Mods, and more!
             </p>
         </div>
@@ -631,27 +709,28 @@
     </div>
 
     <!-- Live Rating Modal -->
+    <!-- Live Rating Modal -->
     <div id="rateGameModal" class="modal-overlay">
         <div class="modal-window" style="max-width: 400px; text-align: center;">
             <button class="modal-close" onclick="document.getElementById('rateGameModal').classList.remove('active')">×</button>
             <h2 class="modal-title">Rate Game</h2>
-            <div style="font-size: 0.85em; color: #aaa; margin-bottom: 15px;">Your new ratings will overwrite your previous votes for this game.</div>
+            <div style="font-size: 0.85em; color: #b8a6e8; margin-bottom: 15px;">Your new ratings will overwrite your previous votes for this game.</div>
             
-            <div style="display:flex; flex-direction:column; gap:15px; margin-bottom: 20px;">
-                <div style="padding:10px; background:#2a2a35; border:1px solid #3a3a45; border-radius:8px;">
-                    <div style="font-size:0.75em; color:#aaa; font-weight:bold;">F2P RATING</div>
+            <div class="modal-form-stack" style="margin-bottom: 20px;">
+                <div class="rating-box">
+                    <div class="rating-label">F2P Rating</div>
                     <div class="star-rating-input" id="liveF2P" data-val="0"><span class="star" data-rating="1">★</span><span class="star" data-rating="2">★</span><span class="star" data-rating="3">★</span><span class="star" data-rating="4">★</span><span class="star" data-rating="5">★</span></div>
                 </div>
-                <div style="padding:10px; background:#2a2a35; border:1px solid #3a3a45; border-radius:8px;">
-                    <div style="font-size:0.75em; color:#aaa; font-weight:bold;">AFK RATING</div>
+                <div class="rating-box">
+                    <div class="rating-label">AFK Rating</div>
                     <div class="star-rating-input" id="liveAFK" data-val="0"><span class="star" data-rating="1">★</span><span class="star" data-rating="2">★</span><span class="star" data-rating="3">★</span><span class="star" data-rating="4">★</span><span class="star" data-rating="5">★</span></div>
                 </div>
-                <div style="padding:10px; background:#2a2a35; border:1px solid #3a3a45; border-radius:8px;">
-                    <div style="font-size:0.75em; color:#aaa; font-weight:bold;">STORY RATING</div>
+                <div class="rating-box">
+                    <div class="rating-label">Story Rating</div>
                     <div class="star-rating-input" id="liveStory" data-val="0"><span class="star" data-rating="1">★</span><span class="star" data-rating="2">★</span><span class="star" data-rating="3">★</span><span class="star" data-rating="4">★</span><span class="star" data-rating="5">★</span></div>
                 </div>
-                <div style="padding:10px; background:#2a2a35; border:1px solid #3a3a45; border-radius:8px;">
-                    <div style="font-size:0.75em; color:#aaa; font-weight:bold;">GAMEPLAY RATING</div>
+                <div class="rating-box">
+                    <div class="rating-label">Gameplay Rating</div>
                     <div class="star-rating-input" id="liveGameplay" data-val="0"><span class="star" data-rating="1">★</span><span class="star" data-rating="2">★</span><span class="star" data-rating="3">★</span><span class="star" data-rating="4">★</span><span class="star" data-rating="5">★</span></div>
                 </div>
             </div>
@@ -908,15 +987,15 @@
             const num = Math.round(parseFloat(val));
             
             // If the game has no ratings yet, or if it's old legacy data without a review count, force N/A
-            if (isNaN(num) || num < 1 || !count) return '<span style="color:#888; font-size: 0.85em;">N/A</span>';
+            if (isNaN(num) || num < 1 || !count) return '<span style="color:#887da8; font-size: 0.82em; background:rgba(157, 142, 199, 0.12); padding:3px 10px; border-radius:10px 3px 10px 3px; border:1px solid rgba(157, 142, 199, 0.2);">N/A</span>';
             
             const filled = '★'.repeat(num);
             const empty = '☆'.repeat(5 - num);
             
             return `
                 <div style="display:flex; flex-direction:column; align-items:center; line-height:1.2;">
-                    <span class="star-display" style="letter-spacing:2px;"><span style="color:#ffc107;">${filled}</span><span style="color:#555;">${empty}</span></span>
-                    <span style="font-size:0.75em; color:#aaa; font-family:sans-serif; text-transform:none; margin-top:4px;">(${count} rating${count !== 1 ? 's' : ''})</span>
+                    <span class="star-display"><span style="color:#f6c85f;">${filled}</span><span style="color:rgba(157, 142, 199, 0.35);">${empty}</span></span>
+                    <span style="font-size:0.72em; color:#b8a6e8; font-family:sans-serif; text-transform:none; margin-top:5px;">(${count} rating${count !== 1 ? 's' : ''})</span>
                 </div>
             `;
         }
@@ -931,12 +1010,12 @@
             modalGameTitle.textContent = game.name || 'Unknown Game';
             
             const videoContainer = document.getElementById('modalVideoContainer');
-            // Strictly fetch the trailer ID, entirely ignoring the starter guide
+            // Strictly fetch the trailer ID, without autoplaying on modal open
             const vidId = game.trailer_id;
             
             if (vidId) {
                 if (currentTrailerId !== vidId) {
-                    modalTrailer.src = `https://www.youtube-nocookie.com/embed/${vidId}?autoplay=1`;
+                    modalTrailer.src = `https://www.youtube-nocookie.com/embed/${vidId}`;
                     currentTrailerId = vidId;
                 }
                 videoContainer.style.display = 'block';
@@ -951,7 +1030,7 @@
                 'T': '<img src="https://www.esrb.org/wp-content/uploads/2019/05/T.svg" style="height:35px; object-fit:contain;">',
                 'M': '<img src="https://www.esrb.org/wp-content/uploads/2019/05/M.svg" style="height:35px; object-fit:contain;">'
             };
-            modalAge.innerHTML = esrbImages[game.ratings?.age] || '<span style="font-size:1.1em; font-weight:bold; color:#ffc107;">N/A</span>';
+            modalAge.innerHTML = esrbImages[game.ratings?.age] || '<span style="color:#887da8; font-size: 0.82em; background:rgba(157, 142, 199, 0.12); padding:3px 10px; border-radius:10px 3px 10px 3px; border:1px solid rgba(157, 142, 199, 0.2);">N/A</span>';
             
             // Render integer ratings into visual stars with appended database review counts
             modalF2P.innerHTML = renderStars(game.ratings?.f2p, game.rating_counts?.f2p);
