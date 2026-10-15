@@ -356,38 +356,220 @@
             margin: 14px 0;
         }
 
-        /* === HERO / CHANGELOG SHOWCASE AREA === */
+        /* === HERO SHOWCASE & IWARA-STYLE CHANGELOG === */
         .hero-showcase {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             text-align: center;
-            padding: 32px 24px 22px 24px;
-            margin: 22px auto 10px auto;
-            background: radial-gradient(circle at 50% 0%, rgba(157, 142, 199, 0.2) 0%, rgba(30, 25, 43, 0.65) 70%);
-            border: 1px solid rgba(157, 142, 199, 0.28);
-            border-radius: 28px 10px 28px 10px;
+            padding: 28px 24px 20px 24px;
+            margin: 22px auto 0 auto;
+            background: radial-gradient(circle at 50% 0%, rgba(157, 142, 199, 0.22) 0%, rgba(30, 25, 43, 0.75) 70%);
+            border: 1px solid rgba(157, 142, 199, 0.3);
+            border-radius: 28px 10px 0 0;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
         }
 
         .hero-logo-img {
-            width: 118px;
-            height: 118px;
+            width: 112px;
+            height: 112px;
             object-fit: contain;
-            margin-bottom: 14px;
+            margin-bottom: 12px;
         }
 
-        /* === BOTANICAL (i) INFO MODAL & RATINGS GRID === */
+        /* Iwara-Style Collapsible Changelog Box Below Hero */
+        .changelog-panel {
+            background: rgba(20, 16, 31, 0.92);
+            border: 1px solid rgba(157, 142, 199, 0.3);
+            border-top: none;
+            border-radius: 0 0 24px 8px;
+            margin: 0 auto 18px auto;
+            overflow: hidden;
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.4);
+            text-align: left;
+        }
+
+        .changelog-header-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 11px 20px;
+            background: linear-gradient(90deg, rgba(94, 71, 150, 0.28) 0%, rgba(36, 28, 54, 0.6) 100%);
+            border-bottom: 1px solid rgba(157, 142, 199, 0.18);
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.15s ease;
+        }
+
+        .changelog-header-bar:hover {
+            background: linear-gradient(90deg, rgba(115, 89, 181, 0.38) 0%, rgba(46, 36, 68, 0.75) 100%);
+        }
+
+        .changelog-header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.92em;
+            font-weight: bold;
+            color: #f4f0ff;
+        }
+
+        .changelog-latest-pill {
+            background: linear-gradient(135deg, #f6c85f, #d99b26);
+            color: #1a1228;
+            font-size: 0.72em;
+            font-weight: bold;
+            padding: 2px 8px;
+            border-radius: 8px 2px 8px 2px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .changelog-toggle-btn {
+            font-size: 0.8em;
+            color: #d0c2f7;
+            background: rgba(157, 142, 199, 0.14);
+            border: 1px solid rgba(157, 142, 199, 0.3);
+            padding: 4px 12px;
+            border-radius: 10px 3px 10px 3px;
+            font-weight: bold;
+            transition: all 0.15s ease;
+        }
+
+        .changelog-header-bar:hover .changelog-toggle-btn {
+            background: #684ea8;
+            color: white;
+            border-color: #d0c2f7;
+        }
+
+        .changelog-body {
+            padding: 16px 22px;
+        }
+
+        .changelog-body.collapsed {
+            display: none;
+        }
+
+        .changelog-entry {
+            padding-bottom: 12px;
+        }
+
+        .changelog-entry + .changelog-entry {
+            padding-top: 14px;
+            border-top: 1px dashed rgba(157, 142, 199, 0.25);
+        }
+
+        .changelog-entry-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .changelog-version-title {
+            font-size: 1.02em;
+            font-weight: bold;
+            color: #d0c2f7;
+        }
+
+        .changelog-date {
+            font-size: 0.8em;
+            font-family: monospace;
+            color: #9a8fb8;
+            background: rgba(157, 142, 199, 0.1);
+            padding: 2px 8px;
+            border-radius: 6px;
+        }
+
+        .changelog-list {
+            margin: 0;
+            padding-left: 18px;
+            color: #e5dcff;
+            font-size: 0.88em;
+            line-height: 1.65;
+        }
+
+        .changelog-list li {
+            margin-bottom: 4px;
+        }
+
+        .cl-tag {
+            display: inline-block;
+            font-size: 0.72em;
+            font-weight: bold;
+            padding: 1px 6px;
+            border-radius: 6px 2px 6px 2px;
+            margin-right: 6px;
+            font-family: monospace;
+            vertical-align: baseline;
+        }
+
+        .cl-tag.new { background: rgba(123, 201, 150, 0.18); color: #7bc996; border: 1px solid rgba(123, 201, 150, 0.4); }
+        .cl-tag.ui  { background: rgba(208, 194, 247, 0.18); color: #d0c2f7; border: 1px solid rgba(208, 194, 247, 0.4); }
+        .cl-tag.fix { background: rgba(217, 107, 152, 0.18); color: #f7a1c4; border: 1px solid rgba(217, 107, 152, 0.4); }
+
+        .changelog-older-Archive {
+            display: none;
+            max-height: 260px;
+            overflow-y: auto;
+            margin-top: 10px;
+            padding-right: 6px;
+            border-top: 1px solid rgba(157, 142, 199, 0.25);
+        }
+
+        .changelog-older-Archive.open {
+            display: block;
+        }
+
+        .changelog-history-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            width: 100%;
+            margin-top: 8px;
+            padding: 8px 12px;
+            background: rgba(157, 142, 199, 0.08);
+            border: 1px dashed rgba(157, 142, 199, 0.35);
+            border-radius: 12px 4px 12px 4px;
+            color: #b8a6e8;
+            font-family: inherit;
+            font-size: 0.82em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .changelog-history-btn:hover {
+            background: rgba(157, 142, 199, 0.18);
+            color: #ffffff;
+            border-color: #d0c2f7;
+        }
+
+        /* === COMPACT (i) INFO MODAL (FITS WITHOUT SCROLLING) === */
+        #gameModal .modal-window {
+            max-width: 720px;
+            padding: 18px 22px;
+        }
+
+        #gameModal .modal-title {
+            font-size: 1.45em;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+        }
+
         .video-container {
             position: relative;
             width: 100%;
-            padding-bottom: 56.25%; 
-            height: 0;
-            margin-bottom: 20px;
-            border-radius: 18px 6px 18px 6px;
+            max-width: 480px;
+            aspect-ratio: 16 / 9;
+            margin: 0 auto 12px auto;
+            border-radius: 16px 5px 16px 5px;
             border: 1px solid rgba(208, 194, 247, 0.4);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
             overflow: hidden;
             background: #0d0a14;
         }
@@ -404,14 +586,14 @@
         .ratings-grid {
             display: grid;
             grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 12px;
+            gap: 8px;
             width: 100%;
         }
 
         .rating-box {
             background: linear-gradient(145deg, rgba(42, 34, 62, 0.92) 0%, rgba(23, 18, 35, 0.96) 100%);
-            padding: 14px 10px;
-            border-radius: 16px 5px 16px 5px;
+            padding: 8px 8px;
+            border-radius: 14px 4px 14px 4px;
             text-align: center;
             border: 1px solid rgba(157, 142, 199, 0.28);
             box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
@@ -424,16 +606,16 @@
         }
 
         .rating-label {
-            font-size: 0.76em;
+            font-size: 0.72em;
             color: #d0c2f7;
             text-transform: uppercase;
-            letter-spacing: 0.7px;
-            margin-bottom: 6px;
+            letter-spacing: 0.6px;
+            margin-bottom: 4px;
             font-weight: bold;
         }
 
         .rating-value {
-            font-size: 1.2em;
+            font-size: 1.1em;
             font-weight: bold;
             color: #f6c85f;
             max-width: 100%;
@@ -443,19 +625,19 @@
             grid-column: 1 / -1;
             background: linear-gradient(135deg, rgba(104, 78, 168, 0.38) 0%, rgba(217, 107, 152, 0.22) 55%, rgba(28, 22, 44, 0.95) 100%);
             border: 1.5px solid rgba(246, 200, 95, 0.65);
-            border-radius: 18px 6px 18px 6px;
-            padding: 16px 12px;
+            border-radius: 16px 5px 16px 5px;
+            padding: 10px 12px;
         }
 
         .rating-box.overall .rating-label {
             color: #ffe6a3;
-            font-size: 0.82em;
+            font-size: 0.78em;
         }
 
         /* === STAR RATINGS === */
         .star-rating-input { display: flex; gap: 4px; cursor: pointer; color: rgba(157, 142, 199, 0.28); font-size: 28px; justify-content: center; line-height: 1; margin-top: 5px; }
         .star-rating-input .star:hover, .star-rating-input .star.active { color: #f6c85f; }
-        .star-display { font-size: 1.25em; letter-spacing: 2px; white-space: nowrap; }
+        .star-display { font-size: 1.15em; letter-spacing: 2px; white-space: nowrap; }
 
         /* === MOBILE RESPONSIVENESS === */
         @media (max-width: 768px) {
@@ -478,13 +660,13 @@
             }
 
             .hero-showcase {
-                padding: 24px 16px 18px 16px;
+                padding: 22px 16px 16px 16px;
                 margin-top: 14px;
             }
 
             .hero-logo-img {
-                width: 92px;
-                height: 92px;
+                width: 88px;
+                height: 88px;
             }
 
             .about-us h1 {
@@ -495,27 +677,25 @@
                 font-size: 1em;
             }
 
-            /* Wrap ratings into 2 columns on mobile so they never bleed out of the modal */
             .ratings-grid {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
                 gap: 8px;
             }
 
-            /* Center the 5th box (Gameplay Rating) across both columns above Overall */
             .ratings-grid .rating-box:nth-child(5) {
                 grid-column: 1 / -1;
             }
 
             .rating-box {
-                padding: 10px 6px;
+                padding: 8px 6px;
             }
 
             .rating-label {
-                font-size: 0.7em;
+                font-size: 0.68em;
             }
 
             .star-display {
-                font-size: 1.05em;
+                font-size: 1em;
                 letter-spacing: 1px;
             }
         }
@@ -594,6 +774,30 @@
             <p style="font-size: 1.15em; color: #d0c2f7; margin: 0; max-width: 620px; line-height: 1.4;">
                 Guides, Raw Assets, Communities, Mods, and more!
             </p>
+        </div>
+
+        <!-- Iwara-Style Expandable Changelog Box -->
+        <div class="changelog-panel" id="changelogPanel">
+            <div class="changelog-header-bar" onclick="toggleChangelogBox()">
+                <div class="changelog-header-left">
+                    <span>🌸 Site Changelog</span>
+                    <span class="changelog-latest-pill" id="clHeaderVersion">LATEST</span>
+                </div>
+                <span class="changelog-toggle-btn" id="clToggleText">Hide ▲</span>
+            </div>
+
+            <div class="changelog-body" id="changelogBody">
+                <!-- Newest Changelog Natively Displayed Here -->
+                <div id="latestChangelogContainer"></div>
+
+                <!-- Older Changelogs Archive (Hidden until clicked) -->
+                <div class="changelog-older-Archive" id="olderChangelogsContainer"></div>
+
+                <!-- Toggle Button for Older Changelogs -->
+                <button type="button" class="changelog-history-btn" id="olderChangelogsBtn" onclick="toggleOlderChangelogs()" style="display:none;">
+                    See older changelogs ▼
+                </button>
+            </div>
         </div>
 
         <div class="search-container" style="display: flex; gap: 10px; justify-content: center; align-items: center; max-width: 800px; width: 100%; margin: 15px auto 25px auto;">
@@ -701,7 +905,7 @@
             </div>
 
             <!-- BUTTONS MUST BE INSIDE THE modal-window DIV -->
-            <div style="display: flex; gap: 12px; margin-top: 20px;">
+            <div style="display: flex; gap: 12px; margin-top: 12px;">
                 <button class="btn-floral pollen" onclick="openRateGameModal()" style="flex: 1; padding:12px;">⭐ Rate Game</button>
                 <button class="btn-floral" onclick="openEditInfoModal()" style="flex: 1; padding:12px;">🌸 Suggest Data</button>
             </div>
@@ -821,6 +1025,7 @@
 
     <!-- Shared Logic -->
     <script src="/Assets/common.js"></script>
+    <script src="/Assets/changelogs.js"></script>
 
     <!-- Page Specific Script -->
     <script>

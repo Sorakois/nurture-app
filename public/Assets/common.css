@@ -565,20 +565,7 @@ body {
 
 /* === MOBILE TROPHY BUTTON & POPUP LEADERBOARD === */
 .mobile-trophy-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    margin: 14px 16px -44px auto;
-    width: 44px;
-    height: 44px;
-    border-radius: 16px 5px 16px 5px;
-    background: linear-gradient(135deg, #f6c85f 0%, #c9881e 100%);
-    border: 1.5px solid #ffe6a3;
-    box-shadow: 0 4px 15px rgba(246, 200, 95, 0.35);
-    cursor: pointer;
-    z-index: 950;
-    transition: transform 0.2s ease;
+    display: none !important;
 }
 
 .lb-mobile-close {
@@ -594,14 +581,13 @@ body {
         display: none !important;
     }
 
-    /* Trophy button positioned right below the banner on the right side */
+    /* Strictly visible ONLY on mobile screens */
     .mobile-trophy-btn {
-        display: inline-flex;
+        display: flex !important;
         align-items: center;
         justify-content: center;
-        position: absolute;
-        top: 122px;
-        right: 16px;
+        position: relative;
+        margin: 14px 16px -44px auto;
         width: 44px;
         height: 44px;
         border-radius: 16px 5px 16px 5px;
