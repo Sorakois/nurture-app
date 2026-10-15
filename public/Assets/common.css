@@ -670,8 +670,9 @@ body {
         padding: 2px 8px;
         font-size: 0.7em;
     }
+} /* <-- Closes @media (max-width: 768px) so the rules below work on Desktop AND Mobile */
 
-    /* === GPU SCROLL & HOVER OPTIMIZATIONS === */
+/* === GPU SCROLL & HOVER OPTIMIZATIONS === */
 .floating-petal, .firefly-spore {
     transform: translateZ(0);
     backface-visibility: hidden;
@@ -699,6 +700,8 @@ body {
     justify-content: center;
     width: 22px;
     height: 22px;
+    min-width: 22px;
+    max-width: 22px;
     border-radius: 7px 2px 7px 2px;
     background: rgba(255, 77, 94, 0.16);
     border: 1px solid rgba(255, 77, 94, 0.55);
@@ -708,9 +711,10 @@ body {
 }
 
 .req-icon svg {
-    width: 13px;
-    height: 13px;
-    fill: #ff4d5e;
+    width: 13px !important;
+    height: 13px !important;
+    fill: #ff4d5e !important;
+    display: block;
 }
 
 /* === EMPHASIZED GAME LOOKUP CALLOUT BOX === */
@@ -753,6 +757,4 @@ body {
     font-size: 0.78em;
     color: #d0c2f7;
     margin-bottom: 10px;
-}
-
 }
