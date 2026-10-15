@@ -3,21 +3,37 @@
     src: url('/Assets/CookieRun Regular.otf') format('opentype');
 }
 
+:root {
+    --bg-canopy: #110d19;
+    --bg-moss: #181524;
+    --card-bg: #1e192b;
+    --card-bg-hover: #262038;
+    --petal-light: #d0c2f7;
+    --petal-main: #9d8ec7;
+    --petal-deep: #5e4796;
+    --petal-dark: #3b2a66;
+    --blossom-pink: #d96b98;
+    --blossom-Pink-hover: #e582ab;
+    --leaf-sage: #7bc996;
+    --pollen-gold: #f6c85f;
+    --border-vine: rgba(157, 142, 199, 0.25);
+    --border-bloom: rgba(208, 194, 247, 0.6);
+}
+
 body {
     margin: 0;
     font-family: 'CookieRun Regular', Arial, sans-serif;
-    background-color: transparent;
-    color: white;
+    background-color: var(--bg-canopy);
+    color: #f4f0ff;
 }
 
-/* Ungray empty games and restore click functionality so users can populate them */
 .game-card.inactive, .inactive {
     filter: none !important;
     pointer-events: auto !important;
     opacity: 1 !important;
 }
 
-/* === BACKGROUND & BANNER STYLES === */
+/* === NATURE & FLORAL BACKGROUND === */
 .background-container {
     position: fixed;
     top: 0;
@@ -27,41 +43,58 @@ body {
     display: flex;
     justify-content: center;
     overflow: hidden;
-    background: #1f1f28;
+    /* Twilight forest canopy & wisteria bloom gradient */
+    background: 
+        radial-gradient(circle at 15% 20%, rgba(94, 71, 150, 0.22) 0%, transparent 45%),
+        radial-gradient(circle at 85% 80%, rgba(65, 110, 85, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 50% 0%, rgba(157, 142, 199, 0.18) 0%, transparent 60%),
+        linear-gradient(180deg, #0f0b17 0%, #171224 55%, #12181b 100%);
     z-index: -1;
     pointer-events: none;
 }
 
-.background-container svg {
+/* Hide legacy cyber lines */
+#lines {
+    display: none;
+}
+
+.floral-bg-layer {
     position: absolute;
-    height: 100%;
+    inset: 0;
     width: 100%;
+    height: 100%;
+    overflow: hidden;
+    pointer-events: none;
 }
 
-.lines {
-    opacity: 0.05;
+.floating-petal {
+    position: absolute;
+    will-change: transform;
+    opacity: 0.65;
+    filter: drop-shadow(0 2px 6px rgba(157, 142, 199, 0.3));
 }
 
-.line {
-    fill-rule: evenodd;
-    clip-rule: evenodd;
-    fill: #4C3A90;
+.firefly-spore {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(circle, #f6c85f 0%, rgba(157, 142, 199, 0.6) 60%, transparent 100%);
+    box-shadow: 0 0 8px #f6c85f, 0 0 14px #9d8ec7;
+    will-change: transform, opacity;
 }
 
-.lights {
-    opacity: 0.9;
+.corner-vine {
+    position: absolute;
+    opacity: 0.14;
+    pointer-events: none;
 }
 
-.light {
-    fill-rule: evenodd;
-    clip-rule: evenodd;
-    fill: #7A6BB5;
-}
-
+/* === BANNER STYLES === */
 .banner {
-    background-color: #16161c;
+    background: linear-gradient(180deg, rgba(18, 13, 28, 0.96) 0%, rgba(26, 20, 40, 0.88) 100%);
+    border-bottom: 1px solid var(--border-vine);
+    box-shadow: 0 4px 25px rgba(0, 0, 0, 0.45);
     color: white;
-    padding: 8px 16px;
+    padding: 10px 16px;
     text-align: center;
     font-size: 2em;
     font-weight: bold;
@@ -84,52 +117,88 @@ body {
     white-space: nowrap;
 }
 
-.social-button {
+/* === PETAL & FLORAL BUTTONS (GLOBAL) === */
+.social-button, .btn-floral {
     display: inline-flex;
     align-items: center;
-    padding: 8px 16px;
-    border-radius: 20px;
+    justify-content: center;
+    padding: 9px 18px;
+    /* Asymmetrical organic petal shape */
+    border-radius: 20px 6px 20px 6px;
     text-decoration: none;
-    font-size: 16px;
+    font-size: 15px;
     font-family: inherit;
-    border: none;
+    font-weight: bold;
+    color: white;
+    border: 1px solid rgba(208, 194, 247, 0.35);
+    background: linear-gradient(135deg, var(--petal-deep) 0%, var(--petal-dark) 100%);
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.25), 0 4px 12px rgba(17, 13, 25, 0.5);
     cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+    transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+    position: relative;
+    overflow: hidden;
 }
 
-.social-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+.social-button:hover, .btn-floral:hover {
+    transform: translateY(-2px) scale(1.02);
+    /* Petal shifts orientation on bloom */
+    border-radius: 8px 22px 8px 22px;
+    border-color: var(--petal-light);
+    box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.4), 0 6px 18px rgba(157, 142, 199, 0.4);
+    background: linear-gradient(135deg, #7359b5 0%, #4c3780 100%);
 }
 
+/* Variant: Blossom Pink (Ko-fi / Primary Submit) */
+.kofi-button, .btn-floral.blossom {
+    background: linear-gradient(135deg, #c95988 0%, #8f3460 100%);
+    border-color: rgba(245, 176, 203, 0.45);
+}
+
+.kofi-button:hover, .btn-floral.blossom:hover {
+    background: linear-gradient(135deg, #de6b9b 0%, #a84273 100%);
+    border-color: #ffd1e3;
+    box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.4), 0 6px 18px rgba(217, 107, 152, 0.45);
+}
+
+/* Variant: Pollen Gold (Rate Game) */
+.btn-floral.pollen {
+    background: linear-gradient(135deg, #f6c85f 0%, #d99b26 100%);
+    color: #1a1228;
+    border-color: #ffe6a3;
+}
+
+.btn-floral.pollen:hover {
+    background: linear-gradient(135deg, #ffd678 0%, #e8ab35 100%);
+    box-shadow: 0 6px 18px rgba(246, 200, 95, 0.45);
+}
+
+/* Variant: Discord Wisteria */
 .discord-button {
-    background-color: #5865F2;
+    background: linear-gradient(135deg, #6b73ff 0%, #4a4ebd 100%);
+    border-color: rgba(180, 186, 255, 0.4);
 }
 
 .discord-button:hover {
-    background-color: #4752c4;
+    background: linear-gradient(135deg, #7e85ff 0%, #585cd1 100%);
 }
 
-.nurture-discord-button {
-    background-color: #4C3A90;
-    border: 1px solid #7A6BB5;
+.nurture-discord-button, .mailbox-button {
+    background: linear-gradient(135deg, #684ea8 0%, #433075 100%);
+    border: 1px solid var(--petal-main);
 }
 
-.nurture-discord-button:hover {
-    background-color: #5c47ac;
+.settings-button {
+    background: linear-gradient(135deg, #2a243b 0%, #1c1829 100%);
+    border: 1px solid var(--border-vine);
 }
 
-.kofi-button {
-    background-color: #FF5E5B;
-}
-
-.kofi-button:hover {
-    background-color: #e04f4c;
+.settings-button:hover {
+    background: linear-gradient(135deg, #393152 0%, #262038 100%);
 }
 
 .social-button img, .social-button svg {
-    height: 28px;
-    width: 28px;
+    height: 24px;
+    width: 24px;
     object-fit: contain;
     margin-right: 8px;
     fill: white;
@@ -142,29 +211,36 @@ body {
     white-space: nowrap;
 }
 
-/* User Account Button with Nested Sign Out */
+/* User Account Badge with Floral Frame */
 .user-profile-badge {
     display: inline-flex;
     align-items: center;
     gap: 10px;
-    background-color: #2a2a35;
-    border: 1px solid #3a3a45;
-    padding: 5px 6px 5px 10px;
-    border-radius: 20px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    background: linear-gradient(135deg, rgba(42, 34, 61, 0.9) 0%, rgba(27, 22, 41, 0.95) 100%);
+    border: 1px solid var(--border-vine);
+    padding: 5px 8px 5px 12px;
+    border-radius: 22px 8px 22px 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: all 0.25s ease;
+}
+
+.user-profile-badge:hover {
+    border-color: var(--petal-main);
+    box-shadow: 0 4px 15px rgba(157, 142, 199, 0.25);
 }
 
 .user-avatar {
     width: 28px;
     height: 28px;
     border-radius: 50%;
+    border: 1.5px solid var(--petal-main);
     object-fit: cover;
 }
 
 .user-name {
     font-size: 0.85em;
     font-weight: bold;
-    color: #ffffff;
+    color: #f4f0ff;
     max-width: 140px;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -172,20 +248,248 @@ body {
 }
 
 .sign-out-btn {
-    background-color: #1f1f28;
-    color: #ff6b6b;
-    border: 1px solid #ff4d4d44;
+    background: rgba(217, 107, 152, 0.15);
+    color: #f7a1c4;
+    border: 1px solid rgba(217, 107, 152, 0.35);
     padding: 4px 10px;
-    border-radius: 14px;
+    border-radius: 14px 4px 14px 4px;
     font-size: 0.75em;
     font-weight: bold;
     text-decoration: none;
-    transition: background-color 0.2s ease, color 0.2s ease;
+    transition: all 0.2s ease;
 }
 
 .sign-out-btn:hover {
-    background-color: #ff4d4d;
+    background: var(--blossom-pink);
     color: #ffffff;
+    border-color: #ffd1e3;
+}
+
+/* === MODAL STYLES (GLOBAL - NO BLUR FOR 60FPS) === */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(11, 8, 18, 0.94);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-window {
+    background: radial-gradient(circle at top right, rgba(157, 142, 199, 0.14), transparent 55%), var(--card-bg);
+    border: 1px solid var(--border-bloom);
+    border-radius: 24px 8px 24px 8px;
+    width: 90%;
+    max-width: 800px;
+    padding: 26px;
+    position: relative;
+    color: white;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.85), 0 0 25px rgba(122, 107, 181, 0.15);
+    transform: scale(0.95);
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform, opacity;
+}
+
+.modal-overlay.active .modal-window {
+    transform: scale(1);
+}
+
+.modal-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: rgba(157, 142, 199, 0.1);
+    border: 1px solid var(--border-vine);
+    border-radius: 12px 4px 12px 4px;
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--petal-light);
+    font-size: 22px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.modal-close:hover {
+    background: var(--blossom-pink);
+    color: white;
+    border-color: #ffd1e3;
+    transform: rotate(90deg);
+}
+
+.modal-title {
+    margin: 0 0 15px 0;
+    font-size: 1.8em;
+    color: var(--petal-light);
+    border-bottom: 1px solid var(--border-vine);
+    padding-bottom: 10px;
+}
+
+/* === FLORAL LEADERBOARD STYLES (GLOBAL) === */
+.leaderboard-sidebar {
+    width: 290px;
+    min-width: 290px;
+    background: 
+        radial-gradient(circle at 100% 0%, rgba(157, 142, 199, 0.18) 0%, transparent 50%),
+        radial-gradient(circle at 0% 100%, rgba(123, 201, 150, 0.08) 0%, transparent 50%),
+        linear-gradient(180deg, rgba(32, 25, 48, 0.95) 0%, rgba(21, 17, 33, 0.95) 100%);
+    border: 1px solid var(--border-vine);
+    border-radius: 24px 8px 24px 8px;
+    padding: 20px;
+    height: fit-content;
+    box-sizing: border-box;
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Subtle decorative flower watermark in the corner of the leaderboard */
+.leaderboard-sidebar::after {
+    content: '';
+    position: absolute;
+    bottom: -25px;
+    right: -25px;
+    width: 110px;
+    height: 110px;
+    background-image: url('/Assets/nurture_icon.ico');
+    background-size: contain;
+    background-repeat: no-repeat;
+    opacity: 0.06;
+    transform: rotate(-15deg);
+    pointer-events: none;
+}
+
+.lb-header {
+    background: linear-gradient(135deg, #684ea8 0%, #9b6b9e 55%, #c9658f 100%);
+    color: white;
+    text-align: center;
+    padding: 12px 14px;
+    border-radius: 16px 5px 16px 5px;
+    font-weight: bold;
+    font-size: 1.05em;
+    letter-spacing: 0.5px;
+    margin-bottom: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    box-shadow: 0 4px 15px rgba(104, 78, 168, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.lb-header::before, .lb-header::after {
+    content: '✿';
+    color: var(--petal-light);
+    font-size: 0.9em;
+}
+
+.lb-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(24, 19, 36, 0.85);
+    padding: 9px 12px;
+    border-radius: 14px 4px 14px 4px;
+    margin-bottom: 9px;
+    border: 1px solid rgba(157, 142, 199, 0.18);
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.lb-row:hover {
+    transform: translateX(4px);
+    background: rgba(43, 35, 64, 0.95);
+    border-color: var(--petal-main) !important;
+    box-shadow: 0 4px 12px rgba(122, 107, 181, 0.2);
+}
+
+/* Special Floral Styling for Top 3 Contributors */
+.lb-row.rank-1 {
+    background: linear-gradient(90deg, rgba(246, 200, 95, 0.14) 0%, rgba(36, 28, 54, 0.9) 100%);
+    border-color: rgba(246, 200, 95, 0.5);
+}
+.lb-row.rank-2 {
+    background: linear-gradient(90deg, rgba(208, 194, 247, 0.14) 0%, rgba(32, 25, 48, 0.9) 100%);
+    border-color: rgba(208, 194, 247, 0.4);
+}
+.lb-row.rank-3 {
+    background: linear-gradient(90deg, rgba(217, 107, 152, 0.14) 0%, rgba(32, 25, 48, 0.9) 100%);
+    border-color: rgba(217, 107, 152, 0.4);
+}
+
+.lb-rank-badge {
+    min-width: 28px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 0.85em;
+    color: var(--petal-light);
+    background: rgba(157, 142, 199, 0.15);
+    border-radius: 10px 3px 10px 3px;
+    border: 1px solid rgba(157, 142, 199, 0.3);
+}
+
+.lb-row.rank-1 .lb-rank-badge {
+    background: linear-gradient(135deg, #f6c85f, #d49522);
+    color: #1a1228;
+    border-color: #ffe6a3;
+}
+.lb-row.rank-2 .lb-rank-badge {
+    background: linear-gradient(135deg, #e2d9ff, #9d8ec7);
+    color: #1a1228;
+}
+.lb-row.rank-3 .lb-rank-badge {
+    background: linear-gradient(135deg, #f29bb8, #c95988);
+    color: #1a1228;
+}
+
+.lb-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1.5px solid rgba(157, 142, 199, 0.4);
+}
+
+.lb-info {
+    flex-grow: 1;
+    overflow: hidden;
+}
+
+.lb-name {
+    font-size: 0.85em;
+    font-weight: bold;
+    color: #f4f0ff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.lb-score {
+    color: var(--leaf-sage);
+    background: rgba(123, 201, 150, 0.12);
+    border: 1px solid rgba(123, 201, 150, 0.3);
+    padding: 2px 8px;
+    border-radius: 10px 3px 10px 3px;
+    font-weight: bold;
+    font-size: 0.8em;
+    white-space: nowrap;
 }
 
 /* Responsive adjustments */
@@ -199,46 +503,18 @@ body {
         gap: 6px;
         align-items: flex-end;
     }
-
     .social-button, .user-profile-badge {
         padding: 5px 10px;
     }
-
     .social-button img, .social-button svg, .user-avatar {
         height: 20px;
         width: 20px;
     }
-
     .sub-text, .user-name {
         font-size: 0.75em;
     }
-
     .sign-out-btn {
         padding: 2px 8px;
         font-size: 0.7em;
     }
 }
-
-/* === MODAL STYLES (GLOBAL) === */
-.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.95); display: flex; justify-content: center; align-items: center; z-index: 9999; opacity: 0; visibility: hidden; transition: opacity 0.2s ease, visibility 0.2s ease; }
-.modal-overlay.active { opacity: 1; visibility: visible; }
-.modal-window { background-color: #1f1f28; border: 1px solid #3a3a45; border-radius: 12px; width: 90%; max-width: 800px; padding: 24px; position: relative; color: white; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8); transform: scale(0.95); transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1); will-change: transform, opacity; }
-.modal-overlay.active .modal-window { transform: scale(1); }
-.modal-close { position: absolute; top: 16px; right: 16px; background: none; border: none; color: #888; font-size: 28px; cursor: pointer; transition: color 0.2s; }
-.modal-close:hover { color: #ff5c5c; }
-.modal-title { margin: 0 0 15px 0; font-size: 1.8em; border-bottom: 1px solid #3a3a45; padding-bottom: 10px; }
-
-/* === LEADERBOARD STYLES (GLOBAL) === */
-.leaderboard-sidebar { width: 280px; min-width: 280px; background-color: #2a2a35; border: 1px solid #3a3a45; border-radius: 12px; padding: 20px; height: fit-content; box-sizing: border-box; }
-.lb-header { background-color: #FF5E5B; color: white; text-align: center; padding: 10px; border-radius: 8px; font-weight: bold; margin-bottom: 15px; }
-.lb-row { display: flex; align-items: center; gap: 10px; background: #1f1f28; padding: 8px 12px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #3a3a45; }
-.lb-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
-.lb-info { flex-grow: 1; overflow: hidden; }
-.lb-name { font-size: 0.85em; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.lb-score { color: #ffc107; font-weight: bold; font-size: 0.9em; }
-
-/* === MAILBOX & SETTINGS BUTTONS === */
-.mailbox-button { background-color: #4C3A90; }
-.mailbox-button:hover { background-color: #5c47ac; }
-.settings-button { background-color: #2a2a35; border: 1px solid #3a3a45; }
-.settings-button:hover { background-color: #3a3a45; }

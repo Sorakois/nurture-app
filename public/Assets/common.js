@@ -1,12 +1,94 @@
-// Background Animation Logic (GSAP 3)
-function animateWithRandomNumber(myClass, from, to) {
-    if (typeof gsap === 'undefined') return;
-    gsap.fromTo(myClass, { y: from }, { duration: Math.floor((Math.random() * 20) + 1), y: to, ease: "none", onComplete: animateWithRandomNumber, onCompleteParams: [myClass, from, to] });
-}
-const itemsDown = [".light4", ".light5", ".light6", ".light7", ".light8", ".light11", ".light12", ".light13", ".light14", ".light15", ".light16"];
-itemsDown.forEach(e => animateWithRandomNumber(e, -1080, 1080));
-const itemsUp = [".light1", ".light2", ".light3", ".light9", ".light10", ".light17"];
-itemsUp.forEach(e => animateWithRandomNumber(e, 1080, -1080));
+// --- Botanical & Purple Flower Background Engine (GSAP 3) ---
+document.addEventListener('DOMContentLoaded', () => {
+    const bgContainer = document.querySelector('.background-container');
+    if (!bgContainer || typeof gsap === 'undefined') return;
+
+    const layer = document.createElement('div');
+    layer.className = 'floral-bg-layer';
+    bgContainer.appendChild(layer);
+
+    // 5-Petal Purple Flower SVG (Matches nurture_icon.ico) & Single Petal SVG
+    const flowerSvg = `<svg viewBox="0 0 64 64" width="100%" height="100%">
+        <g fill="url(#petalGrad)" stroke="#4c3780" stroke-width="1.5">
+            <path d="M32 6 C25 16, 22 24, 32 32 C42 24, 39 16, 32 6 Z"/>
+            <path d="M32 6 C25 16, 22 24, 32 32 C42 24, 39 16, 32 6 Z" transform="rotate(72 32 32)"/>
+            <path d="M32 6 C25 16, 22 24, 32 32 C42 24, 39 16, 32 6 Z" transform="rotate(144 32 32)"/>
+            <path d="M32 6 C25 16, 22 24, 32 32 C42 24, 39 16, 32 6 Z" transform="rotate(216 32 32)"/>
+            <path d="M32 6 C25 16, 22 24, 32 32 C42 24, 39 16, 32 6 Z" transform="rotate(288 32 32)"/>
+        </g>
+        <circle cx="32" cy="32" r="5" fill="#5e4796"/>
+        <circle cx="32" cy="32" r="2.5" fill="#f6c85f"/>
+        <defs>
+            <radialGradient id="petalGrad" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#7A6BB5"/>
+                <stop offset="70%" stop-color="#c3b3ed"/>
+                <stop offset="100%" stop-color="#e5dcff"/>
+            </radialGradient>
+        </defs>
+    </svg>`;
+
+    const singlePetalSvg = `<svg viewBox="0 0 32 32" width="100%" height="100%">
+        <path d="M16 2 C8 12, 6 22, 16 30 C26 22, 24 12, 16 2 Z" fill="#b8a6e8" opacity="0.85"/>
+    </svg>`;
+
+    // 1. Spawn Drifting Flowers & Petals
+    for (let i = 0; i < 18; i++) {
+        const el = document.createElement('div');
+        el.className = 'floating-petal';
+        const isFullFlower = i % 3 === 0;
+        const size = isFullFlower ? Math.random() * 18 + 18 : Math.random() * 12 + 10;
+        el.style.width = `${size}px`;
+        el.style.height = `${size}px`;
+        el.innerHTML = isFullFlower ? flowerSvg : singlePetalSvg;
+        layer.appendChild(el);
+
+        const startX = Math.random() * window.innerWidth;
+        gsap.set(el, { x: startX, y: Math.random() * window.innerHeight, rotation: Math.random() * 360 });
+
+        // Vertical fall loop
+        gsap.to(el, {
+            y: window.innerHeight + 60,
+            rotation: `+=${Math.random() * 360 + 180}`,
+            duration: Math.random() * 18 + 14,
+            ease: "none",
+            repeat: -1,
+            onRepeat: () => {
+                gsap.set(el, { y: -60, x: Math.random() * window.innerWidth });
+            }
+        });
+
+        // Gentle horizontal breeze sway
+        gsap.to(el, {
+            x: `+=${Math.random() * 90 - 45}`,
+            duration: Math.random() * 4 + 3,
+            ease: "sine.inOut",
+            yoyo: true,
+            repeat: -1
+        });
+    }
+
+    // 2. Spawn Glowing Pollen / Firefly Spores
+    for (let i = 0; i < 14; i++) {
+        const spore = document.createElement('div');
+        spore.className = 'firefly-spore';
+        const size = Math.random() * 4 + 3;
+        spore.style.width = `${size}px`;
+        spore.style.height = `${size}px`;
+        layer.appendChild(spore);
+
+        gsap.set(spore, { x: Math.random() * window.innerWidth, y: Math.random() * window.innerHeight, opacity: Math.random() * 0.6 + 0.1 });
+
+        gsap.to(spore, {
+            y: `-=${Math.random() * 250 + 100}`,
+            x: `+=${Math.random() * 100 - 50}`,
+            opacity: Math.random() * 0.7 + 0.2,
+            duration: Math.random() * 10 + 8,
+            ease: "sine.inOut",
+            yoyo: true,
+            repeat: -1
+        });
+    }
+});
 
 // --- Global Background Pause on Modal Open ---
 document.addEventListener('DOMContentLoaded', () => {
@@ -126,7 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <span onclick="markAllRead()" style="font-size: 0.45em; color: #aaa; cursor: pointer; border: 1px solid #3a3a45; padding: 4px 10px; border-radius: 12px; font-weight: normal; transition: background 0.2s;" onmouseover="this.style.background='#3a3a45'" onmouseout="this.style.background='transparent'">Mark All Read</span>
                 </h2>
                 <div id="mailboxContent" style="max-height: 350px; overflow-y: auto; margin-bottom: 15px;">Loading messages...</div>
-                <button style="width:100%; padding:10px; background:#4C3A90; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="openComposeModal()">Compose New Message to Staff</button>
+                <button class="btn-floral" style="width:100%;" onclick="openComposeModal()">🌸 Compose New Message to Staff</button>
             </div>
         </div>
         <div id="composeModal" class="modal-overlay">
@@ -135,7 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <h2 class="modal-title">✉️ Message Staff</h2>
                 <input type="text" id="mailSubject" placeholder="Subject" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; color:white; box-sizing:border-box;">
                 <textarea id="mailContent" placeholder="Write your message here..." style="width:100%; height:120px; background:#2a2a35; color:#fff; border:1px solid #3a3a45; border-radius:8px; padding:10px; resize:none; box-sizing:border-box;"></textarea>
-                <button style="width:100%; margin-top:10px; padding:10px; background:#FF5E5B; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="sendMail()">Send Message</button>
+                <button class="btn-floral blossom" style="width:100%; margin-top:10px;" onclick="sendMail()">Send Message</button>
             </div>
         </div>
         <div id="userProfileModal" class="modal-overlay">
