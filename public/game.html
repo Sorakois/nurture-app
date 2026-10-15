@@ -620,7 +620,7 @@
                 };
 
                 const config = sectionConfig[currentSection];
-                const addNewBtn = `<button class="btn-floral" onclick="openGameSuggestModal('${config.dbKey}')" style="padding: 6px 14px; font-size: 0.6em;">🌸 + Add New</button>`;
+                const addNewBtn = `<button class="btn-floral" onclick="openGameSuggestModal('${config.dbKey}')" style="padding: 6px 14px; font-size: 0.6em;">+ Add New</button>`;
                 const headerHtml = `<h2 style="display: flex; justify-content: space-between; align-items: center;">${config.title} ${addNewBtn}</h2>`;
 
                 if (!config || !config.data || config.data.length === 0) {
