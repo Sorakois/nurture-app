@@ -13,10 +13,9 @@
     --petal-deep: #5e4796;
     --petal-dark: #3b2a66;
     --blossom-pink: #d96b98;
-    --blossom-Pink-hover: #e582ab;
     --leaf-sage: #7bc996;
     --pollen-gold: #f6c85f;
-    --border-vine: rgba(157, 142, 199, 0.25);
+    --border-vine: rgba(157, 142, 199, 0.28);
     --border-bloom: rgba(208, 194, 247, 0.6);
 }
 
@@ -33,7 +32,7 @@ body {
     opacity: 1 !important;
 }
 
-/* === NATURE & FLORAL BACKGROUND === */
+/* === NATURE & FLORAL BACKGROUND (GPU OPTIMIZED) === */
 .background-container {
     position: fixed;
     top: 0;
@@ -43,7 +42,6 @@ body {
     display: flex;
     justify-content: center;
     overflow: hidden;
-    /* Twilight forest canopy & wisteria bloom gradient */
     background: 
         radial-gradient(circle at 15% 20%, rgba(94, 71, 150, 0.22) 0%, transparent 45%),
         radial-gradient(circle at 85% 80%, rgba(65, 110, 85, 0.15) 0%, transparent 50%),
@@ -51,9 +49,9 @@ body {
         linear-gradient(180deg, #0f0b17 0%, #171224 55%, #12181b 100%);
     z-index: -1;
     pointer-events: none;
+    contain: strict;
 }
 
-/* Hide legacy cyber lines */
 #lines {
     display: none;
 }
@@ -67,37 +65,32 @@ body {
     pointer-events: none;
 }
 
+/* Removed CSS drop-shadow filter to eliminate modal composite lag */
 .floating-petal {
     position: absolute;
     will-change: transform;
-    opacity: 0.65;
-    filter: drop-shadow(0 2px 6px rgba(157, 142, 199, 0.3));
+    opacity: 0.6;
 }
 
 .firefly-spore {
     position: absolute;
     border-radius: 50%;
-    background: radial-gradient(circle, #f6c85f 0%, rgba(157, 142, 199, 0.6) 60%, transparent 100%);
-    box-shadow: 0 0 8px #f6c85f, 0 0 14px #9d8ec7;
+    background: #f6c85f;
     will-change: transform, opacity;
-}
-
-.corner-vine {
-    position: absolute;
-    opacity: 0.14;
-    pointer-events: none;
 }
 
 /* === BANNER STYLES === */
 .banner {
-    background: linear-gradient(180deg, rgba(18, 13, 28, 0.96) 0%, rgba(26, 20, 40, 0.88) 100%);
+    background: linear-gradient(180deg, rgba(18, 13, 28, 0.96) 0%, rgba(26, 20, 40, 0.9) 100%);
     border-bottom: 1px solid var(--border-vine);
-    box-shadow: 0 4px 25px rgba(0, 0, 0, 0.45);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
     color: white;
     padding: 10px 16px;
     text-align: center;
     font-size: 2em;
     font-weight: bold;
+    position: relative;
+    z-index: 100;
 }
 
 .banner-row {
@@ -123,7 +116,6 @@ body {
     align-items: center;
     justify-content: center;
     padding: 9px 18px;
-    /* Asymmetrical organic petal shape */
     border-radius: 20px 6px 20px 6px;
     text-decoration: none;
     font-size: 15px;
@@ -132,23 +124,20 @@ body {
     color: white;
     border: 1px solid rgba(208, 194, 247, 0.35);
     background: linear-gradient(135deg, var(--petal-deep) 0%, var(--petal-dark) 100%);
-    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.25), 0 4px 12px rgba(17, 13, 25, 0.5);
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.25), 0 4px 10px rgba(17, 13, 25, 0.45);
     cursor: pointer;
-    transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+    transition: transform 0.2s ease, border-radius 0.2s ease, border-color 0.2s ease, background 0.2s ease;
     position: relative;
     overflow: hidden;
 }
 
 .social-button:hover, .btn-floral:hover {
-    transform: translateY(-2px) scale(1.02);
-    /* Petal shifts orientation on bloom */
-    border-radius: 8px 22px 8px 22px;
+    transform: translateY(-2px);
+    border-radius: 6px 20px 6px 20px;
     border-color: var(--petal-light);
-    box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.4), 0 6px 18px rgba(157, 142, 199, 0.4);
     background: linear-gradient(135deg, #7359b5 0%, #4c3780 100%);
 }
 
-/* Variant: Blossom Pink (Ko-fi / Primary Submit) */
 .kofi-button, .btn-floral.blossom {
     background: linear-gradient(135deg, #c95988 0%, #8f3460 100%);
     border-color: rgba(245, 176, 203, 0.45);
@@ -157,10 +146,8 @@ body {
 .kofi-button:hover, .btn-floral.blossom:hover {
     background: linear-gradient(135deg, #de6b9b 0%, #a84273 100%);
     border-color: #ffd1e3;
-    box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.4), 0 6px 18px rgba(217, 107, 152, 0.45);
 }
 
-/* Variant: Pollen Gold (Rate Game) */
 .btn-floral.pollen {
     background: linear-gradient(135deg, #f6c85f 0%, #d99b26 100%);
     color: #1a1228;
@@ -169,17 +156,11 @@ body {
 
 .btn-floral.pollen:hover {
     background: linear-gradient(135deg, #ffd678 0%, #e8ab35 100%);
-    box-shadow: 0 6px 18px rgba(246, 200, 95, 0.45);
 }
 
-/* Variant: Discord Wisteria */
 .discord-button {
     background: linear-gradient(135deg, #6b73ff 0%, #4a4ebd 100%);
     border-color: rgba(180, 186, 255, 0.4);
-}
-
-.discord-button:hover {
-    background: linear-gradient(135deg, #7e85ff 0%, #585cd1 100%);
 }
 
 .nurture-discord-button, .mailbox-button {
@@ -188,17 +169,17 @@ body {
 }
 
 .settings-button {
-    background: linear-gradient(135deg, #2a243b 0%, #1c1829 100%);
+    background: linear-gradient(135deg, #322947 0%, #201a30 100%);
     border: 1px solid var(--border-vine);
 }
 
 .settings-button:hover {
-    background: linear-gradient(135deg, #393152 0%, #262038 100%);
+    background: linear-gradient(135deg, #43375e 0%, #2b2340 100%);
 }
 
 .social-button img, .social-button svg {
-    height: 24px;
-    width: 24px;
+    height: 22px;
+    width: 22px;
     object-fit: contain;
     margin-right: 8px;
     fill: white;
@@ -211,22 +192,20 @@ body {
     white-space: nowrap;
 }
 
-/* User Account Badge with Floral Frame */
+/* User Account Badge */
 .user-profile-badge {
     display: inline-flex;
     align-items: center;
     gap: 10px;
-    background: linear-gradient(135deg, rgba(42, 34, 61, 0.9) 0%, rgba(27, 22, 41, 0.95) 100%);
+    background: linear-gradient(135deg, #2a223d 0%, #1b1629 100%);
     border: 1px solid var(--border-vine);
     padding: 5px 8px 5px 12px;
-    border-radius: 22px 8px 22px 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    transition: all 0.25s ease;
+    border-radius: 20px 6px 20px 6px;
+    transition: border-color 0.2s ease;
 }
 
 .user-profile-badge:hover {
-    border-color: var(--petal-main);
-    box-shadow: 0 4px 15px rgba(157, 142, 199, 0.25);
+    border-color: var(--petal-light);
 }
 
 .user-avatar {
@@ -248,47 +227,47 @@ body {
 }
 
 .sign-out-btn {
-    background: rgba(217, 107, 152, 0.15);
+    background: rgba(217, 107, 152, 0.18);
     color: #f7a1c4;
-    border: 1px solid rgba(217, 107, 152, 0.35);
+    border: 1px solid rgba(217, 107, 152, 0.4);
     padding: 4px 10px;
-    border-radius: 14px 4px 14px 4px;
+    border-radius: 12px 4px 12px 4px;
     font-size: 0.75em;
     font-weight: bold;
     text-decoration: none;
-    transition: all 0.2s ease;
+    transition: background 0.2s ease, color 0.2s ease;
 }
 
 .sign-out-btn:hover {
     background: var(--blossom-pink);
     color: #ffffff;
-    border-color: #ffd1e3;
 }
 
-/* === MODAL STYLES (GLOBAL - NO BLUR FOR 60FPS) === */
+/* === ULTRA-FAST MODAL STYLES (GLOBAL - ZERO LAG) === */
 .modal-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
+    inset: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(11, 8, 18, 0.94);
+    background-color: rgba(12, 9, 20, 0.92);
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 9999;
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.2s ease, visibility 0.2s ease;
+    pointer-events: none;
+    transition: opacity 0.14s ease-out, visibility 0.14s ease-out;
 }
 
 .modal-overlay.active {
     opacity: 1;
     visibility: visible;
+    pointer-events: auto;
 }
 
 .modal-window {
-    background: radial-gradient(circle at top right, rgba(157, 142, 199, 0.14), transparent 55%), var(--card-bg);
+    background: linear-gradient(165deg, #251e36 0%, #191426 100%);
     border: 1px solid var(--border-bloom);
     border-radius: 24px 8px 24px 8px;
     width: 90%;
@@ -296,21 +275,21 @@ body {
     padding: 26px;
     position: relative;
     color: white;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.85), 0 0 25px rgba(122, 107, 181, 0.15);
-    transform: scale(0.95);
-    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    will-change: transform, opacity;
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.75);
+    transform: translateY(8px);
+    transition: transform 0.14s ease-out;
+    contain: content;
 }
 
 .modal-overlay.active .modal-window {
-    transform: scale(1);
+    transform: translateY(0);
 }
 
 .modal-close {
     position: absolute;
     top: 16px;
     right: 16px;
-    background: rgba(157, 142, 199, 0.1);
+    background: rgba(157, 142, 199, 0.14);
     border: 1px solid var(--border-vine);
     border-radius: 12px 4px 12px 4px;
     width: 34px;
@@ -321,43 +300,145 @@ body {
     color: var(--petal-light);
     font-size: 22px;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: background 0.15s ease, color 0.15s ease;
 }
 
 .modal-close:hover {
     background: var(--blossom-pink);
     color: white;
     border-color: #ffd1e3;
-    transform: rotate(90deg);
 }
 
 .modal-title {
     margin: 0 0 15px 0;
-    font-size: 1.8em;
+    font-size: 1.7em;
     color: var(--petal-light);
     border-bottom: 1px solid var(--border-vine);
-    padding-bottom: 10px;
+    padding-bottom: 12px;
+}
+
+/* === BOTANICAL INPUTS, MAILBOX & SETTINGS UI === */
+.floral-input, .floral-textarea, .floral-select {
+    width: 100%;
+    padding: 11px 14px;
+    border-radius: 16px 5px 16px 5px;
+    border: 1px solid var(--border-vine);
+    background: rgba(17, 13, 25, 0.85);
+    color: #f4f0ff;
+    font-family: inherit;
+    font-size: 0.95em;
+    box-sizing: border-box;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.floral-input:focus, .floral-textarea:focus, .floral-select:focus {
+    outline: none;
+    border-color: var(--petal-light);
+    box-shadow: 0 0 10px rgba(157, 142, 199, 0.25);
+}
+
+.floral-mail-card {
+    background: linear-gradient(135deg, rgba(38, 31, 56, 0.9) 0%, rgba(24, 19, 36, 0.95) 100%);
+    border: 1px solid var(--border-vine);
+    border-radius: 18px 6px 18px 6px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.floral-mail-card:hover {
+    border-color: var(--petal-main);
+}
+
+.floral-mail-card.unread {
+    border-left: 4px solid var(--blossom-pink);
+    background: linear-gradient(135deg, rgba(217, 107, 152, 0.12) 0%, rgba(30, 24, 46, 0.95) 100%);
+    cursor: pointer;
+}
+
+.floral-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px 3px 10px 3px;
+    font-size: 0.7em;
+    font-weight: bold;
+    margin-left: 8px;
+    vertical-align: middle;
+}
+
+.floral-setting-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(20, 16, 30, 0.75);
+    border: 1px solid var(--border-vine);
+    border-radius: 16px 5px 16px 5px;
+    padding: 12px 16px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+}
+
+.floral-setting-card:hover {
+    border-color: var(--petal-main);
+}
+
+/* Custom Floral Toggle Checkbox */
+.floral-checkbox {
+    appearance: none;
+    width: 44px;
+    height: 24px;
+    background: #161221;
+    border: 1px solid var(--border-vine);
+    border-radius: 14px 4px 14px 4px;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.floral-checkbox::after {
+    content: '✿';
+    position: absolute;
+    top: 2px;
+    left: 4px;
+    width: 18px;
+    height: 18px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #887da8;
+    background: #2a233d;
+    border-radius: 8px 2px 8px 2px;
+    transition: all 0.2s ease;
+}
+
+.floral-checkbox:checked {
+    background: linear-gradient(135deg, var(--petal-deep), var(--blossom-pink));
+    border-color: var(--petal-light);
+}
+
+.floral-checkbox:checked::after {
+    left: 20px;
+    color: #1a1228;
+    background: var(--pollen-gold);
 }
 
 /* === FLORAL LEADERBOARD STYLES (GLOBAL) === */
 .leaderboard-sidebar {
     width: 290px;
     min-width: 290px;
-    background: 
-        radial-gradient(circle at 100% 0%, rgba(157, 142, 199, 0.18) 0%, transparent 50%),
-        radial-gradient(circle at 0% 100%, rgba(123, 201, 150, 0.08) 0%, transparent 50%),
-        linear-gradient(180deg, rgba(32, 25, 48, 0.95) 0%, rgba(21, 17, 33, 0.95) 100%);
+    background: linear-gradient(180deg, rgba(32, 25, 48, 0.95) 0%, rgba(21, 17, 33, 0.95) 100%);
     border: 1px solid var(--border-vine);
     border-radius: 24px 8px 24px 8px;
     padding: 20px;
     height: fit-content;
     box-sizing: border-box;
-    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
     position: relative;
     overflow: hidden;
 }
 
-/* Subtle decorative flower watermark in the corner of the leaderboard */
 .leaderboard-sidebar::after {
     content: '';
     position: absolute;
@@ -384,7 +465,6 @@ body {
     letter-spacing: 0.5px;
     margin-bottom: 16px;
     border: 1px solid rgba(255, 255, 255, 0.25);
-    box-shadow: 0 4px 15px rgba(104, 78, 168, 0.4);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -401,23 +481,20 @@ body {
     display: flex;
     align-items: center;
     gap: 10px;
-    background: rgba(24, 19, 36, 0.85);
+    background: rgba(24, 19, 36, 0.9);
     padding: 9px 12px;
     border-radius: 14px 4px 14px 4px;
     margin-bottom: 9px;
     border: 1px solid rgba(157, 142, 199, 0.18);
-    transition: all 0.2s ease;
-    position: relative;
+    transition: transform 0.15s ease, border-color 0.15s ease;
 }
 
 .lb-row:hover {
     transform: translateX(4px);
     background: rgba(43, 35, 64, 0.95);
     border-color: var(--petal-main) !important;
-    box-shadow: 0 4px 12px rgba(122, 107, 181, 0.2);
 }
 
-/* Special Floral Styling for Top 3 Contributors */
 .lb-row.rank-1 {
     background: linear-gradient(90deg, rgba(246, 200, 95, 0.14) 0%, rgba(36, 28, 54, 0.9) 100%);
     border-color: rgba(246, 200, 95, 0.5);
@@ -467,20 +544,8 @@ body {
     border: 1.5px solid rgba(157, 142, 199, 0.4);
 }
 
-.lb-info {
-    flex-grow: 1;
-    overflow: hidden;
-}
-
-.lb-name {
-    font-size: 0.85em;
-    font-weight: bold;
-    color: #f4f0ff;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
+.lb-info { flex-grow: 1; overflow: hidden; }
+.lb-name { font-size: 0.85em; font-weight: bold; color: #f4f0ff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .lb-score {
     color: var(--leaf-sage);
     background: rgba(123, 201, 150, 0.12);
@@ -492,11 +557,98 @@ body {
     white-space: nowrap;
 }
 
-/* Responsive adjustments */
+/* === MOBILE TROPHY BUTTON & POPUP LEADERBOARD === */
+.mobile-trophy-btn {
+    display: none;
+}
+
+.lb-mobile-close {
+    display: none;
+}
+
+.mobile-lb-backdrop {
+    display: none;
+}
+
 @media (max-width: 768px) {
-    .leaderboard-sidebar, .leaderboard-spacer {
+    .leaderboard-spacer {
         display: none !important;
     }
+
+    /* Trophy button positioned right below the banner on the right side */
+    .mobile-trophy-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        position: absolute;
+        top: 122px;
+        right: 16px;
+        width: 44px;
+        height: 44px;
+        border-radius: 16px 5px 16px 5px;
+        background: linear-gradient(135deg, #f6c85f 0%, #c9881e 100%);
+        border: 1.5px solid #ffe6a3;
+        box-shadow: 0 4px 15px rgba(246, 200, 95, 0.35);
+        cursor: pointer;
+        z-index: 950;
+        transition: transform 0.2s ease;
+    }
+
+    .mobile-trophy-btn:active {
+        transform: scale(0.92);
+    }
+
+    .mobile-trophy-btn svg {
+        width: 24px;
+        height: 24px;
+        fill: #1a1228;
+    }
+
+    /* Hide sidebar on mobile unless toggled open */
+    .leaderboard-sidebar {
+        display: none !important;
+    }
+
+    .leaderboard-sidebar.mobile-open {
+        display: flex !important;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 88vw;
+        max-width: 360px;
+        max-height: 75vh;
+        z-index: 10001;
+        padding-top: 48px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9);
+        border: 1px solid var(--border-bloom);
+    }
+
+    .leaderboard-sidebar.mobile-open .lb-mobile-close {
+        display: flex;
+        position: absolute;
+        top: 10px;
+        right: 12px;
+        width: 30px;
+        height: 30px;
+        align-items: center;
+        justify-content: center;
+        background: rgba(157, 142, 199, 0.15);
+        border: 1px solid var(--border-vine);
+        border-radius: 10px 3px 10px 3px;
+        color: var(--petal-light);
+        font-size: 20px;
+        cursor: pointer;
+    }
+
+    .mobile-lb-backdrop.active {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: rgba(11, 8, 18, 0.9);
+        z-index: 10000;
+    }
+
     .banner-actions {
         display: flex;
         flex-direction: column;

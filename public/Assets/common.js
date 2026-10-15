@@ -198,53 +198,83 @@ async function fetchUnreadMailCount() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    // 1. Inject Mobile Trophy Button & Backdrop if page has a Leaderboard
+    const lbSidebar = document.getElementById('leaderboardSidebar');
+    if (lbSidebar) {
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'lb-mobile-close';
+        closeBtn.innerHTML = '×';
+        closeBtn.onclick = closeMobileLeaderboard;
+        lbSidebar.prepend(closeBtn);
+
+        const trophyBtn = document.createElement('button');
+        trophyBtn.className = 'mobile-trophy-btn';
+        trophyBtn.title = 'View Leaderboard';
+        trophyBtn.onclick = openMobileLeaderboard;
+        trophyBtn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94.63 1.5 1.98 2.63 3.61 2.96V19H7v2h10v-2h-4v-3.1c1.63-.33 2.98-1.46 3.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z"/></svg>`;
+        document.body.appendChild(trophyBtn);
+
+        const lbBackdrop = document.createElement('div');
+        lbBackdrop.id = 'mobileLbBackdrop';
+        lbBackdrop.className = 'mobile-lb-backdrop';
+        lbBackdrop.onclick = closeMobileLeaderboard;
+        document.body.appendChild(lbBackdrop);
+    }
+
+    // 2. Inject Upgraded Botanical Modals (Mailbox, Compose, Profile, Settings)
     const modalWrapper = document.createElement('div');
     modalWrapper.innerHTML = `
         <div id="mailboxModal" class="modal-overlay">
             <div class="modal-window" style="max-width: 600px;">
                 <button class="modal-close" onclick="closeMailboxModal()">×</button>
-                <h2 class="modal-title" style="display: flex; justify-content: space-between; align-items: center;">
-                    📬 User Mailbox
-                    <span onclick="markAllRead()" style="font-size: 0.45em; color: #aaa; cursor: pointer; border: 1px solid #3a3a45; padding: 4px 10px; border-radius: 12px; font-weight: normal; transition: background 0.2s;" onmouseover="this.style.background='#3a3a45'" onmouseout="this.style.background='transparent'">Mark All Read</span>
+                <h2 class="modal-title" style="display: flex; justify-content: space-between; align-items: center; padding-right: 42px;">
+                    <span>🌸 User Mailbox</span>
+                    <button class="btn-floral" onclick="markAllRead()" style="font-size: 0.5em; padding: 6px 12px;">✓ Mark All Read</button>
                 </h2>
-                <div id="mailboxContent" style="max-height: 350px; overflow-y: auto; margin-bottom: 15px;">Loading messages...</div>
-                <button class="btn-floral" style="width:100%;" onclick="openComposeModal()">🌸 Compose New Message to Staff</button>
+                <div id="mailboxContent" style="max-height: 350px; overflow-y: auto; margin-bottom: 16px; padding-right: 4px;">Loading messages...</div>
+                <button class="btn-floral blossom" style="width:100%; padding:12px;" onclick="openComposeModal()">✉️ Compose New Message to Staff</button>
             </div>
         </div>
         <div id="composeModal" class="modal-overlay">
             <div class="modal-window" style="max-width: 500px;">
                 <button class="modal-close" onclick="closeComposeModal()">×</button>
-                <h2 class="modal-title">✉️ Message Staff</h2>
-                <input type="text" id="mailSubject" placeholder="Subject" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #3a3a45; background:#2a2a35; color:white; box-sizing:border-box;">
-                <textarea id="mailContent" placeholder="Write your message here..." style="width:100%; height:120px; background:#2a2a35; color:#fff; border:1px solid #3a3a45; border-radius:8px; padding:10px; resize:none; box-sizing:border-box;"></textarea>
-                <button class="btn-floral blossom" style="width:100%; margin-top:10px;" onclick="sendMail()">Send Message</button>
+                <h2 class="modal-title">🌺 Message Staff</h2>
+                <input type="text" id="mailSubject" class="floral-input" placeholder="Subject..." style="margin-bottom:12px;">
+                <textarea id="mailContent" class="floral-textarea" placeholder="Write your message here..." style="height:130px; resize:none;"></textarea>
+                <button class="btn-floral blossom" style="width:100%; margin-top:14px; padding:12px;" onclick="sendMail()">🌸 Send Message</button>
             </div>
         </div>
         <div id="userProfileModal" class="modal-overlay">
             <div class="modal-window" style="max-width: 500px;">
                 <button class="modal-close" onclick="closeUserProfileModal()">×</button>
                 <div style="display:flex; align-items:center; gap: 15px; margin-bottom: 20px;">
-                    <img id="upAvatar" src="/Assets/placeholder.png" style="width: 60px; height: 60px; border-radius: 50%; border: 2px solid #7A6BB5; object-fit: cover;">
+                    <img id="upAvatar" src="/Assets/placeholder.png" style="width: 60px; height: 60px; border-radius: 50%; border: 2px solid #9d8ec7; object-fit: cover;">
                     <div>
                         <h2 class="modal-title" style="margin:0; border:none; padding:0 0 5px 0;" id="upUsername">Loading...</h2>
-                        <div style="color: #ffc107; font-weight: bold; font-size: 1.1em;" id="upPoints">...</div>
+                        <div style="color: #7bc996; font-weight: bold; font-size: 1.05em;" id="upPoints">...</div>
                     </div>
                 </div>
-                <h3 style="border-bottom: 1px solid #3a3a45; padding-bottom: 8px; margin-top: 0;">Approved Contributions</h3>
+                <h3 style="border-bottom: 1px solid rgba(157, 142, 199, 0.28); padding-bottom: 8px; margin-top: 0; color: #d0c2f7;">✿ Approved Contributions</h3>
                 <div id="upContributions" style="max-height: 300px; overflow-y: auto; padding-right: 5px;"></div>
             </div>
         </div>
         <div id="settingsModal" class="modal-overlay">
-            <div class="modal-window" style="max-width: 400px;">
+            <div class="modal-window" style="max-width: 420px;">
                 <button class="modal-close" onclick="closeSettingsModal()">×</button>
-                <h2 class="modal-title">⚙️ Display Settings</h2>
-                <label style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; cursor:pointer;">
-                    <span>Show Leaderboard Panel</span>
-                    <input type="checkbox" id="toggleLeaderboard" checked onchange="saveSettings()">
+                <h2 class="modal-title">🌿 Display Settings</h2>
+                <label class="floral-setting-card">
+                    <div>
+                        <div style="font-weight:bold; color:#f4f0ff;">Show Leaderboard Panel</div>
+                        <div style="font-size:0.75em; color:#a99ec7;">Display contributor rankings on desktop</div>
+                    </div>
+                    <input type="checkbox" id="toggleLeaderboard" class="floral-checkbox" checked onchange="saveSettings()">
                 </label>
-                <label style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;">
-                    <span>Leaderboard Position</span>
-                    <select id="selectLbSide" style="padding:6px; border-radius:6px; background:#1f1f28; color:white; border:1px solid #3a3a45;" onchange="saveSettings()">
+                <label class="floral-setting-card" style="margin-bottom:0;">
+                    <div>
+                        <div style="font-weight:bold; color:#f4f0ff;">Leaderboard Position</div>
+                        <div style="font-size:0.75em; color:#a99ec7;">Choose which side the panel blooms</div>
+                    </div>
+                    <select id="selectLbSide" class="floral-select" style="width: auto; padding: 8px 14px;" onchange="saveSettings()">
                         <option value="right">Right Side</option>
                         <option value="left">Left Side</option>
                     </select>
@@ -256,20 +286,34 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(applySettings, 100);
 });
 
+function openMobileLeaderboard() {
+    const lb = document.getElementById('leaderboardSidebar');
+    const backdrop = document.getElementById('mobileLbBackdrop');
+    if (lb) lb.classList.add('mobile-open');
+    if (backdrop) backdrop.classList.add('active');
+}
+
+function closeMobileLeaderboard() {
+    const lb = document.getElementById('leaderboardSidebar');
+    const backdrop = document.getElementById('mobileLbBackdrop');
+    if (lb) lb.classList.remove('mobile-open');
+    if (backdrop) backdrop.classList.remove('active');
+}
+
 function openMailboxModal() { 
     document.getElementById('mailboxModal').classList.add('active'); 
-    document.getElementById('mailboxContent').innerHTML = '<p style="color:#aaa;">Loading messages...</p>';
+    document.getElementById('mailboxContent').innerHTML = '<p style="color:#a99ec7; text-align:center;">Loading messages...</p>';
     setTimeout(loadMailboxMessages, 50); 
 }
+
 async function markAsRead(id, element) {
     try {
         await fetch('/api/mailbox/mark-read', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messageIds: [id] }) });
-        element.style.borderLeft = '1px solid #3a3a45'; // Remove unread highlight
+        element.classList.remove('unread');
         element.onclick = null;
-        element.style.cursor = 'default';
         const badge = element.querySelector('.new-badge');
         if (badge) badge.style.display = 'none';
-        fetchUnreadMailCount(); // Updates the top nav counter instantly
+        fetchUnreadMailCount();
     } catch(e) {}
 }
 
@@ -292,12 +336,12 @@ async function openUserProfileModal(discordId, username = null) {
     
     document.getElementById('userProfileModal').classList.add('active');
     const container = document.getElementById('upContributions');
-    container.innerHTML = '<p style="color:#aaa;">Loading profile...</p>';
+    container.innerHTML = '<p style="color:#a99ec7;">Loading profile...</p>';
     
     try {
         const res = await fetch(`/api/profile/${encodeURIComponent(query)}`);
         if (!res.ok) {
-            container.innerHTML = '<p style="color:#ff5555;">User not found or is an external author.</p>';
+            container.innerHTML = '<p style="color:#d96b98;">User not found or is an external author.</p>';
             document.getElementById('upUsername').textContent = username || 'Unknown User';
             document.getElementById('upAvatar').src = '/Assets/placeholder.png';
             document.getElementById('upPoints').textContent = '0 pts';
@@ -312,7 +356,7 @@ async function openUserProfileModal(discordId, username = null) {
         document.getElementById('upPoints').textContent = `${data.totalPoints} pts`;
         
         if (!data.contributions || data.contributions.length === 0) {
-            container.innerHTML = '<p style="color:#888;">No approved contributions yet.</p>';
+            container.innerHTML = '<p style="color:#a99ec7;">No approved contributions yet.</p>';
             return;
         }
         
@@ -323,25 +367,25 @@ async function openUserProfileModal(discordId, username = null) {
             
             const dateStr = new Date(c.date).toLocaleDateString();
             const actionText = c.action ? c.action.toUpperCase() : 'EDIT';
-            const commitHtml = c.commitMessage ? `<div style="font-size:0.85em; color:#ddd; border-left:2px solid #4C3A90; padding-left:8px; margin-top:8px; font-style: italic;">${escapeTxt(c.commitMessage)}</div>` : '';
+            const commitHtml = c.commitMessage ? `<div style="font-size:0.85em; color:#e5dcff; border-left:2px solid #9d8ec7; padding-left:8px; margin-top:8px; font-style: italic;">${escapeTxt(c.commitMessage)}</div>` : '';
             
             return `
-                <a href="${link}" style="display:block; background:#2a2a35; padding:14px; border:1px solid #3a3a45; border-radius:8px; margin-bottom:10px; text-decoration:none; color:white; transition:border 0.2s, background 0.2s;" onmouseover="this.style.borderColor='#7A6BB5'; this.style.background='#2f2f3b';" onmouseout="this.style.borderColor='#3a3a45'; this.style.background='#2a2a35';">
+                <a href="${link}" class="floral-mail-card" style="display:block; text-decoration:none; color:white;">
                     <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
-                        <div style="font-weight:bold; color:#9d8ec7; font-size:1.1em;">${escapeTxt(c.target)}</div>
-                        <span style="font-size:0.75em; color:#888;">${dateStr}</span>
+                        <div style="font-weight:bold; color:#d0c2f7; font-size:1.05em;">${escapeTxt(c.target)}</div>
+                        <span style="font-size:0.75em; color:#a99ec7;">${dateStr}</span>
                     </div>
-                    <div style="font-size:0.8em; color:#aaa; margin-bottom:4px; display:flex; align-items:center; gap:6px;">
-                        <strong style="color:#FF5E5B; background:#1f1f28; padding:2px 6px; border-radius:4px; border:1px solid #3a3a45;">${actionText}</strong> 
+                    <div style="font-size:0.8em; color:#a99ec7; margin-bottom:4px; display:flex; align-items:center; gap:6px;">
+                        <strong style="color:#f6c85f; background:rgba(246, 200, 95, 0.12); padding:2px 8px; border-radius:8px 2px 8px 2px; border:1px solid rgba(246, 200, 95, 0.35);">${actionText}</strong> 
                         <span>in ${c.category}</span>
-                        <span style="color:#555;">•</span>
-                        <span style="font-family:monospace; color:#ccc;">${c.gameId || 'General'}</span>
+                        <span style="color:#5e4796;">•</span>
+                        <span style="font-family:monospace; color:#d0c2f7;">${c.gameId || 'General'}</span>
                     </div>
                     ${commitHtml}
                 </a>
             `;
         }).join('');
-    } catch (e) { container.innerHTML = '<p style="color:#ff5555;">Failed to load profile.</p>'; }
+    } catch (e) { container.innerHTML = '<p style="color:#d96b98;">Failed to load profile.</p>'; }
 }
 function closeUserProfileModal() { document.getElementById('userProfileModal').classList.remove('active'); }
 
@@ -350,7 +394,10 @@ async function loadMailboxMessages() {
     try {
         const res = await fetch('/api/mailbox');
         const mail = await res.json();
-        if (!mail || mail.length === 0) { container.innerHTML = '<p style="color:#888; text-align:center;">Your mailbox is empty.</p>'; return; }
+        if (!mail || mail.length === 0) {
+            container.innerHTML = '<p style="color:#a99ec7; text-align:center; padding: 20px 0;">🌱 Your mailbox is peaceful and empty.</p>';
+            return;
+        }
         
         container.innerHTML = mail.map(m => {
             let senderInfo = '';
@@ -359,34 +406,32 @@ async function loadMailboxMessages() {
             if (m.direction === 'INBOUND') {
                 const avatar = m.adminAvatar || 'https://cdn.discordapp.com/embed/avatars/0.png';
                 const name = m.adminUsername || 'Admin';
-                senderInfo = `<img src="${avatar}" style="width:20px;height:20px;border-radius:50%;vertical-align:middle;margin-right:5px; border: 1px solid #7A6BB5;"><b>${name}</b>`;
+                senderInfo = `<img src="${avatar}" style="width:22px;height:22px;border-radius:50%;vertical-align:middle;margin-right:6px; border: 1.5px solid #9d8ec7;"><b>${name}</b>`;
             } else if (m.direction === 'OUTBOUND_CONTRIBUTION') {
-                senderInfo = `<b>📦 Contribution</b>`;
+                senderInfo = `<b>🌸 Contribution</b>`;
                 const statusStr = (m.status || 'Pending').toUpperCase();
-                const color = statusStr === 'APPROVED' ? '#4CAF50' : statusStr === 'REJECTED' ? '#F44336' : '#FFC107';
-                statusBadge = `<span style="background:${color}; color:#000; padding:2px 6px; border-radius:10px; font-size:0.7em; font-weight:bold; margin-left:8px; vertical-align:middle;">${statusStr}</span>`;
+                const bg = statusStr === 'APPROVED' ? 'rgba(123, 201, 150, 0.2)' : statusStr === 'REJECTED' ? 'rgba(217, 107, 152, 0.2)' : 'rgba(246, 200, 95, 0.2)';
+                const border = statusStr === 'APPROVED' ? '#7bc996' : statusStr === 'REJECTED' ? '#d96b98' : '#f6c85f';
+                statusBadge = `<span class="floral-badge" style="background:${bg}; color:${border}; border:1px solid ${border};">${statusStr}</span>`;
             } else {
-                senderInfo = `<b>📤 You</b>`;
+                senderInfo = `<b>🍃 You</b>`;
             }
 
             const isUnread = !m.read && m.direction === 'INBOUND';
-            const unreadHighlight = isUnread ? 'border-left: 4px solid #FF5E5B; cursor: pointer;' : 'border-left: 1px solid #3a3a45;';
-            const newBadge = isUnread ? `<span class="new-badge" style="background:#FF5E5B; color:#fff; padding:2px 6px; border-radius:10px; font-size:0.7em; font-weight:bold; margin-left:8px; vertical-align:middle;">NEW</span>` : '';
-
-            // Strict text escaping to prevent HTML/XSS execution inside the mailbox
+            const newBadge = isUnread ? `<span class="floral-badge new-badge" style="background:#d96b98; color:#fff;">NEW</span>` : '';
             const escapeMail = (text) => (text || '').replace(/[&<>"']/g, match => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[match]));
 
             return `
-            <div style="background:#1f1f28; border:1px solid #3a3a45; ${unreadHighlight} padding:12px; border-radius:8px; margin-bottom:10px;" ${isUnread ? `onclick="markAsRead('${m.id}', this)"` : ''}>
-                <div style="display:flex; justify-content:space-between; font-size:0.85em; color:#aaa; margin-bottom:8px; align-items:center;">
-                    <div>${senderInfo} — ${escapeMail(m.subject)} ${statusBadge} ${newBadge}</div>
-                    <span>${new Date(m.date).toLocaleDateString()}</span>
+            <div class="floral-mail-card ${isUnread ? 'unread' : ''}" ${isUnread ? `onclick="markAsRead('${m.id}', this)"` : ''}>
+                <div style="display:flex; justify-content:space-between; font-size:0.85em; color:#b8a6e8; margin-bottom:8px; align-items:center;">
+                    <div>${senderInfo} — <span style="color:#f4f0ff;">${escapeMail(m.subject)}</span> ${statusBadge} ${newBadge}</div>
+                    <span style="font-size:0.85em; color:#887da8;">${new Date(m.date).toLocaleDateString()}</span>
                 </div>
-                <div style="color:#fff; font-size:0.95em; white-space:pre-wrap;">${escapeMail(m.content)}</div>
+                <div style="color:#e5dcff; font-size:0.92em; white-space:pre-wrap; line-height:1.45;">${escapeMail(m.content)}</div>
             </div>
             `;
         }).join('');
-    } catch (e) { container.innerHTML = '<p style="color:#ff5555;">Failed to load mailbox.</p>'; }
+    } catch (e) { container.innerHTML = '<p style="color:#d96b98;">Failed to load mailbox.</p>'; }
 }
 
 async function sendMail() {

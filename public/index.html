@@ -181,70 +181,171 @@
             transform: none;
         }
 
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(4px);
-            display: flex;
-            justify-content: center;
+/* === BOTANICAL MULTI-TAG & AGE FILTER MENU === */
+        .tags-menu-wrapper {
+            position: relative;
+            user-select: none;
+        }
+
+        .tags-menu-trigger {
+            display: inline-flex;
             align-items: center;
-            z-index: 9999;
+            gap: 8px;
+            padding: 11px 18px;
+            border-radius: 20px 6px 20px 6px;
+            background: linear-gradient(135deg, #32274a 0%, #1e172e 100%);
+            color: #f4f0ff;
+            border: 1px solid rgba(208, 194, 247, 0.4);
+            font-family: inherit;
+            font-size: 0.95em;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .tags-menu-trigger:hover, .tags-menu-trigger.open {
+            border-radius: 6px 20px 6px 20px;
+            border-color: #d0c2f7;
+            background: linear-gradient(135deg, #473769 0%, #2a2040 100%);
+        }
+
+        .filter-count-badge {
+            background: linear-gradient(135deg, #f6c85f, #d99b26);
+            color: #1a1228;
+            font-size: 0.78em;
+            padding: 2px 7px;
+            border-radius: 10px 3px 10px 3px;
+            font-weight: bold;
+        }
+
+        .tags-dropdown-panel {
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            width: 320px;
+            background: linear-gradient(165deg, #261f38 0%, #181324 100%);
+            border: 1px solid rgba(208, 194, 247, 0.55);
+            border-radius: 22px 8px 22px 8px;
+            padding: 18px;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8);
+            z-index: 950;
             opacity: 0;
             visibility: hidden;
-            transition: opacity 0.3s ease, visibility 0.3s ease;
+            transform: translateY(-6px);
+            transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s ease;
+            text-align: left;
         }
 
-        .modal-overlay.active {
+        .tags-dropdown-panel.open {
             opacity: 1;
             visibility: visible;
+            transform: translateY(0);
         }
 
-        .modal-window {
-            background-color: #1f1f28; 
-            border: 1px solid #3a3a45;
-            border-radius: 12px;
-            width: 90%;
-            max-width: 800px;
-            padding: 24px;
-            position: relative;
-            color: white;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
-            --start-x: 0px;
-            --start-y: 20px;
-            transform: translate(var(--start-x), var(--start-y)) scale(0.25);
-            transform-origin: center;
-            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        .tags-panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 12px;
+            margin-bottom: 12px;
+            border-bottom: 1px solid rgba(157, 142, 199, 0.25);
         }
 
-        .modal-overlay.active .modal-window {
-            transform: translate(0, 0) scale(1);
+        .logic-toggle-group {
+            display: inline-flex;
+            background: #120e1c;
+            border: 1px solid rgba(157, 142, 199, 0.3);
+            border-radius: 12px 4px 12px 4px;
+            padding: 2px;
         }
 
-        .modal-close {
-            position: absolute;
-            top: 16px;
-            right: 16px;
-            background: none;
+        .logic-btn {
+            background: transparent;
             border: none;
-            color: #888;
-            font-size: 28px;
+            color: #a99ec7;
+            font-family: inherit;
+            font-size: 0.75em;
+            font-weight: bold;
+            padding: 4px 10px;
+            border-radius: 10px 3px 10px 3px;
             cursor: pointer;
-            transition: color 0.2s;
+            transition: all 0.15s ease;
         }
 
-        .modal-close:hover {
-            color: #ff5c5c;
+        .logic-btn.active {
+            background: linear-gradient(135deg, #7A6BB5, #523d8a);
+            color: white;
         }
 
-        .modal-title {
-            margin: 0 0 15px 0;
-            font-size: 1.8em;
-            border-bottom: 1px solid #3a3a45;
-            padding-bottom: 10px;
+        .clear-filters-btn {
+            background: rgba(217, 107, 152, 0.15);
+            color: #f7a1c4;
+            border: 1px solid rgba(217, 107, 152, 0.35);
+            border-radius: 10px 3px 10px 3px;
+            padding: 4px 9px;
+            font-family: inherit;
+            font-size: 0.75em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.15s ease;
+        }
+
+        .clear-filters-btn:hover {
+            background: #d96b98;
+            color: white;
+        }
+
+        .tags-section-title {
+            font-size: 0.8em;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: #d0c2f7;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .tags-pills-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .tag-pill {
+            background: rgba(18, 14, 28, 0.85);
+            color: #b8a6e8;
+            border: 1px solid rgba(157, 142, 199, 0.3);
+            border-radius: 14px 4px 14px 4px;
+            padding: 6px 12px;
+            font-family: inherit;
+            font-size: 0.82em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .tag-pill:hover {
+            border-color: #d0c2f7;
+            color: white;
+        }
+
+        .tag-pill.selected {
+            background: linear-gradient(135deg, #684ea8 0%, #433075 100%);
+            color: white;
+            border-color: #f6c85f;
+            box-shadow: 0 2px 8px rgba(104, 78, 168, 0.45);
+        }
+
+        .tag-pill.age-pill.selected {
+            background: linear-gradient(135deg, #c95988 0%, #8f3460 100%);
+            border-color: #ffd1e3;
+        }
+
+        .tags-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(157, 142, 199, 0.35), transparent);
+            margin: 14px 0;
         }
 
         .video-container {
@@ -420,15 +521,43 @@
                     <input type="text" class="search-input" placeholder="Search games..." id="searchInput" style="width: 100%; opacity: 1; padding: 12px 20px; transition: all 0.3s ease; flex-grow: 1;">
                 </div>
                 
-                <select id="tagFilter" style="padding: 12px; border-radius: 20px; outline: none; background: #2a2a35; color: white; border: 2px solid #333; cursor: pointer;">
-                    <option value="All">All Tags</option>
-                    <option value="RPG">RPG</option>
-                    <option value="Action">Action</option>
-                    <option value="Turn-Based">Turn-Based</option>
-                    <option value="Tower Defense">Tower Defense</option>
-                    <option value="Rhythm">Rhythm</option>
-                    <option value="City Builder">City Builder</option>
-                </select>
+                <div class="tags-menu-wrapper" id="tagsMenuWrapper">
+                    <button type="button" class="tags-menu-trigger" id="tagsMenuBtn" onclick="toggleTagsMenu(event)">
+                        <span>✿ Filters</span>
+                        <span id="activeFilterCount" class="filter-count-badge" style="display:none;">0</span>
+                        <span style="font-size: 0.75em; color: #d0c2f7;">▼</span>
+                    </button>
+
+                    <div class="tags-dropdown-panel" id="tagsDropdownPanel" onclick="event.stopPropagation()">
+                        <div class="tags-panel-header">
+                            <span style="font-size: 0.78em; color: #a99ec7; font-weight: bold;">Match Logic:</span>
+                            <div class="logic-toggle-group">
+                                <button type="button" id="logicOrBtn" class="logic-btn active" onclick="setFilterLogic('OR')">OR</button>
+                                <button type="button" id="logicAndBtn" class="logic-btn" onclick="setFilterLogic('AND')">AND</button>
+                            </div>
+                            <button type="button" class="clear-filters-btn" onclick="clearAllFilters()">Reset</button>
+                        </div>
+
+                        <div class="tags-section-title">🌸 Genre Tags</div>
+                        <div class="tags-pills-grid" id="genreTagsGrid">
+                            <button type="button" class="tag-pill" data-tag="RPG" onclick="toggleGenreTag('RPG', this)">RPG</button>
+                            <button type="button" class="tag-pill" data-tag="Action" onclick="toggleGenreTag('Action', this)">Action</button>
+                            <button type="button" class="tag-pill" data-tag="Turn-Based" onclick="toggleGenreTag('Turn-Based', this)">Turn-Based</button>
+                            <button type="button" class="tag-pill" data-tag="Tower Defense" onclick="toggleGenreTag('Tower Defense', this)">Tower Defense</button>
+                            <button type="button" class="tag-pill" data-tag="Rhythm" onclick="toggleGenreTag('Rhythm', this)">Rhythm</button>
+                            <button type="button" class="tag-pill" data-tag="City Builder" onclick="toggleGenreTag('City Builder', this)">City Builder</button>
+                        </div>
+
+                        <div class="tags-divider"></div>
+
+                        <div class="tags-section-title">🌿 Age Rating (ESRB)</div>
+                        <div class="tags-pills-grid" id="ageTagsGrid">
+                            <button type="button" class="tag-pill age-pill" data-age="E" onclick="toggleAgeTag('E', this)">E • Everyone</button>
+                            <button type="button" class="tag-pill age-pill" data-age="T" onclick="toggleAgeTag('T', this)">T • Teen</button>
+                            <button type="button" class="tag-pill age-pill" data-age="M" onclick="toggleAgeTag('M', this)">M • Mature 17+</button>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="grid-container" id="gameGrid">
             </div>
@@ -800,16 +929,98 @@
                 closeGameModal();
             }
         });
+        let selectedGenreTags = [];
+        let selectedAgeTags = [];
+        let filterLogicMode = 'OR';
+
+        function toggleTagsMenu(e) {
+            e.stopPropagation();
+            const panel = document.getElementById('tagsDropdownPanel');
+            const btn = document.getElementById('tagsMenuBtn');
+            panel.classList.toggle('open');
+            btn.classList.toggle('open');
+        }
+
+        document.addEventListener('click', () => {
+            const panel = document.getElementById('tagsDropdownPanel');
+            const btn = document.getElementById('tagsMenuBtn');
+            if (panel) panel.classList.remove('open');
+            if (btn) btn.classList.remove('open');
+        });
+
+        function setFilterLogic(mode) {
+            filterLogicMode = mode;
+            document.getElementById('logicOrBtn').classList.toggle('active', mode === 'OR');
+            document.getElementById('logicAndBtn').classList.toggle('active', mode === 'AND');
+            updateGrid(allGames);
+        }
+
+        function toggleGenreTag(tag, btnEl) {
+            if (selectedGenreTags.includes(tag)) {
+                selectedGenreTags = selectedGenreTags.filter(t => t !== tag);
+                btnEl.classList.remove('selected');
+            } else {
+                selectedGenreTags.push(tag);
+                btnEl.classList.add('selected');
+            }
+            updateFilterBadge();
+            updateGrid(allGames);
+        }
+
+        function toggleAgeTag(age, btnEl) {
+            if (selectedAgeTags.includes(age)) {
+                selectedAgeTags = selectedAgeTags.filter(a => a !== age);
+                btnEl.classList.remove('selected');
+            } else {
+                selectedAgeTags.push(age);
+                btnEl.classList.add('selected');
+            }
+            updateFilterBadge();
+            updateGrid(allGames);
+        }
+
+        function clearAllFilters() {
+            selectedGenreTags = [];
+            selectedAgeTags = [];
+            document.querySelectorAll('.tag-pill.selected').forEach(el => el.classList.remove('selected'));
+            updateFilterBadge();
+            updateGrid(allGames);
+        }
+
+        function updateFilterBadge() {
+            const total = selectedGenreTags.length + selectedAgeTags.length;
+            const badge = document.getElementById('activeFilterCount');
+            if (!badge) return;
+            if (total > 0) {
+                badge.textContent = total;
+                badge.style.display = 'inline-block';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
         function updateGrid(games) {
             const gameGrid = document.getElementById('gameGrid');
             if (!gameGrid) return;
             gameGrid.innerHTML = ''; 
             
-            const selectedTag = document.getElementById('tagFilter') ? document.getElementById('tagFilter').value : 'All';
             let filteredGames = games || [];
             
-            if (selectedTag !== 'All') {
-                filteredGames = filteredGames.filter(g => g.tags && g.tags.includes(selectedTag));
+            if (selectedGenreTags.length > 0 || selectedAgeTags.length > 0) {
+                filteredGames = filteredGames.filter(g => {
+                    const gTags = Array.isArray(g.tags) ? g.tags : [];
+                    const gAge = g.ratings?.age || '';
+
+                    if (filterLogicMode === 'AND') {
+                        const genreMatch = selectedGenreTags.length === 0 || selectedGenreTags.every(t => gTags.includes(t));
+                        const ageMatch = selectedAgeTags.length === 0 || (selectedAgeTags.length === 1 && selectedAgeTags[0] === gAge);
+                        return genreMatch && ageMatch;
+                    } else {
+                        const genreMatch = selectedGenreTags.some(t => gTags.includes(t));
+                        const ageMatch = selectedAgeTags.includes(gAge);
+                        return genreMatch || ageMatch;
+                    }
+                });
             }
 
             filteredGames.sort((a, b) => {
@@ -924,10 +1135,6 @@
             }
         });
 
-        document.getElementById('tagFilter').addEventListener('change', () => {
-            updateGrid(allGames);
-        });
-
         const escapeHtml = (text) => {
             if (!text) return ''; // Prevents the fatal crash if data is missing
             const map = {
@@ -946,8 +1153,8 @@
             fetchInitialData();
             
             // Attach Tag Filter Listener
-            const tagFilter = document.getElementById('tagFilter');
-            if (tagFilter) tagFilter.addEventListener('change', () => updateGrid(allGames));
+            // const tagFilter = document.getElementById('tagFilter');
+            // if (tagFilter) tagFilter.addEventListener('change', () => updateGrid(allGames));
 
             // Attach Search Toggle Listener
             const searchToggle = document.getElementById('searchToggle');
