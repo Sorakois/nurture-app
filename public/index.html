@@ -507,9 +507,10 @@
             vertical-align: baseline;
         }
 
-        .cl-tag.new { background: rgba(123, 201, 150, 0.18); color: #7bc996; border: 1px solid rgba(123, 201, 150, 0.4); }
-        .cl-tag.ui  { background: rgba(208, 194, 247, 0.18); color: #d0c2f7; border: 1px solid rgba(208, 194, 247, 0.4); }
-        .cl-tag.fix { background: rgba(217, 107, 152, 0.18); color: #f7a1c4; border: 1px solid rgba(217, 107, 152, 0.4); }
+        .cl-tag.new    { background: rgba(123, 201, 150, 0.18); color: #7bc996; border: 1px solid rgba(123, 201, 150, 0.4); }
+        .cl-tag.ui     { background: rgba(208, 194, 247, 0.18); color: #d0c2f7; border: 1px solid rgba(208, 194, 247, 0.4); }
+        .cl-tag.fix    { background: rgba(217, 107, 152, 0.18); color: #f7a1c4; border: 1px solid rgba(217, 107, 152, 0.4); }
+        .cl-tag.mobile { background: rgba(246, 200, 95, 0.18);  color: #f6c85f; border: 1px solid rgba(246, 200, 95, 0.4); }
 
         .changelog-older-Archive {
             display: none;
@@ -780,7 +781,7 @@
         <div class="changelog-panel" id="changelogPanel">
             <div class="changelog-header-bar" onclick="toggleChangelogBox()">
                 <div class="changelog-header-left">
-                    <span>🌸 Site Changelog</span>
+                    <span>Site Changelog</span>
                     <span class="changelog-latest-pill" id="clHeaderVersion">LATEST</span>
                 </div>
                 <span class="changelog-toggle-btn" id="clToggleText">Hide ▲</span>
@@ -1025,7 +1026,7 @@
 
     <!-- Shared Logic -->
     <script src="/Assets/common.js"></script>
-    <script src="/Assets/changelogs.js"></script>
+    <script src="/Assets/changelog.js"></script>
 
     <!-- Page Specific Script -->
     <script>

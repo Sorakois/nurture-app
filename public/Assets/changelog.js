@@ -1,5 +1,5 @@
 // =========================================================================
-// 🌸 SITE CHANGELOGS — ADD NEW UPDATES AT THE VERY TOP OF THIS ARRAY!
+// SITE CHANGELOGS — ADD NEW UPDATES AT THE VERY TOP OF THIS ARRAY
 // The first item (index 0) is natively displayed. Every older item is 
 // automatically pushed down into the "See older changelogs" archive.
 // =========================================================================
@@ -17,26 +17,28 @@ const SITE_CHANGELOGS = [
             "[NEW] You can now 'favorite' games to add preference to what you want to use",
             "[NEW] New mailbox system, settings",
             "[MOBILE] COMPLETELY overhauled mobile for better looks and performance.",
-            "[UI] Smoother performance while making the background more eye-appealing.",
+            "[UI] Smoother performance while making the background more eye-appealing."
         ]
     }
 ];
 
 function formatChangelogLine(line) {
     const safe = (line || '').replace(/[&<>"']/g, m => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[m]));
-    return safe
-        .replace(/^[NEW]\s*/i, '<span class="cl-tag new">NEW</span>')
-        .replace(/^[UI]\s*/i, '<span class="cl-tag ui">UI</span>')
-        .replace(/^[FIX]\s*/i, '<span class="cl-tag fix">FIX</span>');
+    
+    // Automatically converts any leading [TAG] (e.g. [NEW], [MOBILE], [UI], [FIX]) into a badge
+    return safe.replace(/^\[([A-Za-z0-9_-]+)\]\s*/, (match, tag) => {
+        const tagClass = tag.toLowerCase();
+        return `<span class="cl-tag ${tagClass}">${tag.toUpperCase()}</span>`;
+    });
 }
 
-function buildChangelogEntryHtml(entry, isLatest = false) {
+function buildChangelogEntryHtml(entry) {
     const itemsHtml = (entry.changes || []).map(c => `<li>${formatChangelogLine(c)}</li>`).join('');
     return `
         <div class="changelog-entry">
             <div class="changelog-entry-meta">
                 <div class="changelog-version-title">
-                    ${isLatest ? '✿ ' : ''}${entry.version} — ${entry.title}
+                    ${entry.version} — ${entry.title}
                 </div>
                 <span class="changelog-date">${entry.date}</span>
             </div>
@@ -55,13 +57,15 @@ function initChangelogs() {
 
     const newest = SITE_CHANGELOGS[0];
     if (headerVer) headerVer.textContent = `${newest.version} • ${newest.date}`;
-    latestContainer.innerHTML = buildChangelogEntryHtml(newest, true);
+    latestContainer.innerHTML = buildChangelogEntryHtml(newest);
 
     const olderList = SITE_CHANGELOGS.slice(1);
     if (olderList.length > 0 && olderContainer && olderBtn) {
-        olderContainer.innerHTML = olderList.map(entry => buildChangelogEntryHtml(entry, false)).join('');
+        olderContainer.innerHTML = olderList.map(entry => buildChangelogEntryHtml(entry)).join('');
         olderBtn.style.display = 'flex';
         olderBtn.textContent = `See older changelogs (${olderList.length}) ▼`;
+    } else if (olderBtn) {
+        olderBtn.style.display = 'none';
     }
 }
 
@@ -82,4 +86,8 @@ function toggleOlderChangelogs() {
     btn.textContent = isOpen ? 'Hide older changelogs ▲' : `See older changelogs (${count}) ▼`;
 }
 
-document.addEventListener('DOMContentLoaded', initChangelogs);
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initChangelogs);
+} else {
+    initChangelogs();
+}
