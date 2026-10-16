@@ -522,18 +522,25 @@
         }
 
         .changelog-toggle-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             font-size: 0.8em;
-            color: #d0c2f7;
-            background: rgba(157, 142, 199, 0.14);
-            border: 1px solid rgba(157, 142, 199, 0.3);
-            padding: 4px 12px;
-            border-radius: 10px 3px 10px 3px;
+            color: #f4f0ff;
+            background: linear-gradient(135deg, #5e4796 0%, #3b2a66 100%);
+            border: 1px solid rgba(208, 194, 247, 0.35);
+            padding: 5px 14px;
+            border-radius: 16px 5px 16px 5px;
             font-weight: bold;
-            transition: all 0.15s ease;
+            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.22), 0 3px 8px rgba(17, 13, 25, 0.4);
+            transition: transform 0.2s ease, border-radius 0.2s ease, border-color 0.2s ease, background 0.2s ease;
         }
 
-        .changelog-header-bar:hover .changelog-toggle-btn {
-            background: #684ea8;
+        .changelog-header-bar:hover .changelog-toggle-btn,
+        .changelog-toggle-btn:hover {
+            transform: translateY(-2px);
+            border-radius: 5px 16px 5px 16px;
+            background: linear-gradient(135deg, #7359b5 0%, #4c3780 100%);
             color: white;
             border-color: #d0c2f7;
         }

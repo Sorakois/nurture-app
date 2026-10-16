@@ -17,98 +17,277 @@
     <meta name="twitter:card" content="summary">
 
     <link rel="stylesheet" href="/Assets/common.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
     <style>
-        .profile-layout {
-            max-width: 1400px;
+        .profile-page-wrap {
+            max-width: 1500px;
             width: 95%;
-            margin: 40px auto;
-            display: flex;
-            gap: 26px;
-            align-items: flex-start;
+            margin: 26px auto 50px auto;
+            box-sizing: border-box;
         }
 
-        .profile-sidebar {
-            width: 340px;
-            min-width: 340px;
+        /* Top Profile Identity Bar */
+        .profile-hero-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            background: radial-gradient(circle at top right, rgba(157, 142, 199, 0.22), transparent 60%), rgba(30, 25, 43, 0.94);
+            border: 1px solid rgba(157, 142, 199, 0.3);
+            border-radius: 24px 8px 24px 8px;
+            padding: 20px 28px;
+            margin-bottom: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.38);
+            box-sizing: border-box;
+        }
+
+        .profile-hero-left {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            min-width: 0;
+        }
+
+        .profile-avatar {
+            width: 68px;
+            height: 68px;
+            border-radius: 50%;
+            border: 2.5px solid #9d8ec7;
+            object-fit: cover;
+            flex-shrink: 0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+
+        /* Side-by-Side Modules: My Games (Left) & My Items (Right) */
+        .profile-modules-grid {
+            display: grid;
+            grid-template-columns: 360px minmax(0, 1fr);
+            gap: 24px;
+            align-items: stretch;
+            margin-bottom: 26px;
+        }
+
+        .profile-module-card {
             background: linear-gradient(180deg, rgba(32, 25, 48, 0.95) 0%, rgba(21, 17, 33, 0.95) 100%);
             border: 1px solid rgba(157, 142, 199, 0.28);
             border-radius: 24px 8px 24px 8px;
             padding: 24px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
-            position: sticky;
-            top: 24px;
+            box-sizing: border-box;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.42);
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
         }
 
-        .profile-header {
+        .module-header {
             display: flex;
             align-items: center;
-            gap: 16px;
-            margin-bottom: 24px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid rgba(157, 142, 199, 0.2);
-        }
-
-        .profile-avatar {
-            width: 72px;
-            height: 72px;
-            border-radius: 50%;
-            border: 2.5px solid #9d8ec7;
-            object-fit: cover;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-        }
-
-        .profile-game-filter {
-            display: flex;
-            align-items: center;
+            justify-content: space-between;
             gap: 12px;
-            padding: 10px 14px;
-            background: rgba(20, 16, 31, 0.6);
-            border: 1px solid rgba(157, 142, 199, 0.2);
-            border-radius: 12px 4px 12px 4px;
-            margin-bottom: 10px;
-            cursor: pointer;
+            flex-wrap: wrap;
+            padding-bottom: 14px;
+            margin-bottom: 16px;
+            border-bottom: 1px solid rgba(157, 142, 199, 0.22);
+        }
+
+        .module-title {
+            margin: 0;
+            font-size: 1.35em;
             color: #d0c2f7;
+        }
+
+        /* My Games Cards */
+        .my-games-list {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .my-game-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            background: rgba(20, 16, 30, 0.85);
+            border: 1px solid rgba(157, 142, 199, 0.22);
+            border-radius: 16px 5px 16px 5px;
+            padding: 12px;
+            text-decoration: none;
+            color: #f4f0ff;
+            transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+            min-width: 0;
+        }
+
+        .my-game-card:hover {
+            transform: translateY(-3px);
+            border-color: #f6c85f;
+            background: rgba(40, 32, 60, 0.95);
+        }
+
+        .my-game-card img {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            object-fit: cover;
+            border-radius: 12px 4px 12px 4px;
+            margin-bottom: 8px;
+        }
+
+        .my-game-card-title {
+            font-size: 0.88em;
             font-weight: bold;
+            width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* View Mode Toggle (View ALL vs View Items by Game) */
+        .view-mode-toggle {
+            display: inline-flex;
+            background: #120e1c;
+            border: 1px solid rgba(157, 142, 199, 0.3);
+            border-radius: 14px 4px 14px 4px;
+            padding: 3px;
+            gap: 4px;
+        }
+
+        .view-mode-btn {
+            background: transparent;
+            border: none;
+            color: #a99ec7;
+            font-size: 0.78em;
+            font-weight: bold;
+            padding: 6px 12px;
+            border-radius: 10px 3px 10px 3px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .view-mode-btn.active {
+            background: linear-gradient(135deg, #684ea8 0%, #433075 100%);
+            color: #fff;
+            border: 1px solid rgba(246, 200, 95, 0.5);
+        }
+
+        /* Game Filter Bar for My Items (Independent of Starred Games) */
+        .item-game-pills {
+            display: none;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .item-game-pills.visible {
+            display: flex;
+        }
+
+        .item-game-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: rgba(20, 16, 30, 0.85);
+            border: 1px solid rgba(157, 142, 199, 0.3);
+            border-radius: 14px 4px 14px 4px;
+            color: #b8a6e8;
+            font-size: 0.82em;
+            font-weight: bold;
+            cursor: pointer;
             transition: all 0.2s ease;
         }
 
-        .profile-game-filter:hover {
-            background: rgba(157, 142, 199, 0.15);
+        .item-game-pill:hover {
             border-color: #d0c2f7;
+            color: #fff;
+            transform: translateY(-2px);
         }
 
-        .profile-game-filter.active {
-            background: linear-gradient(135deg, #684ea8 0%, #433075 100%);
+        .item-game-pill.active {
+            background: linear-gradient(135deg, #7A6BB5 0%, #523d8a 100%);
             color: #fff;
             border-color: #f6c85f;
-            box-shadow: inset 4px 0 0 #f6c85f;
         }
 
-        .profile-content-area {
-            flex-grow: 1;
-            background: radial-gradient(circle at bottom left, rgba(123, 201, 150, 0.05), transparent 60%), rgba(30, 25, 43, 0.92);
-            border: 1px solid rgba(157, 142, 199, 0.25);
-            border-radius: 24px 8px 24px 8px;
-            padding: 30px;
-            min-height: 500px;
-            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4);
+        .item-game-pill img {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            object-fit: cover;
         }
 
-        .section-divider {
-            margin: 40px 0 20px 0;
-            padding-bottom: 8px;
-            border-bottom: 1px solid rgba(157, 142, 199, 0.2);
-            color: #d0c2f7;
-            font-size: 1.2em;
-            font-weight: bold;
+        .fav-item-card {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 14px;
+            text-decoration: none;
+            color: white;
+            min-width: 0;
+            box-sizing: border-box;
         }
 
-        @media (max-width: 768px) {
-            .profile-layout { flex-direction: column; padding: 0 10px; margin: 20px auto; }
-            .profile-sidebar { width: 100%; min-width: 0; position: static; }
+        .fav-item-details {
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .fav-item-title {
+            font-weight: bold;
+            color: #d0c2f7;
+            font-size: 1.02em;
+            margin-bottom: 5px;
+            word-break: break-word;
+        }
+
+        /* Mobile Responsiveness (Mirrors game.html containment) */
+        @media (max-width: 980px) {
+            .profile-page-wrap {
+                width: 100%;
+                margin: 16px auto 40px auto;
+                padding: 0 12px;
+            }
+
+            .profile-hero-bar {
+                flex-direction: column;
+                align-items: stretch;
+                text-align: center;
+                padding: 18px;
+                gap: 14px;
+            }
+
+            .profile-hero-left {
+                flex-direction: column;
+                justify-content: center;
+            }
+
+            .profile-modules-grid {
+                grid-template-columns: 1fr;
+                gap: 18px;
+            }
+
+            .profile-module-card {
+                padding: 18px;
+            }
+
+            .my-games-list {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .module-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .view-mode-toggle {
+                width: 100%;
+                display: flex;
+            }
+
+            .view-mode-btn {
+                flex: 1;
+                text-align: center;
+            }
         }
     </style>
 </head>
@@ -124,38 +303,61 @@
         </div>
     </div>
 
-    <div class="profile-layout">
-        <!-- Module 1: Profile & My Games (Left) -->
-        <aside class="profile-sidebar">
-            <a href="javascript:history.length > 1 ? history.back() : window.location.href='/'" class="btn-floral" style="margin-bottom: 20px; display: inline-flex; width: auto; padding: 8px 16px;">
-                <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; margin-right: 6px;"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
-                <span>Back</span>
-            </a>
-
-            <div class="profile-header">
+    <div class="profile-page-wrap">
+        <!-- Top Identity & Navigation Bar -->
+        <div class="profile-hero-bar">
+            <div class="profile-hero-left">
+                <button type="button" class="btn-floral" onclick="goBackSmart()" style="padding: 9px 16px; flex-shrink: 0;">
+                    <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; margin-right: 6px; fill: currentColor;"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+                    <span>Back</span>
+                </button>
                 <img id="pageAvatar" src="/Assets/placeholder.png" class="profile-avatar">
-                <div>
-                    <h1 id="pageUsername" style="margin: 0 0 6px 0; font-size: 1.8em; color: #f4f0ff;">Loading...</h1>
-                    <div id="pagePoints" style="color: #7bc996; font-weight: bold; font-size: 1.1em;">...</div>
+                <div style="min-width: 0;">
+                    <h1 id="pageUsername" style="margin: 0 0 6px 0; font-size: 1.75em; color: #f4f0ff; word-break: break-word;">Loading...</h1>
+                    <div id="pagePoints" style="display: inline-flex; align-items: center; gap: 8px;">...</div>
                 </div>
             </div>
-            
-            <div style="font-size: 0.8em; text-transform: uppercase; color: #a99ec7; font-weight: bold; margin-bottom: 12px;">Starred Games & Categories</div>
-            <div id="gameFiltersList"></div>
-        </aside>
 
-        <!-- Module 2: My Items & Contributions (Right) -->
-        <div class="profile-content-area">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 24px; border-bottom: 1px solid rgba(157, 142, 199, 0.2); padding-bottom: 12px;">
-                <h2 style="margin: 0; color: #d0c2f7;" id="itemsHeaderTitle">Favorited Items</h2>
-                <button class="btn-floral pollen" onclick="navigator.clipboard.writeText(window.location.href); alert('Profile Link Copied!')" style="padding: 8px 14px;">🔗 Share Profile</button>
-            </div>
-            
-            <div id="itemsContainer" style="display: flex; flex-direction: column; gap: 12px;"></div>
-
-            <div class="section-divider">✿ Approved Contributions</div>
-            <div id="contributionsContainer" style="display: flex; flex-direction: column; gap: 12px;"></div>
+            <button class="btn-floral pollen" onclick="navigator.clipboard.writeText(window.location.href); alert('Profile Link Copied!')" style="padding: 10px 18px; flex-shrink: 0;">
+                🔗 Share Profile
+            </button>
         </div>
+
+        <!-- Side-by-Side Modules: My Games (Left) & My Items (Right) -->
+        <div class="profile-modules-grid">
+            <!-- Left Module: My Games -->
+            <section class="profile-module-card">
+                <div class="module-header">
+                    <h2 class="module-title">My Games</h2>
+                    <span id="myGamesCountBadge" style="font-size: 0.8em; color: #a99ec7;">0 games</span>
+                </div>
+                <div id="myGamesContainer" class="my-games-list"></div>
+            </section>
+
+            <!-- Right Module: My Items (Can sort/filter by game WITHOUT needing to favorite the game) -->
+            <section class="profile-module-card">
+                <div class="module-header">
+                    <h2 class="module-title" id="itemsHeaderTitle">My Items</h2>
+                    <div class="view-mode-toggle">
+                        <button type="button" class="view-mode-btn active" id="modeAllBtn" onclick="setItemsViewMode('ALL')">View ALL</button>
+                        <button type="button" class="view-mode-btn" id="modeByGameBtn" onclick="setItemsViewMode('BY_GAME')">View items by game</button>
+                    </div>
+                </div>
+
+                <!-- Dynamic Game Filter Pills (Populated from games that have favorited items) -->
+                <div id="itemGamePills" class="item-game-pills"></div>
+
+                <div id="itemsContainer" style="display: flex; flex-direction: column; gap: 10px;"></div>
+            </section>
+        </div>
+
+        <!-- Bottom Module: Approved Contributions (Below Favorited Modules) -->
+        <section class="profile-module-card">
+            <div class="module-header">
+                <h2 class="module-title">✿ Approved Contributions</h2>
+            </div>
+            <div id="contributionsContainer" style="display: flex; flex-direction: column; gap: 12px;"></div>
+        </section>
     </div>
 
     <script src="/Assets/common.js"></script>
@@ -165,10 +367,23 @@
         let allGames = [];
         let myGames = [];
         let myItemsMap = {};
+        let currentItemsMode = 'ALL'; // 'ALL' or 'BY_GAME'
+        let selectedItemGameId = null;
+
+        function goBackSmart() {
+            if (document.referrer && (document.referrer.includes(window.location.host))) {
+                window.location.href = document.referrer;
+            } else if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                window.location.href = '/';
+            }
+        }
+
+        const escapeTxt = (txt) => (txt || '').toString().replace(/[&<>"']/g, m => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[m]));
 
         async function initProfilePage() {
             try {
-                // Fetch User Profile
                 const res = await fetch(`/api/profile/${encodeURIComponent(profileId)}`);
                 if (!res.ok) throw new Error();
                 profileData = await res.json();
@@ -176,36 +391,47 @@
                 document.title = `Nurture | ${profileData.username}'s Profile`;
                 document.getElementById('pageUsername').textContent = profileData.username;
                 document.getElementById('pageAvatar').src = profileData.avatar ? `https://cdn.discordapp.com/avatars/${profileData.discordId}/${profileData.avatar}.png` : '/Assets/placeholder.png';
-                document.getElementById('pagePoints').textContent = `${profileData.totalPoints} pts`;
 
-                // Fetch All Games Database
+                const rankClass = (profileData.rank && profileData.rank <= 3) ? `rank-${profileData.rank}` : '';
+                const rankBadgeHtml = profileData.rank ? `<span class="lb-rank-badge">#${profileData.rank}</span>` : '';
+                document.getElementById('pagePoints').innerHTML = `
+                    <div class="lb-row ${rankClass}" style="background:none; border:none; padding:0; margin:0; display:inline-flex; align-items:center; gap:8px;">
+                        ${rankBadgeHtml}
+                        <span style="color: #7bc996; font-weight: bold; font-size: 1.1em;">${profileData.totalPoints}pts</span>
+                    </div>
+                `;
+
                 const gamesRes = await fetch('/api/games?limit=100');
                 const gamesData = await gamesRes.json();
                 allGames = gamesData.games || [];
                 
-                // Map out "My Games" and "My Items" using the ID arrays stored in MongoDB
-                myGames = allGames.filter(g => profileData.starredGames.includes(g.id));
+                // 1. Populate "My Games" (Starred Games)
+                myGames = allGames.filter(g => (profileData.starredGames || []).includes(g.id));
 
+                // 2. Populate "My Items" independently from ALL games where the user favorited sub-items
+                myItemsMap = {};
                 allGames.forEach(g => {
-                    const favIds = profileData.starredSubItems[g.id] || [];
+                    const favIds = (profileData.starredSubItems && profileData.starredSubItems[g.id]) || [];
                     if (favIds.length > 0) {
-                        if (!myItemsMap[g.id]) myItemsMap[g.id] = { name: g.name, icon: g.banner_url, items: [] };
-
+                        const matchedItems = [];
                         ['guides', 'assets', 'communities', 'mods'].forEach(cat => {
-                            if (g[cat]) {
+                            if (Array.isArray(g[cat])) {
                                 g[cat].forEach(item => {
                                     const itemId = String(item._id || item.url || item.download_url || item.title || item.name);
                                     if (favIds.includes(itemId)) {
-                                        myItemsMap[g.id].items.push({ ...item, category: cat });
+                                        matchedItems.push({ ...item, category: cat });
                                     }
                                 });
                             }
                         });
+                        if (matchedItems.length > 0) {
+                            myItemsMap[g.id] = { id: g.id, name: g.name, icon: g.banner_url || '/Assets/placeholder.png', items: matchedItems };
+                        }
                     }
                 });
 
-                renderGameFilters();
-                renderItems('ALL');
+                renderMyGames();
+                renderMyItems();
                 renderContributions();
 
             } catch (e) {
@@ -214,107 +440,146 @@
             }
         }
 
-        function renderGameFilters() {
-            const list = document.getElementById('gameFiltersList');
-            let totalFavs = 0;
-            Object.values(myItemsMap).forEach(g => { totalFavs += g.items.length; });
+        function renderMyGames() {
+            const container = document.getElementById('myGamesContainer');
+            const badge = document.getElementById('myGamesCountBadge');
+            badge.textContent = `${myGames.length} game${myGames.length !== 1 ? 's' : ''}`;
 
-            let html = `
-                <div class="profile-game-filter active" id="filter_ALL" onclick="renderItems('ALL')">
-                    <span style="font-size: 1.2em; padding: 0 4px;">✿</span>
-                    <span style="flex-grow:1;">View ALL Favorites</span>
-                    <span style="background: rgba(157,142,199,0.2); padding: 2px 8px; border-radius: 8px;">${totalFavs}</span>
-                </div>
-            `;
+            if (myGames.length === 0) {
+                container.style.gridTemplateColumns = '1fr';
+                container.innerHTML = '<p style="color:#a99ec7; margin: 0;">No favorited games yet.</p>';
+                return;
+            }
 
-            myGames.forEach(g => {
-                const count = myItemsMap[g.id] ? myItemsMap[g.id].items.length : 0;
-                html += `
-                    <div class="profile-game-filter" id="filter_${g.id}" onclick="renderItems('${g.id}')">
-                        <img src="${g.banner_url || '/Assets/placeholder.png'}" style="width: 24px; height: 24px; border-radius: 4px; object-fit: cover;">
-                        <span style="flex-grow:1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${g.name}</span>
-                        <span style="background: rgba(157,142,199,0.2); padding: 2px 8px; border-radius: 8px;">${count}</span>
-                    </div>
-                `;
-            });
-            list.innerHTML = html;
+            container.style.gridTemplateColumns = 'repeat(2, minmax(0, 1fr))';
+            container.innerHTML = myGames.map(g => `
+                <a href="/games/${encodeURIComponent(g.id)}" class="my-game-card">
+                    <img src="${g.banner_url || '/Assets/placeholder.png'}" alt="${escapeTxt(g.name)}" onerror="this.src='/Assets/placeholder.png'">
+                    <div class="my-game-card-title">${escapeTxt(g.name)}</div>
+                </a>
+            `).join('');
         }
 
-        const escapeTxt = (txt) => (txt || '').toString().replace(/[&<>"']/g, m => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[m]));
+        function setItemsViewMode(mode) {
+            currentItemsMode = mode;
+            document.getElementById('modeAllBtn').classList.toggle('active', mode === 'ALL');
+            document.getElementById('modeByGameBtn').classList.toggle('active', mode === 'BY_GAME');
 
-        function renderItems(filterGameId) {
-            document.querySelectorAll('.profile-game-filter').forEach(el => el.classList.remove('active'));
-            const filterBtn = document.getElementById(`filter_${filterGameId}`);
-            if (filterBtn) filterBtn.classList.add('active');
+            const gameKeys = Object.keys(myItemsMap);
+            if (mode === 'BY_GAME' && !selectedItemGameId && gameKeys.length > 0) {
+                selectedItemGameId = gameKeys[0];
+            }
+            renderMyItems();
+        }
 
+        function selectItemGameFilter(gId) {
+            selectedItemGameId = gId;
+            renderMyItems();
+        }
+
+        function renderMyItems() {
+            const pillsContainer = document.getElementById('itemGamePills');
             const container = document.getElementById('itemsContainer');
-            document.getElementById('itemsHeaderTitle').textContent = filterGameId === 'ALL' ? 'All Favorited Items' : 'Favorited Items';
+            const gameGroups = Object.values(myItemsMap);
+
+            // Render game filter pills when in 'BY_GAME' mode (uses myItemsMap directly, not myGames!)
+            if (currentItemsMode === 'BY_GAME' && gameGroups.length > 0) {
+                pillsContainer.classList.add('visible');
+                pillsContainer.innerHTML = gameGroups.map(g => `
+                    <button type="button" class="item-game-pill ${selectedItemGameId === g.id ? 'active' : ''}" onclick="selectItemGameFilter('${g.id}')">
+                        <img src="${g.icon}" onerror="this.src='/Assets/placeholder.png'">
+                        <span>${escapeTxt(g.name)} (${g.items.length})</span>
+                    </button>
+                `).join('');
+            } else {
+                pillsContainer.classList.remove('visible');
+            }
 
             let itemsToRender = [];
-            if (filterGameId === 'ALL') {
-                Object.values(myItemsMap).forEach(g => {
+            if (currentItemsMode === 'ALL') {
+                gameGroups.forEach(g => {
                     g.items.forEach(item => {
-                        itemsToRender.push({ ...item, gameName: g.name, gameIcon: g.icon });
+                        itemsToRender.push({ ...item, gameId: g.id, gameName: g.name, gameIcon: g.icon });
                     });
                 });
-            } else if (myItemsMap[filterGameId]) {
-                myItemsMap[filterGameId].items.forEach(item => {
-                    itemsToRender.push({ ...item, gameName: myItemsMap[filterGameId].name, gameIcon: myItemsMap[filterGameId].icon });
+            } else if (selectedItemGameId && myItemsMap[selectedItemGameId]) {
+                const g = myItemsMap[selectedItemGameId];
+                g.items.forEach(item => {
+                    itemsToRender.push({ ...item, gameId: g.id, gameName: g.name, gameIcon: g.icon });
                 });
             }
 
             if (itemsToRender.length === 0) {
-                container.innerHTML = '<p style="color:#a99ec7;">No items favorited in this category.</p>';
+                container.innerHTML = '<p style="color:#a99ec7; margin: 0;">No favorited items yet.</p>';
                 return;
             }
 
             container.innerHTML = itemsToRender.map(item => {
-                const targetUrl = item.url || item.download_url || '#';
+                const targetUrl = item.url || item.download_url || `/games/${item.gameId}`;
                 return `
-                <a href="${escapeTxt(targetUrl)}" target="_blank" class="floral-mail-card" style="display:flex; gap:16px; align-items:center; text-decoration:none; color:white;">
-                    <img src="${item.gameIcon}" style="width: 48px; height: 48px; border-radius: 8px; border: 1.5px solid #9d8ec7; object-fit: cover; flex-shrink: 0;">
-                    <div style="flex-grow: 1;">
-                        <div style="font-weight:bold; color:#d0c2f7; font-size:1.1em; margin-bottom: 6px;">${escapeTxt(item.title || item.name)}</div>
-                        <div style="font-size:0.85em; color:#a99ec7; display:flex; align-items:center; gap:8px;">
+                <a href="${escapeTxt(targetUrl)}" target="_blank" class="floral-mail-card fav-item-card">
+                    <img src="${item.gameIcon}" style="width: 44px; height: 44px; border-radius: 8px; border: 1.5px solid #9d8ec7; object-fit: cover; flex-shrink: 0;" onerror="this.src='/Assets/placeholder.png'">
+                    <div class="fav-item-details">
+                        <div class="fav-item-title">${escapeTxt(item.title || item.name)}</div>
+                        <div style="font-size:0.82em; color:#a99ec7; display:flex; align-items:center; flex-wrap:wrap; gap:6px;">
                             <strong style="color:#f6c85f; background:rgba(246, 200, 95, 0.12); padding:2px 8px; border-radius:8px 2px 8px 2px; border:1px solid rgba(246, 200, 95, 0.35);">${item.category.toUpperCase()}</strong> 
                             <span style="color:#5e4796;">•</span>
-                            <span style="font-family:monospace; color:#d0c2f7;">${escapeTxt(item.gameName)}</span>
+                            <span style="color:#d0c2f7;">From: <b>${escapeTxt(item.gameName)}</b></span>
                         </div>
                     </div>
                 </a>
-            `}).join('');
+                `;
+            }).join('');
         }
 
         function renderContributions() {
             const container = document.getElementById('contributionsContainer');
             if (!profileData.contributions || profileData.contributions.length === 0) {
-                container.innerHTML = '<p style="color:#a99ec7;">No approved contributions yet.</p>';
+                container.innerHTML = '<p style="color:#a99ec7; margin: 0;">No approved contributions yet.</p>';
                 return;
             }
 
-            container.innerHTML = profileData.contributions.map(c => {
-                const tabMap = { 'Guide': 'guides', 'Asset': 'assets', 'Community': 'communities', 'Mod': 'mods', 'Coupon': 'overview', 'Game': 'overview' };
-                const tab = tabMap[c.category] || 'overview';
-                const link = c.gameId ? `/games/${c.gameId}?tab=${tab}` : '/';
+            const grouped = {};
+            profileData.contributions.forEach(c => {
+                if (!grouped[c.gameId]) grouped[c.gameId] = { name: c.gameName, icon: c.gameIcon, items: [] };
+                grouped[c.gameId].items.push(c);
+            });
 
-                return `
-                <a href="${link}" class="floral-mail-card" style="display:flex; gap:16px; align-items:center; text-decoration:none; color:white;">
-                    <img src="${c.gameIcon}" style="width: 50px; height: 50px; border-radius: 12px; border: 1px solid rgba(157, 142, 199, 0.3); object-fit: cover; flex-shrink: 0;">
-                    <div style="flex-grow: 1;">
-                        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
-                            <div style="font-weight:bold; color:#d0c2f7; font-size:1.05em;">${escapeTxt(c.target)}</div>
-                            <span style="font-size:0.75em; color:#a99ec7;">${new Date(c.date).toLocaleDateString()}</span>
+            container.innerHTML = Object.values(grouped).map(group => `
+                <div class="profile-game-group open">
+                    <div class="profile-game-header" onclick="this.parentElement.classList.toggle('open')">
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <img src="${group.icon}" style="width:28px; height:28px; border-radius:6px; object-fit:cover; border: 1px solid rgba(157, 142, 199, 0.4);" onerror="this.src='/Assets/placeholder.png'">
+                            <strong style="color: #f4f0ff;">${escapeTxt(group.name)} <span style="color: #7bc996;">(+${group.items.length})</span></strong>
                         </div>
-                        <div style="font-size:0.8em; color:#a99ec7; display:flex; align-items:center; gap:6px;">
-                            <strong style="color:#7bc996; background:rgba(123, 201, 150, 0.12); padding:2px 8px; border-radius:8px 2px 8px 2px; border:1px solid rgba(123, 201, 150, 0.35);">${c.action ? c.action.toUpperCase() : 'EDIT'}</strong> 
-                            <span>in ${c.category}</span>
-                            <span style="color:#5e4796;">•</span>
-                            <span style="font-family:monospace; color:#d0c2f7;">${escapeTxt(c.gameName)}</span>
-                        </div>
-                        ${c.commitMessage ? `<div style="font-size:0.85em; color:#e5dcff; border-left:2px solid #9d8ec7; padding-left:10px; margin-top:10px; font-style: italic;">${escapeTxt(c.commitMessage)}</div>` : ''}
+                        <span class="toggle-arrow" style="font-size:0.8em; color:#a99ec7;">▼</span>
                     </div>
-                </a>
-            `}).join('');
+                    <div class="profile-game-items">
+                        ${group.items.map(c => {
+                            const tabMap = { 'Guide': 'guides', 'Asset': 'assets', 'Community': 'communities', 'Mod': 'mods', 'Coupon': 'overview', 'Game': 'overview' };
+                            const tab = tabMap[c.category] || 'overview';
+                            const link = c.gameId ? `/games/${c.gameId}?tab=${tab}` : '/';
+
+                            return `
+                            <a href="${link}" class="floral-mail-card" style="display:flex; gap:14px; align-items:center; text-decoration:none; color:white; box-sizing:border-box;">
+                                <img src="${c.gameIcon}" style="width: 44px; height: 44px; border-radius: 10px; border: 1px solid rgba(157, 142, 199, 0.3); object-fit: cover; flex-shrink: 0;" onerror="this.src='/Assets/placeholder.png'">
+                                <div style="flex: 1; min-width: 0;">
+                                    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px; flex-wrap:wrap; margin-bottom:6px;">
+                                        <div style="font-weight:bold; color:#d0c2f7; font-size:1.02em; word-break:break-word;">${escapeTxt(c.target)}</div>
+                                        <span style="font-size:0.75em; color:#a99ec7; flex-shrink:0;">${new Date(c.date).toLocaleDateString()}</span>
+                                    </div>
+                                    <div style="font-size:0.8em; color:#a99ec7; display:flex; align-items:center; flex-wrap:wrap; gap:6px;">
+                                        <strong style="color:#7bc996; background:rgba(123, 201, 150, 0.12); padding:2px 8px; border-radius:8px 2px 8px 2px; border:1px solid rgba(123, 201, 150, 0.35);">${c.action ? c.action.toUpperCase() : 'EDIT'}</strong> 
+                                        <span>in ${c.category}</span>
+                                    </div>
+                                    ${c.commitMessage ? `<div style="font-size:0.85em; color:#e5dcff; border-left:2px solid #9d8ec7; padding-left:10px; margin-top:8px; font-style: italic; word-break:break-word;">${escapeTxt(c.commitMessage)}</div>` : ''}
+                                </div>
+                            </a>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `).join('');
         }
 
         document.addEventListener('DOMContentLoaded', initProfilePage);

@@ -129,6 +129,15 @@ window.syncUserPreferences = async function(payload) {
     } catch (e) {}
 };
 
+function getMobileTrophyBtnHtml() {
+    if (!document.getElementById('leaderboardSidebar')) return '';
+    return `
+        <button type="button" class="social-button mobile-trophy-btn" onclick="openMobileLeaderboard()" title="View Leaderboard">
+            <svg viewBox="0 0 24 24"><path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94.63 1.5 1.98 2.63 3.61 2.96V19H7v2h10v-2h-4v-3.1c1.63-.33 2.98-1.46 3.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z"/></svg>
+        </button>
+    `;
+}
+
 // --- UI Render Helpers ---
 function renderLoggedOutUI(container) {
     container.innerHTML = `
@@ -145,6 +154,7 @@ function renderLoggedOutUI(container) {
         <a href="https://ko-fi.com/sorakoi" target="_blank" class="social-button kofi-button">
             <img src="/Assets/kofi_icon.png" alt="Ko-fi Icon"><span class="sub-text">Ko-fi</span>
         </a>
+        ${getMobileTrophyBtnHtml()}
     `;
     window.evaluateAdVisibility(null);
 }
@@ -178,6 +188,7 @@ function renderLoggedInUI(container, user) {
         <a href="https://ko-fi.com/sorakoi" target="_blank" rel="noopener noreferrer" class="social-button kofi-button">
             <img src="/Assets/kofi_icon.png" alt="Ko-fi"><span class="sub-text">Ko-fi</span>
         </a>
+        ${getMobileTrophyBtnHtml()}
     `;
     window.evaluateAdVisibility(user);
     fetchUnreadMailCount();
@@ -253,7 +264,7 @@ async function fetchUnreadMailCount() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Inject Mobile Trophy Button & Backdrop if page has a Leaderboard
+    // 1. Inject Mobile Leaderboard Close Button & Backdrop if page has a Leaderboard
     const lbSidebar = document.getElementById('leaderboardSidebar');
     if (lbSidebar) {
         const closeBtn = document.createElement('button');
@@ -261,16 +272,6 @@ document.addEventListener('DOMContentLoaded', () => {
         closeBtn.innerHTML = '×';
         closeBtn.onclick = closeMobileLeaderboard;
         lbSidebar.prepend(closeBtn);
-
-        const trophyBtn = document.createElement('button');
-        trophyBtn.className = 'mobile-trophy-btn';
-        trophyBtn.title = 'View Leaderboard';
-        trophyBtn.onclick = openMobileLeaderboard;
-        trophyBtn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94.63 1.5 1.98 2.63 3.61 2.96V19H7v2h10v-2h-4v-3.1c1.63-.33 2.98-1.46 3.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z"/></svg>`;
-        
-        const bannerEl = document.querySelector('.banner');
-        if (bannerEl) bannerEl.insertAdjacentElement('afterend', trophyBtn);
-        else document.body.appendChild(trophyBtn);
 
         const lbBackdrop = document.createElement('div');
         lbBackdrop.id = 'mobileLbBackdrop';
@@ -310,13 +311,16 @@ document.addEventListener('DOMContentLoaded', () => {
         <div id="userProfileModal" class="modal-overlay">
             <div class="modal-window" style="max-width: 500px;">
                 <button class="modal-close" onclick="closeUserProfileModal()">×</button>
-                <div style="display:flex; align-items:center; gap: 15px; margin-bottom: 20px;">
+                <div style="display:flex; align-items:center; gap: 15px; margin-bottom: 16px;">
                     <img id="upAvatar" src="/Assets/placeholder.png" style="width: 60px; height: 60px; border-radius: 50%; border: 2px solid #9d8ec7; object-fit: cover;">
                     <div>
-                        <h2 class="modal-title" style="margin:0; border:none; padding:0 0 5px 0;" id="upUsername">Loading...</h2>
-                        <div style="color: #7bc996; font-weight: bold; font-size: 1.05em;" id="upPoints">...</div>
+                        <h2 class="modal-title" style="margin:0; border:none; padding:0 0 6px 0;" id="upUsername">Loading...</h2>
+                        <div id="upPoints" style="display:flex; align-items:center; gap:8px;">...</div>
                     </div>
                 </div>
+                <a id="upViewProfileBtn" href="#" class="btn-floral pollen" style="width: 100%; box-sizing: border-box; margin-bottom: 16px; padding: 10px; display: none;">
+                    View My Profile
+                </a>
                 <h3 style="border-bottom: 1px solid rgba(157, 142, 199, 0.28); padding-bottom: 8px; margin-top: 0; color: #d0c2f7;">✿ Approved Contributions</h3>
                 <div id="upContributions" style="max-height: 300px; overflow-y: auto; padding-right: 5px;"></div>
             </div>
@@ -399,7 +403,9 @@ async function openUserProfileModal(discordId, username = null) {
     
     document.getElementById('userProfileModal').classList.add('active');
     const container = document.getElementById('upContributions');
+    const viewProfileBtn = document.getElementById('upViewProfileBtn');
     container.innerHTML = '<p style="color:#a99ec7;">Loading profile...</p>';
+    if (viewProfileBtn) viewProfileBtn.style.display = 'none';
     
     try {
         const res = await fetch(`/api/profile/${encodeURIComponent(query)}`);
@@ -407,7 +413,7 @@ async function openUserProfileModal(discordId, username = null) {
             container.innerHTML = '<p style="color:#d96b98;">User not found or is an external author.</p>';
             document.getElementById('upUsername').textContent = username || 'Unknown User';
             document.getElementById('upAvatar').src = '/Assets/placeholder.png';
-            document.getElementById('upPoints').textContent = '0 pts';
+            document.getElementById('upPoints').innerHTML = '<span style="color:#7bc996; font-weight:bold;">0 pts</span>';
             return;
         }
         
@@ -416,7 +422,21 @@ async function openUserProfileModal(discordId, username = null) {
         
         document.getElementById('upUsername').textContent = data.username;
         document.getElementById('upAvatar').src = data.avatar ? `https://cdn.discordapp.com/avatars/${data.discordId}/${data.avatar}.png` : 'https://cdn.discordapp.com/embed/avatars/0.png';
-        document.getElementById('upPoints').textContent = `${data.totalPoints} pts`;
+        
+        // Show Leaderboard Rank Badge next to points if ranked: [#1] 6pts
+        const rankClass = (data.rank && data.rank <= 3) ? `rank-${data.rank}` : '';
+        const rankBadgeHtml = data.rank ? `<span class="lb-rank-badge">#${data.rank}</span>` : '';
+        document.getElementById('upPoints').innerHTML = `
+            <div class="lb-row ${rankClass}" style="background:none; border:none; padding:0; margin:0; display:inline-flex; align-items:center; gap:8px;">
+                ${rankBadgeHtml}
+                <span style="color: #7bc996; font-weight: bold; font-size: 1.05em;">${data.totalPoints}pts</span>
+            </div>
+        `;
+
+        if (viewProfileBtn) {
+            viewProfileBtn.href = `/profile/${encodeURIComponent(data.discordId || data.username)}`;
+            viewProfileBtn.style.display = 'inline-flex';
+        }
         
         if (!data.contributions || data.contributions.length === 0) {
             container.innerHTML = '<p style="color:#a99ec7;">No approved contributions yet.</p>';
@@ -434,7 +454,7 @@ async function openUserProfileModal(discordId, username = null) {
                 <div class="profile-game-header" onclick="this.parentElement.classList.toggle('open')">
                     <div style="display:flex; align-items:center; gap:10px;">
                         <img src="${group.icon}" style="width:24px; height:24px; border-radius:6px; object-fit:cover; border: 1px solid rgba(157, 142, 199, 0.4);">
-                        <strong style="color: #f4f0ff;">${escapeTxt(group.name)}</strong>
+                        <strong style="color: #f4f0ff;">${escapeTxt(group.name)} <span style="color: #7bc996;">(+${group.items.length})</span></strong>
                     </div>
                     <span class="toggle-arrow" style="font-size:0.8em; color:#a99ec7;">▼</span>
                 </div>

@@ -1101,6 +1101,12 @@ app.get('/api/profile/:query', async (req, res) => {
         if (!user) user = await User.collection.findOne({ username: new RegExp(`^${query}$`, 'i') });
         if (!user) return res.status(404).json({ error: "User not found" });
 
+        // Calculate leaderboard rank
+        const allUsers = await User.collection.find({}).project({ discordId: 1, totalPoints: 1 }).toArray();
+        allUsers.sort((a, b) => (b.totalPoints || 0) - (a.totalPoints || 0));
+        const rankIdx = allUsers.findIndex(u => u.discordId === user.discordId);
+        const rank = (rankIdx !== -1 && (user.totalPoints || 0) > 0) ? rankIdx + 1 : null;
+
         const contributions = await Contribution.collection.find({ 
             submitterDiscordId: user.discordId, 
             status: 'approved' 
@@ -1117,6 +1123,7 @@ app.get('/api/profile/:query', async (req, res) => {
             avatar: user.avatar,
             discordId: user.discordId,
             totalPoints: user.totalPoints || 0,
+            rank,
             starredGames: user.starredGames || [],
             starredSubItems: user.starredSubItems || {},
             contributions: contributions.map(c => ({

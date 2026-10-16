@@ -234,11 +234,15 @@ body {
     border: 1px solid var(--border-vine);
     padding: 5px 8px 5px 12px;
     border-radius: 20px 6px 20px 6px;
-    transition: border-color 0.2s ease;
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.2), 0 4px 10px rgba(17, 13, 25, 0.45);
+    transition: transform 0.2s ease, border-radius 0.2s ease, border-color 0.2s ease, background 0.2s ease;
 }
 
 .user-profile-badge:hover {
+    transform: translateY(-2px);
+    border-radius: 6px 20px 6px 20px;
     border-color: var(--petal-light);
+    background: linear-gradient(135deg, #433363 0%, #29203d 100%);
 }
 
 .user-avatar {
@@ -811,7 +815,7 @@ body {
     order: 1;
 }
 
-.right-rail-column .leaderboard-sidebar {
+.right-rail-column .leaderboard-sidebar:not(.mobile-open) {
     position: static !important;
     width: 100%;
     min-width: 0;
@@ -980,70 +984,59 @@ body {
         font-size: 10px;
     }
 
-    /* Mobile Trophy Button below the taller banner */
+    /* Inline Trophy button in the same row as Mailbox, Settings, and Ko-fi */
     .mobile-trophy-btn {
-        display: flex !important;
+        display: inline-flex !important;
         align-items: center;
         justify-content: center;
-        position: relative;
-        margin: 10px 14px -38px auto;
-        width: 40px;
-        height: 40px;
+        position: static !important;
+        margin: 0 !important;
+        padding: 5px 10px !important;
+        width: auto !important;
+        height: auto !important;
         border-radius: 14px 4px 14px 4px;
         background: linear-gradient(135deg, #f6c85f 0%, #c9881e 100%);
-        border: 1.5px solid #ffe6a3;
-        box-shadow: 0 4px 15px rgba(246, 200, 95, 0.35);
+        border: 1px solid #ffe6a3;
+        box-shadow: 0 3px 10px rgba(246, 200, 95, 0.3);
         cursor: pointer;
-        z-index: 950;
     }
 
     .mobile-trophy-btn svg {
-        width: 22px;
-        height: 22px;
-        fill: #1a1228;
+        width: 16px !important;
+        height: 16px !important;
+        margin-right: 0 !important;
+        fill: #1a1228 !important;
     }
 
-    .leaderboard-sidebar {
-        display: none !important;
-    }
-
+    /* Strictly contained mobile leaderboard modal */
     .leaderboard-sidebar.mobile-open {
         display: flex !important;
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 88vw;
-        max-width: 360px;
-        max-height: 75vh;
-        z-index: 10001;
-        padding-top: 48px;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9);
-        border: 1px solid var(--border-bloom);
-    }
-
-    .leaderboard-sidebar.mobile-open .lb-mobile-close {
-        display: flex;
-        position: absolute;
-        top: 10px;
-        right: 12px;
-        width: 30px;
-        height: 30px;
-        align-items: center;
-        justify-content: center;
-        background: rgba(157, 142, 199, 0.15);
-        border: 1px solid var(--border-vine);
-        border-radius: 10px 3px 10px 3px;
-        color: var(--petal-light);
-        font-size: 20px;
-        cursor: pointer;
+        position: fixed !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        width: calc(100vw - 32px) !important;
+        max-width: 350px !important;
+        min-width: 0 !important;
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: 75vh !important;
+        margin: 0 !important;
+        padding: 44px 16px 16px 16px !important;
+        box-sizing: border-box !important;
+        overflow-y: auto !important;
+        z-index: 10001 !important;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9) !important;
+        border: 1px solid var(--border-bloom) !important;
     }
 
     .mobile-lb-backdrop.active {
-        display: block;
-        position: fixed;
-        inset: 0;
-        background: rgba(11, 8, 18, 0.9);
-        z-index: 10000;
+        display: block !important;
+        position: fixed !important;
+        inset: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        background: rgba(11, 8, 18, 0.88) !important;
+        z-index: 10000 !important;
     }
 }
