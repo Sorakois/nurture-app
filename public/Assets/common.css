@@ -1,6 +1,25 @@
 @font-face {
     font-family: 'CookieRun Regular';
-    src: url('/Assets/CookieRun Regular.otf') format('opentype');
+    src: url('/Assets/CookieRun Regular.otf') format('opentype'),
+         url('/Assets/CookieRunRegular.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'CookieRun Bold';
+    src: url('/Assets/CookieRun Bold.otf') format('opentype'),
+         url('/Assets/CookieRunBold.otf') format('opentype');
+    font-weight: bold;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'CookieRun Black';
+    src: url('/Assets/CookieRun Black.otf') format('opentype'),
+         url('/Assets/CookieRunBlack.otf') format('opentype');
+    font-weight: 900;
+    font-style: normal;
 }
 
 :root {
@@ -19,11 +38,24 @@
     --border-bloom: rgba(208, 194, 247, 0.6);
 }
 
+*, *::before, *::after, button, input, select, textarea {
+    font-family: 'CookieRun Regular', sans-serif !important;
+}
+
+h1, .game-title, .status-badge .badge-title {
+    font-family: 'CookieRun Black', 'CookieRun Bold', 'CookieRun Regular' !important;
+}
+
+h2, h3, b, strong, .btn-floral, .social-button, .lb-header, .sub-nav a {
+    font-family: 'CookieRun Bold', 'CookieRun Regular' !important;
+}
+
 body {
     margin: 0;
-    font-family: 'CookieRun Regular', Arial, sans-serif;
+    font-family: 'CookieRun Regular' !important;
     background-color: var(--bg-canopy);
     color: #f4f0ff;
+    overflow-x: hidden;
 }
 
 .game-card.inactive, .inactive {
@@ -584,121 +616,6 @@ body {
     display: none;
 }
 
-@media (max-width: 768px) {
-    .leaderboard-spacer {
-        display: none !important;
-    }
-
-    /* Strictly visible ONLY on mobile screens */
-    .mobile-trophy-btn {
-        display: flex !important;
-        align-items: center;
-        justify-content: center;
-        position: relative;
-        margin: 14px 16px -44px auto;
-        width: 44px;
-        height: 44px;
-        border-radius: 16px 5px 16px 5px;
-        background: linear-gradient(135deg, #f6c85f 0%, #c9881e 100%);
-        border: 1.5px solid #ffe6a3;
-        box-shadow: 0 4px 15px rgba(246, 200, 95, 0.35);
-        cursor: pointer;
-        z-index: 950;
-        transition: transform 0.2s ease;
-    }
-
-    .mobile-trophy-btn:active {
-        transform: scale(0.92);
-    }
-
-    .mobile-trophy-btn svg {
-        width: 24px;
-        height: 24px;
-        fill: #1a1228;
-    }
-
-    /* Hide sidebar on mobile unless toggled open */
-    .leaderboard-sidebar {
-        display: none !important;
-    }
-
-    .leaderboard-sidebar.mobile-open {
-        display: flex !important;
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 88vw;
-        max-width: 360px;
-        max-height: 75vh;
-        z-index: 10001;
-        padding-top: 48px;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9);
-        border: 1px solid var(--border-bloom);
-    }
-
-    .leaderboard-sidebar.mobile-open .lb-mobile-close {
-        display: flex;
-        position: absolute;
-        top: 10px;
-        right: 12px;
-        width: 30px;
-        height: 30px;
-        align-items: center;
-        justify-content: center;
-        background: rgba(157, 142, 199, 0.15);
-        border: 1px solid var(--border-vine);
-        border-radius: 10px 3px 10px 3px;
-        color: var(--petal-light);
-        font-size: 20px;
-        cursor: pointer;
-    }
-
-    .mobile-lb-backdrop.active {
-        display: block;
-        position: fixed;
-        inset: 0;
-        background: rgba(11, 8, 18, 0.9);
-        z-index: 10000;
-    }
-
-    .banner {
-        padding: 10px 16px;
-    }
-    .banner-actions {
-        display: flex;
-        flex-direction: row;
-        gap: 8px;
-        align-items: center;
-        justify-content: flex-end;
-        flex-wrap: wrap;
-    }
-    .no-ads-cta-wrap {
-        flex-direction: column;
-        align-items: center;
-    }
-    .no-ads-sub-label {
-        position: static;
-        transform: none;
-        margin-top: 3px;
-        font-size: 8px;
-    }
-    .social-button, .user-profile-badge {
-        padding: 5px 10px;
-    }
-    .social-button img, .social-button svg, .user-avatar {
-        height: 20px;
-        width: 20px;
-    }
-    .sub-text, .user-name {
-        font-size: 0.75em;
-    }
-    .sign-out-btn {
-        padding: 2px 8px;
-        font-size: 0.7em;
-    }
-} /* <-- Closes @media (max-width: 768px) so the rules below work on Desktop AND Mobile */
-
 /* === GPU SCROLL & HOVER OPTIMIZATIONS === */
 .floating-petal, .firefly-spore {
     transform: translateZ(0);
@@ -974,25 +891,159 @@ body {
     color: #fff;
 }
 
+/* === MOBILE GRAPHICS === */
+
 @media (max-width: 768px) {
-    .banner {
-        padding: 10px 16px;
+    .leaderboard-spacer {
+        display: none !important;
     }
-    .no-ads-sub-label {
-        position: static;
-        transform: none;
-        margin-top: 3px;
-    }
-    .no-ads-cta-wrap {
-        flex-direction: column;
-        align-items: flex-end;
-    }
+
     .right-rail-column {
         width: 0;
         min-width: 0;
         position: static;
     }
+
     .nurture-ad-sidebar {
         display: none !important;
+    }
+
+    /* Taller mobile banner: Logo centered on top, all buttons in a horizontal row from left to right */
+    .banner {
+        padding: 12px 8px 14px 8px !important;
+        box-sizing: border-box;
+        width: 100%;
+    }
+
+    .banner-row {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        max-width: 100%;
+        width: 100%;
+    }
+
+    .banner-row img[alt="Nurture Banner"] {
+        height: 64px !important;
+        padding-left: 0 !important;
+    }
+
+    .banner-actions {
+        display: flex;
+        flex-direction: row !important;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .no-ads-cta-wrap {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .no-ads-sub-label {
+        position: static;
+        transform: none;
+        margin-top: 2px;
+        font-size: 7.5px;
+        padding: 1px 5px;
+    }
+
+    .social-button, .user-profile-badge {
+        padding: 5px 9px;
+        border-radius: 14px 4px 14px 4px;
+        gap: 5px;
+    }
+
+    .social-button img, .social-button svg, .user-avatar {
+        height: 16px;
+        width: 16px;
+        margin-right: 4px;
+    }
+
+    .user-avatar {
+        margin-right: 0;
+    }
+
+    .sub-text, .user-name {
+        font-size: 11px;
+        max-width: 85px;
+    }
+
+    .sign-out-btn {
+        padding: 2px 6px;
+        font-size: 10px;
+    }
+
+    /* Mobile Trophy Button below the taller banner */
+    .mobile-trophy-btn {
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        margin: 10px 14px -38px auto;
+        width: 40px;
+        height: 40px;
+        border-radius: 14px 4px 14px 4px;
+        background: linear-gradient(135deg, #f6c85f 0%, #c9881e 100%);
+        border: 1.5px solid #ffe6a3;
+        box-shadow: 0 4px 15px rgba(246, 200, 95, 0.35);
+        cursor: pointer;
+        z-index: 950;
+    }
+
+    .mobile-trophy-btn svg {
+        width: 22px;
+        height: 22px;
+        fill: #1a1228;
+    }
+
+    .leaderboard-sidebar {
+        display: none !important;
+    }
+
+    .leaderboard-sidebar.mobile-open {
+        display: flex !important;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 88vw;
+        max-width: 360px;
+        max-height: 75vh;
+        z-index: 10001;
+        padding-top: 48px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9);
+        border: 1px solid var(--border-bloom);
+    }
+
+    .leaderboard-sidebar.mobile-open .lb-mobile-close {
+        display: flex;
+        position: absolute;
+        top: 10px;
+        right: 12px;
+        width: 30px;
+        height: 30px;
+        align-items: center;
+        justify-content: center;
+        background: rgba(157, 142, 199, 0.15);
+        border: 1px solid var(--border-vine);
+        border-radius: 10px 3px 10px 3px;
+        color: var(--petal-light);
+        font-size: 20px;
+        cursor: pointer;
+    }
+
+    .mobile-lb-backdrop.active {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: rgba(11, 8, 18, 0.9);
+        z-index: 10000;
     }
 }

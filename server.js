@@ -154,6 +154,35 @@ const checkUserOrIpBanned = async (user, clientIp) => {
     return false;
 };
 
+// --- REAL-TIME LIVE EVENT STREAM (DISCORD-STYLE PUSH UPDATES) ---
+const liveClients = new Set();
+
+const broadcastLiveEvent = (type, payload = {}) => {
+    const msg = `data: ${JSON.stringify({ type, payload, timestamp: Date.now() })}\n\n`;
+    for (const clientRes of liveClients) {
+        try { clientRes.write(msg); } catch (e) { liveClients.delete(clientRes); }
+    }
+};
+
+app.get('/api/stream', (req, res) => {
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    if (res.flushHeaders) res.flushHeaders();
+
+    res.write(`data: ${JSON.stringify({ type: 'connected' })}\n\n`);
+    liveClients.add(res);
+
+    const keepAlive = setInterval(() => {
+        try { res.write(': ping\n\n'); } catch (e) { clearInterval(keepAlive); }
+    }, 25000);
+
+    req.on('close', () => {
+        clearInterval(keepAlive);
+        liveClients.delete(res);
+    });
+});
+
 // --- API ROUTES ---
 app.get('/api/games', async (req, res) => {
     const page = Math.max(1, parseInt(req.query.page) || 1);
@@ -365,6 +394,7 @@ app.post('/api/games/:id/rate', async (req, res) => {
             { strict: false }
         );
 
+        broadcastLiveEvent('game_updated', { gameId });
         res.json({ success: true, ratings: newRatings, rating_counts: newCounts, user_ratings: userRatings });
     } catch (err) {
         console.error("Rating error:", err);
@@ -895,7 +925,8 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                     });
                     await user.save();
                 }
-
+                // Send notification live to user
+                broadcastLiveEvent('game_updated', { gameId: contribution.gameId, discordId: contribution.submitterDiscordId });
                 await axios.patch(`https://discord.com/api/v10/webhooks/${process.env.DISCORD_CLIENT_ID}/${interaction.token}/messages/@original`, { content: `✅ **Approved by <@${interaction.member.user.id}>**` });
             }
 
@@ -952,6 +983,7 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                     adminAvatar: interaction.member.user.avatar ? `https://cdn.discordapp.com/avatars/${interaction.member.user.id}/${interaction.member.user.avatar}.png` : 'https://cdn.discordapp.com/embed/avatars/0.png',
                     date: new Date()
                 });
+                broadcastLiveEvent('mail_updated', { discordId: user.discordId });
                 await user.save();
             }
             return res.send({ type: InteractionResponseType.UPDATE_MESSAGE, data: { content: `✅ **Replied by <@${interaction.member.user.id}>:**\n> ${replyText.split('\n').join('\n> ')}`, components: [] } });
@@ -1041,15 +1073,17 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
 
                 const user = await User.findOne({ discordId: contribution.submitterDiscordId });
                 if (user) {
-                    user.totalPoints = (user.totalPoints || 0) + 50;
+                    user.totalPoints = (user.totalPoints || 0) + 1;
                     if (contribution.gameId) {
                         if (!user.gamePoints) user.gamePoints = new Map();
                         const currentPts = user.gamePoints.get(contribution.gameId) || 0;
-                        user.gamePoints.set(contribution.gameId, currentPts + 50);
+                        user.gamePoints.set(contribution.gameId, currentPts + 1);
                     }
-                    user.mailbox.push({ direction: 'INBOUND', subject: 'Contribution Approved! (+50 pts)', content: `Your submission for ${contribution.itemCategory} was tweaked and approved by an admin!`, adminUsername: interaction.member.user.username, adminAvatar: interaction.member.user.avatar ? `https://cdn.discordapp.com/avatars/${interaction.member.user.id}/${interaction.member.user.avatar}.png` : 'https://cdn.discordapp.com/embed/avatars/0.png', date: new Date() });
+                    user.mailbox.push({ direction: 'INBOUND', subject: 'Contribution Approved! (+1 pt)', content: `Your submission for ${contribution.itemCategory} was tweaked and approved by an admin!`, adminUsername: interaction.member.user.username, adminAvatar: interaction.member.user.avatar ? `https://cdn.discordapp.com/avatars/${interaction.member.user.id}/${interaction.member.user.avatar}.png` : 'https://cdn.discordapp.com/embed/avatars/0.png', date: new Date() });
                     await user.save();
                 }
+
+                broadcastLiveEvent('game_updated', { gameId: contribution.gameId, discordId: contribution.submitterDiscordId });
 
                 await axios.patch(`https://discord.com/api/v10/webhooks/${process.env.DISCORD_CLIENT_ID}/${interaction.token}/messages/@original`, { content: `✏️ ✅ **Tweaked & Approved by <@${interaction.member.user.id}>**` });
             } catch (error) {

@@ -565,11 +565,31 @@ function applySettings() {
     if (select) select.value = lbSide;
 }
 
-// --- Silent Polling for Live Updates ---
+// --- Real-Time Live Stream Client (No 15s Polling or Micro-Refreshes) ---
 document.addEventListener('DOMContentLoaded', () => {
-    // Check for new mailbox notifications every 15 seconds
-    setInterval(() => {
-        const cachedUserRaw = localStorage.getItem('nurture_user_session');
-        if (cachedUserRaw) fetchUnreadMailCount();
-    }, 15000);
+    if (typeof EventSource === 'undefined') return;
+
+    let es;
+    function connectLiveStream() {
+        es = new EventSource('/api/stream');
+        es.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                if (!data || data.type === 'connected') return;
+
+                if (data.type === 'mail_updated' || data.type === 'game_updated') {
+                    const cachedUserRaw = localStorage.getItem('nurture_user_session');
+                    if (cachedUserRaw) fetchUnreadMailCount();
+                }
+
+                window.dispatchEvent(new CustomEvent('nurtureLiveUpdate', { detail: data }));
+            } catch (e) {}
+        };
+        es.onerror = () => {
+            es.close();
+            setTimeout(connectLiveStream, 5000);
+        };
+    }
+
+    connectLiveStream();
 });

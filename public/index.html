@@ -166,9 +166,11 @@
         .card-badges-row {
             display: flex;
             flex-direction: column;
-            align-items: flex-end;
+            align-items: center;
+            justify-content: center;
             gap: 5px;
             margin-top: 10px;
+            width: 100%;
         }
 
         .status-badge {
@@ -1610,9 +1612,24 @@
                     if (isNew || isUpdated || isEdited) {
                         badgesHtml = `
                             <div class="card-badges-row">
-                                ${isNew ? '<span class="status-badge badge-new" title="Added within the last 7 days">NEW GAME!</span>' : ''}
-                                ${isUpdated ? `<span class="status-badge badge-update" title="Major App Store update${game.latest_version ? ` (v${escapeHtml(game.latest_version)})` : ''} within the last 7 days">GAME UPDATE!</span>` : ''}
-                                ${isEdited ? '<span class="status-badge badge-edited" title="Community data edited within the last 2 days">EDITED!</span>' : ''}
+                                ${isNew ? `
+                                    <button type="button" class="status-badge badge-new" onclick="event.stopPropagation(); window.location.href='/games/${gameId}'" title="Added within the last 7 days">
+                                        <span class="badge-title">NEW GAME!</span>
+                                        <span class="badge-date">${formatBadgeDate(createdMs)}</span>
+                                    </button>
+                                ` : ''}
+                                ${isUpdated ? `
+                                    <button type="button" class="status-badge badge-update" onclick="event.stopPropagation(); openAppUpdateModal('${gameId}')" title="Click to view latest patch notes">
+                                        <span class="badge-title">GAME UPDATE!</span>
+                                        <span class="badge-date">${formatBadgeDate(updatedMs)}</span>
+                                    </button>
+                                ` : ''}
+                                ${isEdited ? `
+                                    <button type="button" class="status-badge badge-edited" onclick="event.stopPropagation(); openGameEditsModal('${gameId}')" title="Click to view recent community edits">
+                                        <span class="badge-title">EDITED!</span>
+                                        <span class="badge-date">${formatBadgeDate(editedMs)}</span>
+                                    </button>
+                                ` : ''}
                             </div>
                         `;
                     }
@@ -1919,12 +1936,12 @@ function openRateGameModal() {
 
         window.addEventListener('online', () => fetchInitialData());
 
-        // Silently update the grid and leaderboard every 15 seconds
-        setInterval(() => {
-            if (!isSearching && document.visibilityState === 'visible') {
+        // Update live only when the server broadcasts an actual change
+        window.addEventListener('nurtureLiveUpdate', (e) => {
+            if (!isSearching && e.detail?.type === 'game_updated') {
                 fetchInitialData(true);
             }
-        }, 15000);
+        });
     </script>
 </body>
 </html>

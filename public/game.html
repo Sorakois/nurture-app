@@ -996,6 +996,11 @@
         const favStorageKey = `nurture_fav_items_${gameId}`;
         let favoritedSubItems = JSON.parse(localStorage.getItem(favStorageKey) || '[]');
 
+        function getSubItemId(item) {
+            if (!item) return '';
+            return String(item._id || item.url || item.download_url || item.title || item.name || '');
+        }
+
         window.addEventListener('nurtureUserSynced', (e) => {
             const serverMap = e.detail?.starredSubItems;
             if (serverMap && Array.isArray(serverMap[gameId])) {
@@ -1486,7 +1491,6 @@
             if (!gameData) return;
             
             document.title = `Nurture | ${gameData.name} - ${currentSection.toUpperCase()}`;
-            contentArea.style.opacity = 0.5;
             
             const mfContainer = document.getElementById('miniFocusContainer');
 
@@ -1505,155 +1509,155 @@
                 mfContainer.style.display = 'none';
             }
 
-            setTimeout(() => {
-                if (currentSection === 'overview') {
-                    const editOverviewSvg = `<svg onclick="openGameSuggestModal('Overview')" style="width:20px;height:20px;fill:#ffffff;float:right;cursor:pointer;margin-top:5px;" title="Edit Overview" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>`;
-                    
-                    let guideContent = '';
-                    if (gameData.new_player_video_id) {
-                        guideContent = `
-                            <div style="position: relative; width: 100%; max-width: 720px; aspect-ratio: 16 / 9; border-radius: 16px 5px 16px 5px; overflow: hidden; background: #000; margin-top: 12px; border: 1px solid rgba(208, 194, 247, 0.35);">
-                                <iframe 
-                                    src="https://www.youtube.com/embed/${gameData.new_player_video_id}" 
-                                    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;"
-                                    allow="accelerometer; autoplay; clipboard-encrypted-media; gyroscope; picture-in-picture" 
-                                    referrerpolicy="strict-origin-when-cross-origin"
-                                    allowfullscreen>
-                                </iframe>
-                            </div>
-                        `;
-                    } else if (gameData.new_player_guide) {
-                        guideContent = `
-                            <a href="${gameData.new_player_guide}" target="_blank" class="btn-floral" style="margin-top:10px;">View Recommended Guide</a>
-                        `;
-                    } else {
-                        guideContent = `
-                            <button onclick="openGameSuggestModal('Overview')" style="display:inline-block; padding:10px 16px; background:#2a2a35; color:#aaa; border:1px dashed #7A6BB5; border-radius:14px 4px 14px 4px; cursor:pointer; margin-top:10px; transition:color 0.2s, border 0.2s;" onmouseover="this.style.color='#fff'; this.style.borderColor='#9d8ec7'" onmouseout="this.style.color='#aaa'; this.style.borderColor='#7A6BB5'">+ Suggest Beginner Guide</button>
-                        `;
-                    }
-                    
-                    let overviewHtml = `
-                        <h2 style="margin-top: 0;">Overview ${editOverviewSvg}</h2>
-                        <p style="line-height: 1.65; color: #e5dcff; white-space: pre-wrap;">${gameData.overview_text || 'No overview available for this game yet.'}</p>
-                        <h3 style="margin-top:40px; border-bottom:1px solid rgba(157, 142, 199, 0.25); padding-bottom:8px; color:#d0c2f7;">New Player Guide</h3>
-                        ${guideContent}
-                    `;
-
-                    contentArea.innerHTML = overviewHtml;
-                    contentArea.style.opacity = 1;
-                    return;
-                }
-
-                const sectionConfig = {
-                    guides: { title: 'Guides/Tools', dbKey: 'Guide', data: gameData.guides, catKey: 'category', metaKey: 'author', metaPrefix: 'By ' },
-                    assets: { title: 'Raw Assets', dbKey: 'Asset', data: gameData.assets, catKey: 'type', metaKey: 'type', metaPrefix: 'Format: ' },
-                    communities: { title: 'Communities', dbKey: 'Community', data: gameData.communities, catKey: 'platform', metaKey: 'platform', metaPrefix: 'Platform: ' },
-                    mods: { title: 'Mods', dbKey: 'Mod', data: gameData.mods, catKey: 'author', metaKey: 'version', metaPrefix: 'Version: ' }
-                };
-
-                const config = sectionConfig[currentSection] || sectionConfig['guides'];
-                const addNewBtn = `<button class="btn-floral" onclick="openGameSuggestModal('${config?.dbKey || 'Overview'}')" style="padding: 6px 14px; font-size: 0.6em;">+ Add New</button>`;
-                const headerHtml = `<h2 style="display: flex; justify-content: space-between; align-items: center; margin-top: 0;">${config?.title || 'Overview'} ${addNewBtn}</h2>`;
-
-                if (!config || !config.data || config.data.length === 0) {
-                    contentArea.innerHTML = headerHtml + `<p style="color: #aaa;">No items found.</p>`;
-                    contentArea.style.opacity = 1;
-                    return;
-                }
-
-                let filteredData = activeFilter === 'All' 
-                    ? [...(config.data || [])] 
-                    : config.data.filter(item => {
-                        const val = item[config.catKey];
-                        if (!val) return false;
-                        if (Array.isArray(val)) return val.includes(activeFilter);
-                        if (typeof val === 'string' && val.includes(',')) return val.split(',').map(s => s.trim()).includes(activeFilter);
-                        return val === activeFilter;
-                    });
-
-                // Sort items: 1) Favorited items & 2-day NEW!/EDITED! items pushed to the top
-                filteredData.sort((a, b) => {
-                    const aFav = favoritedSubItems.includes(getSubItemId(a)) ? 1 : 0;
-                    const bFav = favoritedSubItems.includes(getSubItemId(b)) ? 1 : 0;
-                    if (aFav !== bFav) return bFav - aFav;
-
-                    const aMod = getItemRecentModifier(a) ? 1 : 0;
-                    const bMod = getItemRecentModifier(b) ? 1 : 0;
-                    if (aMod !== bMod) return bMod - aMod;
-
-                    return 0;
-                });
-
-                const filterHtml = buildFilterBar(config.data, config.catKey);
-                const safeStr = (text) => (text || '').toString().replace(/[&<>"']/g, m => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[m]));
-
-                // Store sorted list so clicking the Edit pencil maps to the exact displayed item
-                currentDisplayedItems = filteredData;
-
-                const cardsHtml = filteredData.map((item, index) => {
-                    const itemId = getSubItemId(item);
-                    const isFav = favoritedSubItems.includes(itemId);
-                    const starColor = isFav ? '#f6c85f' : 'rgba(157, 142, 199, 0.35)';
-
-                    const recentMod = getItemRecentModifier(item);
-                    let modBadgeHtml = '';
-                    if (recentMod === 'NEW') {
-                        modBadgeHtml = `<span class="status-badge badge-new" title="Added within the past 2 days">NEW!</span>`;
-                    } else if (recentMod === 'EDITED') {
-                        modBadgeHtml = `<span class="status-badge badge-edited" title="Edited within the past 2 days">EDITED!</span>`;
-                    }
-
-                    let metaVal = item[config.metaKey];
-                    if (Array.isArray(metaVal)) metaVal = metaVal.join(', ');
-                    let metaHtml = safeStr(metaVal);
-                    let primaryMeta = metaHtml ? `${config.metaPrefix}${metaHtml}` : '';
-
-                    let submitterHtml = '';
-                    let subName = item.submitterUsername || item.submitter;
-                    if (subName) {
-                        let safeSubName = safeStr(subName);
-                        let subDiscordId = item.submitterDiscordId || '';
-                        submitterHtml = `<span style="color:#7A6BB5; font-size: 0.9em; margin-left: 10px;">| Submitted by <span style="color:#9d8ec7; cursor:pointer; text-decoration:underline;" onclick="event.preventDefault(); event.stopPropagation(); openUserProfileModal('${subDiscordId}', '${safeSubName}')">${safeSubName}</span></span>`;
-                    }
-
-                    const formattedDate = formatItemDate(item);
-                    const dateHtml = formattedDate ? `<div class="item-date">Last updated: ${formattedDate}</div>` : '';
-                    
-                    const editBtnHtml = `
-                        <div style="margin-left: auto; padding-left: 15px; display: flex; align-items: center;">
-                            <svg onclick="event.preventDefault(); event.stopPropagation(); openGameSuggestModal('${config.dbKey}', ${index})" style="width:20px;height:20px;fill:#aaa;cursor:pointer;transition:fill 0.2s;" onmouseover="this.style.fill='#fff'" onmouseout="this.style.fill='#aaa'" title="Suggest Edit" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+            
+            if (currentSection === 'overview') {
+                const editOverviewSvg = `<svg onclick="openGameSuggestModal('Overview')" style="width:20px;height:20px;fill:#ffffff;float:right;cursor:pointer;margin-top:5px;" title="Edit Overview" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>`;
+                
+                let guideContent = '';
+                if (gameData.new_player_video_id) {
+                    guideContent = `
+                        <div style="position: relative; width: 100%; max-width: 720px; aspect-ratio: 16 / 9; border-radius: 16px 5px 16px 5px; overflow: hidden; background: #000; margin-top: 12px; border: 1px solid rgba(208, 194, 247, 0.35);">
+                            <iframe 
+                                src="https://www.youtube.com/embed/${gameData.new_player_video_id}" 
+                                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;"
+                                allow="accelerometer; autoplay; clipboard-encrypted-media; gyroscope; picture-in-picture" 
+                                referrerpolicy="strict-origin-when-cross-origin"
+                                allowfullscreen>
+                            </iframe>
                         </div>
                     `;
-
-                    return `
-                        <a href="${safeStr(item.url || item.download_url || '#')}" target="_blank" class="item-card ${(isFav || recentMod) ? 'item-featured' : ''}">
-                            <svg class="item-star-btn" onclick="toggleFavoriteSubItem('${safeStr(itemId)}', event)" style="fill:${starColor};" title="${isFav ? 'Remove from Favorites' : 'Favorite Item'}" viewBox="0 0 24 24">
-                                <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
-                            </svg>
-                            <img src="${getItemIcon(item, currentSection)}" class="item-icon" alt="icon" onerror="this.src='/Assets/placeholder.png'">
-                            <div class="item-details">
-                                <div class="item-title-row">
-                                    <div class="item-title">${safeStr(item.title || item.name)}</div>
-                                    ${modBadgeHtml}
-                                </div>
-                                ${dateHtml}
-                                <div class="item-meta">${primaryMeta}${submitterHtml}</div>
-                            </div>
-                            ${editBtnHtml}
-                        </a>
+                } else if (gameData.new_player_guide) {
+                    guideContent = `
+                        <a href="${gameData.new_player_guide}" target="_blank" class="btn-floral" style="margin-top:10px;">View Recommended Guide</a>
                     `;
-                }).join('');
+                } else {
+                    guideContent = `
+                        <button onclick="openGameSuggestModal('Overview')" style="display:inline-block; padding:10px 16px; background:#2a2a35; color:#aaa; border:1px dashed #7A6BB5; border-radius:14px 4px 14px 4px; cursor:pointer; margin-top:10px; transition:color 0.2s, border 0.2s;" onmouseover="this.style.color='#fff'; this.style.borderColor='#9d8ec7'" onmouseout="this.style.color='#aaa'; this.style.borderColor='#7A6BB5'">+ Suggest Beginner Guide</button>
+                    `;
+                }
+                
+                let overviewHtml = `
+                    <h2 style="margin-top: 0;">Overview ${editOverviewSvg}</h2>
+                    <p style="line-height: 1.65; color: #e5dcff; white-space: pre-wrap;">${gameData.overview_text || 'No overview available for this game yet.'}</p>
+                    <h3 style="margin-top:40px; border-bottom:1px solid rgba(157, 142, 199, 0.25); padding-bottom:8px; color:#d0c2f7;">New Player Guide</h3>
+                    ${guideContent}
+                `;
 
-                contentArea.innerHTML = `
-                    ${headerHtml}
-                    ${filterHtml}
-                    <div class="items-list">
-                        ${cardsHtml || '<p style="color: #888;">No items match this filter.</p>'}
+                contentArea.innerHTML = overviewHtml;
+                contentArea.style.opacity = 1;
+                return;
+            }
+
+            const sectionConfig = {
+                guides: { title: 'Guides/Tools', dbKey: 'Guide', data: gameData.guides, catKey: 'category', metaKey: 'author', metaPrefix: 'By ' },
+                assets: { title: 'Raw Assets', dbKey: 'Asset', data: gameData.assets, catKey: 'type', metaKey: 'type', metaPrefix: 'Format: ' },
+                communities: { title: 'Communities', dbKey: 'Community', data: gameData.communities, catKey: 'platform', metaKey: 'platform', metaPrefix: 'Platform: ' },
+                mods: { title: 'Mods', dbKey: 'Mod', data: gameData.mods, catKey: 'author', metaKey: 'version', metaPrefix: 'Version: ' }
+            };
+
+            const config = sectionConfig[currentSection] || sectionConfig['guides'];
+            const addNewBtn = `<button class="btn-floral" onclick="openGameSuggestModal('${config?.dbKey || 'Overview'}')" style="padding: 6px 14px; font-size: 0.6em;">+ Add New</button>`;
+            const headerHtml = `<h2 style="display: flex; justify-content: space-between; align-items: center; margin-top: 0;">${config?.title || 'Overview'} ${addNewBtn}</h2>`;
+
+            if (!config || !config.data || config.data.length === 0) {
+                contentArea.innerHTML = headerHtml + `<p style="color: #aaa;">No items found.</p>`;
+                contentArea.style.opacity = 1;
+                return;
+            }
+
+            let filteredData = activeFilter === 'All' 
+                ? [...(config.data || [])] 
+                : config.data.filter(item => {
+                    const val = item[config.catKey];
+                    if (!val) return false;
+                    if (Array.isArray(val)) return val.includes(activeFilter);
+                    if (typeof val === 'string' && val.includes(',')) return val.split(',').map(s => s.trim()).includes(activeFilter);
+                    return val === activeFilter;
+                });
+
+            // Sort items: 1) Favorited items & 2-day NEW!/EDITED! items pushed to the top
+            filteredData.sort((a, b) => {
+                const aFav = favoritedSubItems.includes(getSubItemId(a)) ? 1 : 0;
+                const bFav = favoritedSubItems.includes(getSubItemId(b)) ? 1 : 0;
+                if (aFav !== bFav) return bFav - aFav;
+
+                const aMod = getItemRecentModifier(a) ? 1 : 0;
+                const bMod = getItemRecentModifier(b) ? 1 : 0;
+                if (aMod !== bMod) return bMod - aMod;
+
+                return 0;
+            });
+
+            const filterHtml = buildFilterBar(config.data, config.catKey);
+            const safeStr = (text) => (text || '').toString().replace(/[&<>"']/g, m => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[m]));
+
+            // Store sorted list so clicking the Edit pencil maps to the exact displayed item
+            currentDisplayedItems = filteredData;
+
+            const cardsHtml = filteredData.map((item, index) => {
+                const itemId = getSubItemId(item);
+                const isFav = favoritedSubItems.includes(itemId);
+                const starColor = isFav ? '#f6c85f' : 'rgba(157, 142, 199, 0.35)';
+
+                const recentMod = getItemRecentModifier(item);
+                let modBadgeHtml = '';
+                if (recentMod === 'NEW') {
+                    modBadgeHtml = `<span class="status-badge badge-new" title="Added within the past 2 days">NEW!</span>`;
+                } else if (recentMod === 'EDITED') {
+                    modBadgeHtml = `<span class="status-badge badge-edited" title="Edited within the past 2 days">EDITED!</span>`;
+                }
+
+                let metaVal = item[config.metaKey];
+                if (Array.isArray(metaVal)) metaVal = metaVal.join(', ');
+                let metaHtml = safeStr(metaVal);
+                let primaryMeta = metaHtml ? `${config.metaPrefix}${metaHtml}` : '';
+
+                let submitterHtml = '';
+                let subName = item.submitterUsername || item.submitter;
+                if (subName) {
+                    let safeSubName = safeStr(subName);
+                    let subDiscordId = item.submitterDiscordId || '';
+                    submitterHtml = `<span style="color:#7A6BB5; font-size: 0.9em; margin-left: 10px;">| Submitted by <span style="color:#9d8ec7; cursor:pointer; text-decoration:underline;" onclick="event.preventDefault(); event.stopPropagation(); openUserProfileModal('${subDiscordId}', '${safeSubName}')">${safeSubName}</span></span>`;
+                }
+
+                const formattedDate = formatItemDate(item);
+                const dateHtml = formattedDate ? `<div class="item-date">Last updated: ${formattedDate}</div>` : '';
+                
+                const editBtnHtml = `
+                    <div style="margin-left: auto; padding-left: 15px; display: flex; align-items: center;">
+                        <svg onclick="event.preventDefault(); event.stopPropagation(); openGameSuggestModal('${config.dbKey}', ${index})" style="width:20px;height:20px;fill:#aaa;cursor:pointer;transition:fill 0.2s;" onmouseover="this.style.fill='#fff'" onmouseout="this.style.fill='#aaa'" title="Suggest Edit" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
                     </div>
                 `;
-                
-                contentArea.style.opacity = 1;
-            }, 50);
+
+                return `
+                    <a href="${safeStr(item.url || item.download_url || '#')}" target="_blank" class="item-card ${(isFav || recentMod) ? 'item-featured' : ''}">
+                        <svg class="item-star-btn" onclick="toggleFavoriteSubItem('${safeStr(itemId)}', event)" style="fill:${starColor};" title="${isFav ? 'Remove from Favorites' : 'Favorite Item'}" viewBox="0 0 24 24">
+                            <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                        </svg>
+                        <img src="${getItemIcon(item, currentSection)}" class="item-icon" alt="icon" onerror="this.src='/Assets/placeholder.png'">
+                        <div class="item-details">
+                            <div class="item-title-row">
+                                <div class="item-title">${safeStr(item.title || item.name)}</div>
+                                ${modBadgeHtml}
+                            </div>
+                            ${dateHtml}
+                            <div class="item-meta">${primaryMeta}${submitterHtml}</div>
+                        </div>
+                        ${editBtnHtml}
+                    </a>
+                `;
+            }).join('');
+
+            contentArea.innerHTML = `
+                ${headerHtml}
+                ${filterHtml}
+                <div class="items-list">
+                    ${cardsHtml || '<p style="color: #888;">No items match this filter.</p>'}
+                </div>
+            `;
+            
+            contentArea.style.opacity = 1;
+            
         }
 
         window.addEventListener('popstate', () => {
@@ -1874,23 +1878,22 @@
 
         initPage();
 
-        // Silently monitor for Discord admin approvals every 15 seconds
-        setInterval(async () => {
-            if (document.visibilityState !== 'visible' || document.querySelector('.modal-overlay.active')) return;
-            
-            try {
-                const res = await fetch(`/api/games/${gameId}`);
-                if (res.ok) {
-                    const newData = await res.json();
-                    if (JSON.stringify(newData) !== JSON.stringify(gameData)) {
-                        gameData = newData;
+        // Listen for real-time server push events
+        window.addEventListener('nurtureLiveUpdate', async (e) => {
+            const ev = e.detail;
+            if (ev && ev.type === 'game_updated' && (!ev.payload?.gameId || ev.payload.gameId === gameId)) {
+                try {
+                    const res = await fetch(`/api/games/${gameId}`);
+                    if (res.ok) {
+                        gameData = await res.json();
+                        updateRedeemButtonBanners();
                         renderTabs();
                         renderContent();
                         loadGameLeaderboard();
                     }
-                }
-            } catch (e) {}
-        }, 15000);
+                } catch (err) {}
+            }
+        });
     </script>
 </body>
 </html>
