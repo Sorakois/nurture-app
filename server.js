@@ -879,15 +879,15 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                 }
 
                 if (user) {
-                    user.totalPoints = (user.totalPoints || 0) + 50;
+                    user.totalPoints = (user.totalPoints || 0) + 1;
                     if (contribution.gameId) {
                         if (!user.gamePoints) user.gamePoints = new Map();
                         const currentPts = user.gamePoints.get(contribution.gameId) || 0;
-                        user.gamePoints.set(contribution.gameId, currentPts + 50);
+                        user.gamePoints.set(contribution.gameId, currentPts + 1);
                     }
                     user.mailbox.push({
                         direction: 'INBOUND',
-                        subject: 'Contribution Approved! (+50 pts)',
+                        subject: 'Contribution Approved! (+1 pt)',
                         content: `Your submission for ${contribution.itemCategory} was approved!`,
                         adminUsername: interaction.member.user.username,
                         adminAvatar: adminAvatar,
@@ -1063,7 +1063,6 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
 app.get('/api/profile/:query', async (req, res) => {
     try {
         const query = validateInput.sanitizeString(req.params.query);
-        
         let user = await User.collection.findOne({ discordId: query });
         if (!user) user = await User.collection.findOne({ username: new RegExp(`^${query}$`, 'i') });
         if (!user) return res.status(404).json({ error: "User not found" });
@@ -1084,6 +1083,8 @@ app.get('/api/profile/:query', async (req, res) => {
             avatar: user.avatar,
             discordId: user.discordId,
             totalPoints: user.totalPoints || 0,
+            starredGames: user.starredGames || [],
+            starredSubItems: user.starredSubItems || {},
             contributions: contributions.map(c => ({
                 gameId: c.gameId,
                 gameName: gameMap[c.gameId]?.name || c.gameId,
@@ -1152,8 +1153,6 @@ app.get('/games/:id', async (req, res) => {
     try {
         const gamePath = path.join(process.cwd(), 'public', 'game.html');
         let html = fs.readFileSync(gamePath, 'utf8');
-        
-        // Strip query params (like ?tab=guides) so the DB lookup succeeds
         const cleanId = req.params.id.split('?')[0].split('#')[0]; 
         const game = await Game.collection.findOne({ id: cleanId });
 
@@ -1161,26 +1160,18 @@ app.get('/games/:id', async (req, res) => {
         const title = game ? `Nurture | ${escMeta(game.name)} — Guides, Codes, Assets & Mods` : "Nurture | Game Hub";
         const rawDesc = game && game.overview_text 
             ? game.overview_text.replace(/\s+/g, ' ').trim().substring(0, 195) + '...'
-            : (game ? `Explore community-curated guides, active redeem codes, raw assets, and mods for ${game.name} on Nurture.` : "Community-driven gaming hub.");
-        const desc = escMeta(rawDesc);
-        const image = game && game.banner_url && game.banner_url.startsWith('http')
-            ? escMeta(game.banner_url)
-            : `https://${req.get('host')}/Assets/nurture_icon.png`;
-        const pageUrl = `https://${req.get('host')}${req.originalUrl}`;
-
+            : `Explore community-curated guides, active redeem codes, raw assets, and mods for ${game ? game.name : 'games'} on Nurture.`;
+        
         html = html
             .replace(/<title>.*?<\/title>/i, `<title>${title}</title>`)
             .replace(/content="__OG_TITLE__"/g, `content="${title}"`)
-            .replace(/content="__OG_DESC__"/g, `content="${desc}"`)
-            .replace(/content="__OG_IMAGE__"/g, `content="${image}"`)
-            .replace(/content="__OG_URL__"/g, `content="${pageUrl}"`);
+            .replace(/content="__OG_DESC__"/g, `content="${escMeta(rawDesc)}"`)
+            .replace(/content="__OG_IMAGE__"/g, `content="${game?.banner_url || `https://${req.get('host')}/Assets/nurture_icon.png`}"`)
+            .replace(/content="__OG_URL__"/g, `content="https://${req.get('host')}${req.originalUrl}"`);
         
         res.setHeader('Content-Type', 'text/html');
         res.send(html);
-    } catch (err) {
-        console.error("Error rendering game embed:", err);
-        res.sendFile(path.join(process.cwd(), 'public', 'game.html'));
-    }
+    } catch (err) { res.sendFile(path.join(process.cwd(), 'public', 'game.html')); }
 });
 
 app.get('/profile/:id', async (req, res) => {
@@ -1194,22 +1185,17 @@ app.get('/profile/:id', async (req, res) => {
 
         const escMeta = (str) => (str || '').toString().replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
         const title = user ? `Nurture | ${escMeta(user.username)}'s Profile` : "Nurture | User Profile";
-        const desc = user ? `View ${escMeta(user.username)}'s approved contributions, guides, and edits on Nurture.` : "View user contributions on Nurture.";
-        const image = user && user.avatar ? `https://cdn.discordapp.com/avatars/${user.discordId}/${user.avatar}.png` : `https://${req.get('host')}/Assets/nurture_icon.png`;
-        const pageUrl = `https://${req.get('host')}${req.originalUrl}`;
-
+        
         html = html
             .replace(/<title>.*?<\/title>/i, `<title>${title}</title>`)
             .replace(/content="__OG_TITLE__"/g, `content="${title}"`)
-            .replace(/content="__OG_DESC__"/g, `content="${desc}"`)
-            .replace(/content="__OG_IMAGE__"/g, `content="${image}"`)
-            .replace(/content="__OG_URL__"/g, `content="${pageUrl}"`);
+            .replace(/content="__OG_DESC__"/g, `content="View user contributions, favorite games, and tools on Nurture."`)
+            .replace(/content="__OG_IMAGE__"/g, `content="${user?.avatar ? `https://cdn.discordapp.com/avatars/${user.discordId}/${user.avatar}.png` : `https://${req.get('host')}/Assets/nurture_icon.png`}"`)
+            .replace(/content="__OG_URL__"/g, `content="https://${req.get('host')}${req.originalUrl}"`);
         
         res.setHeader('Content-Type', 'text/html');
         res.send(html);
-    } catch (err) {
-        res.sendFile(path.join(process.cwd(), 'public', 'profile.html'));
-    }
+    } catch (err) { res.sendFile(path.join(process.cwd(), 'public', 'profile.html')); }
 });
 
 app.get('/auth/discord/callback', async (req, res) => {

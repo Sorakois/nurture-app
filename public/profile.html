@@ -28,8 +28,8 @@
         }
 
         .profile-sidebar {
-            width: 320px;
-            min-width: 320px;
+            width: 340px;
+            min-width: 340px;
             background: linear-gradient(180deg, rgba(32, 25, 48, 0.95) 0%, rgba(21, 17, 33, 0.95) 100%);
             border: 1px solid rgba(157, 142, 199, 0.28);
             border-radius: 24px 8px 24px 8px;
@@ -94,6 +94,18 @@
             box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4);
         }
 
+        .section-divider {
+            margin: 40px 0 20px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(157, 142, 199, 0.2);
+            color: #d0c2f7;
+            font-size: 1.2em;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
         @media (max-width: 768px) {
             .profile-layout { flex-direction: column; padding: 0 10px; margin: 20px auto; }
             .profile-sidebar { width: 100%; min-width: 0; position: static; }
@@ -113,8 +125,13 @@
     </div>
 
     <div class="profile-layout">
-        <!-- Module 1: My Games (Left) -->
+        <!-- Module 1: Profile & My Games (Left) -->
         <aside class="profile-sidebar">
+            <a href="javascript:history.length > 1 ? history.back() : window.location.href='/'" class="btn-floral" style="margin-bottom: 20px; display: inline-flex; width: auto; padding: 8px 16px;">
+                <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; margin-right: 6px;"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+                <span>Back</span>
+            </a>
+
             <div class="profile-header">
                 <img id="pageAvatar" src="/Assets/placeholder.png" class="profile-avatar">
                 <div>
@@ -123,47 +140,73 @@
                 </div>
             </div>
             
-            <div style="font-size: 0.8em; text-transform: uppercase; color: #a99ec7; font-weight: bold; margin-bottom: 12px;">Contributed Games</div>
+            <div style="font-size: 0.8em; text-transform: uppercase; color: #a99ec7; font-weight: bold; margin-bottom: 12px;">Starred Games & Categories</div>
             <div id="gameFiltersList"></div>
         </aside>
 
-        <!-- Module 2: My Items (Right) -->
+        <!-- Module 2: My Items & Contributions (Right) -->
         <div class="profile-content-area">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 24px; border-bottom: 1px solid rgba(157, 142, 199, 0.2); padding-bottom: 12px;">
-                <h2 style="margin: 0; color: #d0c2f7;" id="itemsHeaderTitle">All Items</h2>
-                <button class="btn-floral" onclick="navigator.clipboard.writeText(window.location.href); alert('Profile Link Copied!')" style="padding: 8px 14px;">🔗 Share Profile</button>
+                <h2 style="margin: 0; color: #d0c2f7;" id="itemsHeaderTitle">Favorited Items</h2>
+                <button class="btn-floral pollen" onclick="navigator.clipboard.writeText(window.location.href); alert('Profile Link Copied!')" style="padding: 8px 14px;">🔗 Share Profile</button>
             </div>
             
             <div id="itemsContainer" style="display: flex; flex-direction: column; gap: 12px;"></div>
+
+            <div class="section-divider">✿ Approved Contributions</div>
+            <div id="contributionsContainer" style="display: flex; flex-direction: column; gap: 12px;"></div>
         </div>
     </div>
 
     <script src="/Assets/common.js"></script>
     <script>
         const profileId = window.location.pathname.split('/').pop().split('?')[0].split('#')[0];
-        let allContributions = [];
-        let groupedGames = {};
+        let profileData = null;
+        let allGames = [];
+        let myGames = [];
+        let myItemsMap = {};
 
         async function initProfilePage() {
             try {
+                // Fetch User Profile
                 const res = await fetch(`/api/profile/${encodeURIComponent(profileId)}`);
                 if (!res.ok) throw new Error();
-                const data = await res.json();
+                profileData = await res.json();
 
-                document.title = `Nurture | ${data.username}'s Profile`;
-                document.getElementById('pageUsername').textContent = data.username;
-                document.getElementById('pageAvatar').src = data.avatar ? `https://cdn.discordapp.com/avatars/${data.discordId}/${data.avatar}.png` : '/Assets/placeholder.png';
-                document.getElementById('pagePoints').textContent = `${data.totalPoints} pts`;
+                document.title = `Nurture | ${profileData.username}'s Profile`;
+                document.getElementById('pageUsername').textContent = profileData.username;
+                document.getElementById('pageAvatar').src = profileData.avatar ? `https://cdn.discordapp.com/avatars/${profileData.discordId}/${profileData.avatar}.png` : '/Assets/placeholder.png';
+                document.getElementById('pagePoints').textContent = `${profileData.totalPoints} pts`;
 
-                allContributions = data.contributions || [];
+                // Fetch All Games Database
+                const gamesRes = await fetch('/api/games?limit=100');
+                const gamesData = await gamesRes.json();
+                allGames = gamesData.games || [];
                 
-                allContributions.forEach(c => {
-                    if (!groupedGames[c.gameId]) groupedGames[c.gameId] = { name: c.gameName, icon: c.gameIcon, count: 0 };
-                    groupedGames[c.gameId].count++;
+                // Map out "My Games" and "My Items" using the ID arrays stored in MongoDB
+                myGames = allGames.filter(g => profileData.starredGames.includes(g.id));
+
+                allGames.forEach(g => {
+                    const favIds = profileData.starredSubItems[g.id] || [];
+                    if (favIds.length > 0) {
+                        if (!myItemsMap[g.id]) myItemsMap[g.id] = { name: g.name, icon: g.banner_url, items: [] };
+
+                        ['guides', 'assets', 'communities', 'mods'].forEach(cat => {
+                            if (g[cat]) {
+                                g[cat].forEach(item => {
+                                    const itemId = String(item._id || item.url || item.download_url || item.title || item.name);
+                                    if (favIds.includes(itemId)) {
+                                        myItemsMap[g.id].items.push({ ...item, category: cat });
+                                    }
+                                });
+                            }
+                        });
+                    }
                 });
 
                 renderGameFilters();
                 renderItems('ALL');
+                renderContributions();
 
             } catch (e) {
                 document.getElementById('pageUsername').textContent = "User Not Found";
@@ -173,57 +216,102 @@
 
         function renderGameFilters() {
             const list = document.getElementById('gameFiltersList');
+            let totalFavs = 0;
+            Object.values(myItemsMap).forEach(g => { totalFavs += g.items.length; });
+
             let html = `
                 <div class="profile-game-filter active" id="filter_ALL" onclick="renderItems('ALL')">
                     <span style="font-size: 1.2em; padding: 0 4px;">✿</span>
-                    <span style="flex-grow:1;">View ALL Items</span>
-                    <span style="background: rgba(157,142,199,0.2); padding: 2px 8px; border-radius: 8px;">${allContributions.length}</span>
+                    <span style="flex-grow:1;">View ALL Favorites</span>
+                    <span style="background: rgba(157,142,199,0.2); padding: 2px 8px; border-radius: 8px;">${totalFavs}</span>
                 </div>
             `;
 
-            Object.entries(groupedGames).forEach(([gId, g]) => {
+            myGames.forEach(g => {
+                const count = myItemsMap[g.id] ? myItemsMap[g.id].items.length : 0;
                 html += `
-                    <div class="profile-game-filter" id="filter_${gId}" onclick="renderItems('${gId}')">
-                        <img src="${g.icon}" style="width: 24px; height: 24px; border-radius: 4px; object-fit: cover;">
+                    <div class="profile-game-filter" id="filter_${g.id}" onclick="renderItems('${g.id}')">
+                        <img src="${g.banner_url || '/Assets/placeholder.png'}" style="width: 24px; height: 24px; border-radius: 4px; object-fit: cover;">
                         <span style="flex-grow:1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${g.name}</span>
-                        <span style="background: rgba(157,142,199,0.2); padding: 2px 8px; border-radius: 8px;">${g.count}</span>
+                        <span style="background: rgba(157,142,199,0.2); padding: 2px 8px; border-radius: 8px;">${count}</span>
                     </div>
                 `;
             });
             list.innerHTML = html;
         }
 
+        const escapeTxt = (txt) => (txt || '').toString().replace(/[&<>"']/g, m => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[m]));
+
         function renderItems(filterGameId) {
             document.querySelectorAll('.profile-game-filter').forEach(el => el.classList.remove('active'));
-            document.getElementById(`filter_${filterGameId}`).classList.add('active');
+            const filterBtn = document.getElementById(`filter_${filterGameId}`);
+            if (filterBtn) filterBtn.classList.add('active');
 
-            document.getElementById('itemsHeaderTitle').textContent = filterGameId === 'ALL' ? 'All Contributions' : `${groupedGames[filterGameId].name} Contributions`;
-
-            const filtered = filterGameId === 'ALL' ? allContributions : allContributions.filter(c => c.gameId === filterGameId);
             const container = document.getElementById('itemsContainer');
-            
-            const escapeTxt = (txt) => (txt || '').toString().replace(/[&<>"']/g, m => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[m]));
+            document.getElementById('itemsHeaderTitle').textContent = filterGameId === 'ALL' ? 'All Favorited Items' : 'Favorited Items';
 
-            container.innerHTML = filtered.map(c => {
+            let itemsToRender = [];
+            if (filterGameId === 'ALL') {
+                Object.values(myItemsMap).forEach(g => {
+                    g.items.forEach(item => {
+                        itemsToRender.push({ ...item, gameName: g.name, gameIcon: g.icon });
+                    });
+                });
+            } else if (myItemsMap[filterGameId]) {
+                myItemsMap[filterGameId].items.forEach(item => {
+                    itemsToRender.push({ ...item, gameName: myItemsMap[filterGameId].name, gameIcon: myItemsMap[filterGameId].icon });
+                });
+            }
+
+            if (itemsToRender.length === 0) {
+                container.innerHTML = '<p style="color:#a99ec7;">No items favorited in this category.</p>';
+                return;
+            }
+
+            container.innerHTML = itemsToRender.map(item => {
+                const targetUrl = item.url || item.download_url || '#';
+                return `
+                <a href="${escapeTxt(targetUrl)}" target="_blank" class="floral-mail-card" style="display:flex; gap:16px; align-items:center; text-decoration:none; color:white;">
+                    <img src="${item.gameIcon}" style="width: 48px; height: 48px; border-radius: 8px; border: 1.5px solid #9d8ec7; object-fit: cover; flex-shrink: 0;">
+                    <div style="flex-grow: 1;">
+                        <div style="font-weight:bold; color:#d0c2f7; font-size:1.1em; margin-bottom: 6px;">${escapeTxt(item.title || item.name)}</div>
+                        <div style="font-size:0.85em; color:#a99ec7; display:flex; align-items:center; gap:8px;">
+                            <strong style="color:#f6c85f; background:rgba(246, 200, 95, 0.12); padding:2px 8px; border-radius:8px 2px 8px 2px; border:1px solid rgba(246, 200, 95, 0.35);">${item.category.toUpperCase()}</strong> 
+                            <span style="color:#5e4796;">•</span>
+                            <span style="font-family:monospace; color:#d0c2f7;">${escapeTxt(item.gameName)}</span>
+                        </div>
+                    </div>
+                </a>
+            `}).join('');
+        }
+
+        function renderContributions() {
+            const container = document.getElementById('contributionsContainer');
+            if (!profileData.contributions || profileData.contributions.length === 0) {
+                container.innerHTML = '<p style="color:#a99ec7;">No approved contributions yet.</p>';
+                return;
+            }
+
+            container.innerHTML = profileData.contributions.map(c => {
                 const tabMap = { 'Guide': 'guides', 'Asset': 'assets', 'Community': 'communities', 'Mod': 'mods', 'Coupon': 'overview', 'Game': 'overview' };
                 const tab = tabMap[c.category] || 'overview';
                 const link = c.gameId ? `/games/${c.gameId}?tab=${tab}` : '/';
 
                 return `
                 <a href="${link}" class="floral-mail-card" style="display:flex; gap:16px; align-items:center; text-decoration:none; color:white;">
-                    <img src="${c.gameIcon}" style="width: 54px; height: 54px; border-radius: 12px; border: 1.5px solid #9d8ec7; object-fit: cover; flex-shrink: 0;">
+                    <img src="${c.gameIcon}" style="width: 50px; height: 50px; border-radius: 12px; border: 1px solid rgba(157, 142, 199, 0.3); object-fit: cover; flex-shrink: 0;">
                     <div style="flex-grow: 1;">
                         <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
-                            <div style="font-weight:bold; color:#d0c2f7; font-size:1.1em;">${escapeTxt(c.target)}</div>
+                            <div style="font-weight:bold; color:#d0c2f7; font-size:1.05em;">${escapeTxt(c.target)}</div>
                             <span style="font-size:0.75em; color:#a99ec7;">${new Date(c.date).toLocaleDateString()}</span>
                         </div>
-                        <div style="font-size:0.85em; color:#a99ec7; display:flex; align-items:center; gap:8px;">
-                            <strong style="color:#f6c85f; background:rgba(246, 200, 95, 0.12); padding:2px 8px; border-radius:8px 2px 8px 2px; border:1px solid rgba(246, 200, 95, 0.35);">${c.action ? c.action.toUpperCase() : 'EDIT'}</strong> 
+                        <div style="font-size:0.8em; color:#a99ec7; display:flex; align-items:center; gap:6px;">
+                            <strong style="color:#7bc996; background:rgba(123, 201, 150, 0.12); padding:2px 8px; border-radius:8px 2px 8px 2px; border:1px solid rgba(123, 201, 150, 0.35);">${c.action ? c.action.toUpperCase() : 'EDIT'}</strong> 
                             <span>in ${c.category}</span>
                             <span style="color:#5e4796;">•</span>
                             <span style="font-family:monospace; color:#d0c2f7;">${escapeTxt(c.gameName)}</span>
                         </div>
-                        ${c.commitMessage ? `<div style="font-size:0.9em; color:#e5dcff; border-left:2px solid #9d8ec7; padding-left:10px; margin-top:10px; font-style: italic;">${escapeTxt(c.commitMessage)}</div>` : ''}
+                        ${c.commitMessage ? `<div style="font-size:0.85em; color:#e5dcff; border-left:2px solid #9d8ec7; padding-left:10px; margin-top:10px; font-style: italic;">${escapeTxt(c.commitMessage)}</div>` : ''}
                     </div>
                 </a>
             `}).join('');

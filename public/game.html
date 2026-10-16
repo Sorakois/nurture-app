@@ -1551,7 +1551,7 @@
                     mods: { title: 'Mods', dbKey: 'Mod', data: gameData.mods, catKey: 'author', metaKey: 'version', metaPrefix: 'Version: ' }
                 };
 
-                const config = sectionConfig[currentSection] || sectionConfig['overview'];
+                const config = sectionConfig[currentSection] || sectionConfig['guides'];
                 const addNewBtn = `<button class="btn-floral" onclick="openGameSuggestModal('${config?.dbKey || 'Overview'}')" style="padding: 6px 14px; font-size: 0.6em;">+ Add New</button>`;
                 const headerHtml = `<h2 style="display: flex; justify-content: space-between; align-items: center; margin-top: 0;">${config?.title || 'Overview'} ${addNewBtn}</h2>`;
 
@@ -1562,7 +1562,7 @@
                 }
 
                 let filteredData = activeFilter === 'All' 
-                    ? [...config.data] 
+                    ? [...(config.data || [])] 
                     : config.data.filter(item => {
                         const val = item[config.catKey];
                         if (!val) return false;

@@ -165,12 +165,10 @@
         /* === 3D STATUS BADGES (NEW! / UPDATE! / EDITED!) === */
         .card-badges-row {
             display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 6px;
-            margin-top: 8px;
-            min-height: 28px;
-            flex-wrap: wrap;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 5px;
+            margin-top: 10px;
         }
 
         .status-badge {
@@ -178,12 +176,12 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 3px 8px;
-            border-radius: 6px;
+            padding: 2px 6px;
+            border-radius: 4px;
             text-transform: uppercase;
             line-height: 1.1;
             user-select: none;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.35);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.35);
             position: relative;
             overflow: hidden;
             border: none;
@@ -197,37 +195,37 @@
         }
 
         .status-badge .badge-title {
-            font-size: 10px;
+            font-size: 8.5px;
             font-weight: 900;
-            letter-spacing: 0.4px;
+            letter-spacing: 0.3px;
         }
 
         .status-badge .badge-date {
-            font-size: 8px;
+            font-size: 7px;
             font-family: monospace;
-            opacity: 0.85;
-            margin-top: 2px;
+            opacity: 0.9;
+            margin-top: 1px;
         }
 
         /* Red NEW! badge with dark crimson bottom lip */
         .status-badge.badge-new {
             background-color: #ef2b2d;
             color: #ffffff;
-            border-bottom: 3px solid #7a0b0c;
+            border-bottom: 2.5px solid #7a0b0c;
         }
 
         /* Orange UPDATE! badge with dark sienna bottom lip */
         .status-badge.badge-update {
             background-color: #ff851b;
             color: #1a1228;
-            border-bottom: 3px solid #9c470b;
+            border-bottom: 2.5px solid #9c470b;
         }
 
         /* Gold EDITED! badge with dark olive-gold bottom lip */
         .status-badge.badge-edited {
             background-color: #ffd014;
             color: #1a1228;
-            border-bottom: 3px solid #7d6708;
+            border-bottom: 2.5px solid #7d6708;
         }
 
         /* Glint Animation applied to all status badges */
@@ -921,7 +919,7 @@
                             <button type="button" class="clear-filters-btn" onclick="clearAllFilters()">Reset</button>
                         </div>
 
-                        <div class="tags-section-title">🌸 Genre Tags</div>
+                        <div class="tags-section-title">📚 Genre Tags</div>
                         <div class="tags-pills-grid" id="genreTagsGrid">
                             <button type="button" class="tag-pill" data-tag="RPG" onclick="toggleGenreTag('RPG', this)">RPG</button>
                             <button type="button" class="tag-pill" data-tag="Action" onclick="toggleGenreTag('Action', this)">Action</button>
@@ -943,7 +941,6 @@
                 </div>
             </div>
 
-            <!-- Game Grid -->
             <div class="grid-container" id="gameGrid" style="padding: 0;"></div>
         </div>
         
@@ -983,7 +980,7 @@
                 <span id="auGameName">Game</span>
             </h2>
             <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 18px; border-bottom: 1px solid rgba(157, 142, 199, 0.28); padding-bottom: 15px;">
-                <span class="status-badge badge-update" style="font-size: 11px; padding: 3px 10px; border-bottom: none;" id="auVersion">Version 0.0.0</span>
+                <span class="status-badge badge-update" style="padding: 3px 10px; border-bottom: none;"><span class="badge-title" id="auVersion">Version 0.0.0</span></span>
                 <span style="font-family: monospace; color: #a99ec7; font-size: 0.85em;" id="auDate">Date</span>
             </div>
             <div id="auNotes" style="max-height: 400px; overflow-y: auto; color: #e5dcff; font-size: 0.95em; line-height: 1.6; white-space: pre-wrap; padding-right: 10px;"></div>
@@ -998,7 +995,7 @@
                 <span id="geGameName">Game</span>
             </h2>
             <div style="display: flex; align-items: center; margin-bottom: 18px; border-bottom: 1px solid rgba(157, 142, 199, 0.28); padding-bottom: 15px;">
-                <span class="status-badge badge-edited" style="font-size: 11px; padding: 3px 10px; border-bottom: none;">Recent Community Edits</span>
+                <span class="status-badge badge-edited" style="padding: 3px 10px; border-bottom: none;"><span class="badge-title">Recent Community Edits</span></span>
             </div>
             <div id="geContent" style="max-height: 400px; overflow-y: auto; padding-right: 10px;"></div>
         </div>
@@ -1242,7 +1239,7 @@
             const game = allGames.find(g => g.id === gameId);
             if (!game) return;
             document.getElementById('auGameName').textContent = game.name;
-            document.getElementById('auVersion').textContent = game.latest_version ? `Version ${game.latest_version}` : 'Latest Update';
+            document.getElementById('auVersion').textContent = game.latest_version ? `v${game.latest_version}` : 'Update';
             const d = new Date(game.last_major_update_date);
             document.getElementById('auDate').textContent = !isNaN(d.getTime()) ? d.toLocaleDateString() : '';
             document.getElementById('auNotes').textContent = game.latest_patch_notes || 'No patch notes provided by developer.';
