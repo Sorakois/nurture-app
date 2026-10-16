@@ -164,7 +164,7 @@ function renderLoggedInUI(container, user) {
     const settingsSvg = `<svg viewBox="0 0 24 24"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.06-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.73,8.87C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.06,0.94l-2.03,1.58c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.43-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.49-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>`;
     
     container.innerHTML = `
-        <div class="user-profile-badge" style="cursor:pointer;" onclick="openUserProfileModal('${user.discordId}')" title="View My Contributions">
+        <div class="user-profile-badge" style="cursor:pointer;" onclick="window.location.href='/profile/${user.discordId}'" title="View My Stuff">
             <img src="${avatarUrl}" class="user-avatar"><span class="user-name">${user.username}</span>
             <a href="/auth/logout" class="sign-out-btn" onclick="event.stopPropagation(); clearCachedAuth()">Sign Out</a>
         </div>
@@ -423,31 +423,38 @@ async function openUserProfileModal(discordId, username = null) {
             return;
         }
         
-        container.innerHTML = data.contributions.map(c => {
-            const tabMap = { 'Guide': 'guides', 'Asset': 'assets', 'Community': 'communities', 'Mod': 'mods', 'Game': 'overview' };
-            const tab = tabMap[c.category] || 'overview';
-            const link = c.gameId ? `/games/${c.gameId}?tab=${tab}` : '/';
-            
-            const dateStr = new Date(c.date).toLocaleDateString();
-            const actionText = c.action ? c.action.toUpperCase() : 'EDIT';
-            const commitHtml = c.commitMessage ? `<div style="font-size:0.85em; color:#e5dcff; border-left:2px solid #9d8ec7; padding-left:8px; margin-top:8px; font-style: italic;">${escapeTxt(c.commitMessage)}</div>` : '';
-            
-            return `
-                <a href="${link}" class="floral-mail-card" style="display:block; text-decoration:none; color:white;">
-                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
-                        <div style="font-weight:bold; color:#d0c2f7; font-size:1.05em;">${escapeTxt(c.target)}</div>
-                        <span style="font-size:0.75em; color:#a99ec7;">${dateStr}</span>
+        const grouped = {};
+        data.contributions.forEach(c => {
+            if (!grouped[c.gameId]) grouped[c.gameId] = { name: c.gameName, icon: c.gameIcon, items: [] };
+            grouped[c.gameId].items.push(c);
+        });
+
+        container.innerHTML = Object.values(grouped).map(group => `
+            <div class="profile-game-group open">
+                <div class="profile-game-header" onclick="this.parentElement.classList.toggle('open')">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <img src="${group.icon}" style="width:24px; height:24px; border-radius:6px; object-fit:cover; border: 1px solid rgba(157, 142, 199, 0.4);">
+                        <strong style="color: #f4f0ff;">${escapeTxt(group.name)}</strong>
                     </div>
-                    <div style="font-size:0.8em; color:#a99ec7; margin-bottom:4px; display:flex; align-items:center; gap:6px;">
-                        <strong style="color:#f6c85f; background:rgba(246, 200, 95, 0.12); padding:2px 8px; border-radius:8px 2px 8px 2px; border:1px solid rgba(246, 200, 95, 0.35);">${actionText}</strong> 
-                        <span>in ${c.category}</span>
-                        <span style="color:#5e4796;">•</span>
-                        <span style="font-family:monospace; color:#d0c2f7;">${c.gameId || 'General'}</span>
-                    </div>
-                    ${commitHtml}
-                </a>
-            `;
-        }).join('');
+                    <span class="toggle-arrow" style="font-size:0.8em; color:#a99ec7;">▼</span>
+                </div>
+                <div class="profile-game-items">
+                    ${group.items.map(c => `
+                        <a href="${c.gameId ? `/games/${c.gameId}` : '/'}" class="floral-mail-card" style="display:block; text-decoration:none; color:white; padding: 10px 14px; margin-bottom: 8px;">
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
+                                <div style="font-weight:bold; color:#d0c2f7; font-size:1.05em;">${escapeTxt(c.target)}</div>
+                                <span style="font-size:0.75em; color:#a99ec7;">${new Date(c.date).toLocaleDateString()}</span>
+                            </div>
+                            <div style="font-size:0.8em; color:#a99ec7; display:flex; align-items:center; gap:6px;">
+                                <strong style="color:#f6c85f; background:rgba(246, 200, 95, 0.12); padding:2px 8px; border-radius:8px 2px 8px 2px; border:1px solid rgba(246, 200, 95, 0.35);">${c.action ? c.action.toUpperCase() : 'EDIT'}</strong> 
+                                <span>in ${c.category}</span>
+                            </div>
+                            ${c.commitMessage ? `<div style="font-size:0.85em; color:#e5dcff; border-left:2px solid #9d8ec7; padding-left:8px; margin-top:8px; font-style: italic;">${escapeTxt(c.commitMessage)}</div>` : ''}
+                        </a>
+                    `).join('')}
+                </div>
+            </div>
+        `).join('');
     } catch (e) { container.innerHTML = '<p style="color:#d96b98;">Failed to load profile.</p>'; }
 }
 function closeUserProfileModal() { document.getElementById('userProfileModal').classList.remove('active'); }
@@ -527,8 +534,14 @@ function applySettings() {
     const subNavEl = document.getElementById('subNavSidebar');
     
     if (lbEl) {
-        lbEl.style.display = showLb ? 'flex' : 'none';
-        if (spacerEl) spacerEl.style.display = showLb ? 'block' : 'none';
+        // Reserves the physical layout space so the center column doesn't break alignment
+        railEl.style.opacity = showLb ? '1' : '0';
+        railEl.style.pointerEvents = showLb ? 'auto' : 'none';
+        
+        if (spacerEl) {
+            spacerEl.style.opacity = showLb ? '1' : '0';
+            spacerEl.style.pointerEvents = showLb ? 'auto' : 'none';
+        }
 
         if (lbSide === 'left') {
             railEl.style.order = '-1';

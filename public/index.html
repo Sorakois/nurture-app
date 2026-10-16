@@ -186,6 +186,27 @@
             line-height: 1.2;
             user-select: none;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.35);
+            /* Added for Glint */
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Glint Animation applied to all status badges */
+        .status-badge::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -100%;
+            width: 40%;
+            height: 200%;
+            background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.7) 50%, rgba(255,255,255,0) 100%);
+            transform: rotate(30deg);
+            animation: badgeGlint 3.5s infinite linear;
+        }
+
+        @keyframes badgeGlint {
+            0% { left: -100%; }
+            20%, 100% { left: 250%; }
         }
 
         /* Red NEW! badge with dark crimson bottom lip */
@@ -821,100 +842,93 @@
         </div>
     </div>
 
-    <!-- Hero Title & Search/Filter Bar Centered Above the Grid -->
-    <div style="max-width: 950px; margin: 0 auto; padding: 0 20px;">
-        <div class="about-us hero-showcase">
-            <img src="/Assets/nurture_icon.png" alt="Nurture Emblem" class="hero-logo-img">
-            <h1 style="font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 2.6em; margin: 0 0 10px 0;">
-                Nurture
-            </h1>
-            <p style="font-size: 1.15em; color: #d0c2f7; margin: 0; max-width: 620px; line-height: 1.4;">
-                Guides, Raw Assets, Communities, Mods, and more!
-            </p>
-        </div>
-
-        <!-- Iwara-Style Expandable Changelog Box -->
-        <div class="changelog-panel" id="changelogPanel">
-            <div class="changelog-header-bar" onclick="toggleChangelogBox()">
-                <div class="changelog-header-left">
-                    <span>Site Changelog</span>
-                    <span class="changelog-latest-pill" id="clHeaderVersion">LATEST</span>
-                </div>
-                <span class="changelog-toggle-btn" id="clToggleText">Hide ▲</span>
-            </div>
-
-            <div class="changelog-body" id="changelogBody">
-                <!-- Newest Changelog Natively Displayed Here -->
-                <div id="latestChangelogContainer"></div>
-
-                <!-- Older Changelogs Archive (Hidden until clicked) -->
-                <div class="changelog-older-Archive" id="olderChangelogsContainer"></div>
-
-                <!-- Toggle Button for Older Changelogs -->
-                <button type="button" class="changelog-history-btn" id="olderChangelogsBtn" onclick="toggleOlderChangelogs()" style="display:none;">
-                    See older changelogs ▼
-                </button>
-            </div>
-        </div>
-
-        <div class="search-container" style="display: flex; gap: 10px; justify-content: center; align-items: center; max-width: 800px; width: 100%; margin: 15px auto 25px auto;">
-            <div style="position: relative; display: flex; align-items: center; flex-grow: 1;">
-                <button id="searchToggle" style="background: none; border: none; cursor: pointer; padding: 0 10px; z-index: 10;" title="Toggle Search">
-                    <svg viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: #aaa;"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-                </button>
-                <input type="text" class="search-input" placeholder="Search games..." id="searchInput" style="width: 100%; opacity: 1; padding: 12px 20px; transition: all 0.3s ease; flex-grow: 1;">
-            </div>
-            
-            <div class="tags-menu-wrapper" id="tagsMenuWrapper">
-                <button type="button" class="tags-menu-trigger" id="tagsMenuBtn" onclick="toggleTagsMenu(event)">
-                    <span>✿ Filters</span>
-                    <span id="activeFilterCount" class="filter-count-badge" style="display:none;">0</span>
-                    <span style="font-size: 0.75em; color: #d0c2f7;">▼</span>
-                </button>
-
-                <div class="tags-dropdown-panel" id="tagsDropdownPanel" onclick="event.stopPropagation()">
-                    <div class="tags-panel-header">
-                        <span style="font-size: 0.78em; color: #a99ec7; font-weight: bold;">Match Logic:</span>
-                        <div class="logic-toggle-group">
-                            <button type="button" id="logicOrBtn" class="logic-btn active" onclick="setFilterLogic('OR')">OR</button>
-                            <button type="button" id="logicAndBtn" class="logic-btn" onclick="setFilterLogic('AND')">AND</button>
-                        </div>
-                        <button type="button" class="clear-filters-btn" onclick="clearAllFilters()">Reset</button>
-                    </div>
-
-                    <div class="tags-section-title">📚 Genre Tags</div>
-                    <div class="tags-pills-grid" id="genreTagsGrid">
-                        <button type="button" class="tag-pill" data-tag="RPG" onclick="toggleGenreTag('RPG', this)">RPG</button>
-                        <button type="button" class="tag-pill" data-tag="Action" onclick="toggleGenreTag('Action', this)">Action</button>
-                        <button type="button" class="tag-pill" data-tag="Turn-Based" onclick="toggleGenreTag('Turn-Based', this)">Turn-Based</button>
-                        <button type="button" class="tag-pill" data-tag="Tower Defense" onclick="toggleGenreTag('Tower Defense', this)">Tower Defense</button>
-                        <button type="button" class="tag-pill" data-tag="Rhythm" onclick="toggleGenreTag('Rhythm', this)">Rhythm</button>
-                        <button type="button" class="tag-pill" data-tag="City Builder" onclick="toggleGenreTag('City Builder', this)">City Builder</button>
-                    </div>
-
-                    <div class="tags-divider"></div>
-
-                    <div class="tags-section-title">🌿 Age Rating (ESRB)</div>
-                    <div class="tags-pills-grid" id="ageTagsGrid">
-                        <button type="button" class="tag-pill age-pill" data-age="E" onclick="toggleAgeTag('E', this)">E • Everyone</button>
-                        <button type="button" class="tag-pill age-pill" data-age="T" onclick="toggleAgeTag('T', this)">T • Teen</button>
-                        <button type="button" class="tag-pill age-pill" data-age="M" onclick="toggleAgeTag('M', this)">M • Mature 17+</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Main Content Row: Single Wrapper with Spacer, Game Grid, and Sticky PC Leaderboard -->
-    <div class="main-wrapper" id="mainWrapper" style="justify-content: center; align-items: flex-start; gap: 30px; max-width: 1600px; padding: 0 24px 40px 24px;">
-        <!-- Flexible spacer keeps the grid dead-center on wide monitors and shrinks first on smaller screens -->
+    <!-- Unified Main Row: Left Spacer, Center Column (Hero + Changelog + Search + Grid), Right Rail (Top-Right Ad + Leaderboard) -->
+    <div class="main-wrapper" id="mainWrapper" style="justify-content: center; align-items: flex-start; gap: 30px; max-width: 1600px; padding: 18px 24px 40px 24px;">
+        <!-- Flexible spacer keeps the center column dead-center on wide monitors -->
         <div id="lbSpacer" class="leaderboard-spacer" style="flex: 0 999 290px; width: 290px; min-width: 0; display: block;"></div>
 
+        <!-- Center Column: Hero Showcase, Changelog, Search Bar, and Game Grid -->
         <div style="flex: 1 1 700px; max-width: 950px; min-width: 0;">
+            <div class="about-us hero-showcase" style="margin-top: 0;">
+                <img src="/Assets/nurture_icon.png" alt="Nurture Emblem" class="hero-logo-img">
+                <h1 style="font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 2.6em; margin: 0 0 10px 0;">
+                    Nurture
+                </h1>
+                <p style="font-size: 1.15em; color: #d0c2f7; margin: 0; max-width: 620px; line-height: 1.4;">
+                    Guides, Raw Assets, Communities, Mods, and more!
+                </p>
+            </div>
+
+            <!-- Iwara-Style Expandable Changelog Box -->
+            <div class="changelog-panel" id="changelogPanel">
+                <div class="changelog-header-bar" onclick="toggleChangelogBox()">
+                    <div class="changelog-header-left">
+                        <span>Site Changelog</span>
+                        <span class="changelog-latest-pill" id="clHeaderVersion">LATEST</span>
+                    </div>
+                    <span class="changelog-toggle-btn" id="clToggleText">Hide ▲</span>
+                </div>
+
+                <div class="changelog-body" id="changelogBody">
+                    <div id="latestChangelogContainer"></div>
+                    <div class="changelog-older-Archive" id="olderChangelogsContainer"></div>
+                    <button type="button" class="changelog-history-btn" id="olderChangelogsBtn" onclick="toggleOlderChangelogs()" style="display:none;">
+                        See older changelogs ▼
+                    </button>
+                </div>
+            </div>
+
+            <div class="search-container" style="display: flex; gap: 10px; justify-content: center; align-items: center; max-width: 800px; width: 100%; margin: 15px auto 22px auto;">
+                <div style="position: relative; display: flex; align-items: center; flex-grow: 1;">
+                    <button id="searchToggle" style="background: none; border: none; cursor: pointer; padding: 0 10px; z-index: 10;" title="Toggle Search">
+                        <svg viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: #aaa;"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                    </button>
+                    <input type="text" class="search-input" placeholder="Search games..." id="searchInput" style="width: 100%; opacity: 1; padding: 12px 20px; transition: all 0.3s ease; flex-grow: 1;">
+                </div>
+                
+                <div class="tags-menu-wrapper" id="tagsMenuWrapper">
+                    <button type="button" class="tags-menu-trigger" id="tagsMenuBtn" onclick="toggleTagsMenu(event)">
+                        <span>⚙️ Filters</span>
+                        <span id="activeFilterCount" class="filter-count-badge" style="display:none;">0</span>
+                        <span style="font-size: 0.75em; color: #d0c2f7;">▼</span>
+                    </button>
+
+                    <div class="tags-dropdown-panel" id="tagsDropdownPanel" onclick="event.stopPropagation()">
+                        <div class="tags-panel-header">
+                            <span style="font-size: 0.78em; color: #a99ec7; font-weight: bold;">Match Logic:</span>
+                            <div class="logic-toggle-group">
+                                <button type="button" id="logicOrBtn" class="logic-btn active" onclick="setFilterLogic('OR')">OR</button>
+                                <button type="button" id="logicAndBtn" class="logic-btn" onclick="setFilterLogic('AND')">AND</button>
+                            </div>
+                            <button type="button" class="clear-filters-btn" onclick="clearAllFilters()">Reset</button>
+                        </div>
+
+                        <div class="tags-section-title">📚 Genre Tags</div>
+                        <div class="tags-pills-grid" id="genreTagsGrid">
+                            <button type="button" class="tag-pill" data-tag="RPG" onclick="toggleGenreTag('RPG', this)">RPG</button>
+                            <button type="button" class="tag-pill" data-tag="Action" onclick="toggleGenreTag('Action', this)">Action</button>
+                            <button type="button" class="tag-pill" data-tag="Turn-Based" onclick="toggleGenreTag('Turn-Based', this)">Turn-Based</button>
+                            <button type="button" class="tag-pill" data-tag="Tower Defense" onclick="toggleGenreTag('Tower Defense', this)">Tower Defense</button>
+                            <button type="button" class="tag-pill" data-tag="Rhythm" onclick="toggleGenreTag('Rhythm', this)">Rhythm</button>
+                            <button type="button" class="tag-pill" data-tag="City Builder" onclick="toggleGenreTag('City Builder', this)">City Builder</button>
+                        </div>
+
+                        <div class="tags-divider"></div>
+
+                        <div class="tags-section-title">🌿 Age Rating (ESRB)</div>
+                        <div class="tags-pills-grid" id="ageTagsGrid">
+                            <button type="button" class="tag-pill age-pill" data-age="E" onclick="toggleAgeTag('E', this)">E • Everyone</button>
+                            <button type="button" class="tag-pill age-pill" data-age="T" onclick="toggleAgeTag('T', this)">T • Teen</button>
+                            <button type="button" class="tag-pill age-pill" data-age="M" onclick="toggleAgeTag('M', this)">M • Mature 17+</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="grid-container" id="gameGrid"></div>
         </div>
         
-        <!-- Right Rail: Top-Right Ad Window + Sticky PC Leaderboard -->
+        <!-- Right Rail: Top-Right Ad Window (Beside Hero) + Sticky PC Leaderboard -->
         <div class="right-rail-column" id="rightRailColumn">
             <div class="nurture-ad-unit nurture-ad-sidebar" id="indexSidebarAd">
                 <span class="ad-tag-label">Sponsored</span>
@@ -987,7 +1001,6 @@
         </div>
     </div>
 
-    <!-- Live Rating Modal -->
     <!-- Live Rating Modal -->
     <div id="rateGameModal" class="modal-overlay">
         <div class="modal-window" style="max-width: 400px; text-align: center;">

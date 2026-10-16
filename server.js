@@ -135,6 +135,24 @@ const syncAppStoreUpdatesBackground = async (games) => {
     }
 };
 
+// --- IP & DISCORD BAN ENFORCEMENT HELPER ---
+const getClientIp = (req) => {
+    const forwarded = req.headers['x-forwarded-for'];
+    if (forwarded) return String(forwarded).split(',')[0].trim();
+    return req.socket?.remoteAddress || 'unknown';
+};
+
+const checkUserOrIpBanned = async (user, clientIp) => {
+    if (user && user.isBanned) {
+        return true;
+    }
+    if (clientIp && clientIp !== 'unknown') {
+        const bannedByIp = await User.collection.findOne({ isBanned: true, bannedIps: clientIp });
+        if (bannedByIp) return true;
+    }
+    return false;
+};
+
 // --- API ROUTES ---
 app.get('/api/games', async (req, res) => {
     const page = Math.max(1, parseInt(req.query.page) || 1);
@@ -173,9 +191,50 @@ app.get('/api/games', async (req, res) => {
 
 app.get('/api/games/:id', async (req, res) => {
     try {
-        // Use native driver here as well to expose hidden fields
         const game = await Game.collection.findOne({ id: req.params.id });
         if (!game) return res.status(404).json({ error: 'Game not found' });
+
+        // 1. Auto-recover any approved coupon contributions that were submitted under 'Game' or 'Coupon'
+        const approvedCouponContribs = await Contribution.collection.find({
+            gameId: req.params.id,
+            status: 'approved',
+            'data.code': { $exists: true, $ne: '' },
+            actionType: 'CREATE'
+        }).toArray();
+
+        let coupons = Array.isArray(game.coupons) ? game.coupons : [];
+        let modifiedCoupons = false;
+
+        approvedCouponContribs.forEach(c => {
+            const codeUpper = String(c.data.code).trim().toUpperCase();
+            if (codeUpper && !coupons.some(existing => String(existing.code || '').toUpperCase() === codeUpper)) {
+                coupons.push({
+                    _id: c._id,
+                    code: codeUpper,
+                    rewards: c.data.rewards || c.data.url || 'In-game rewards',
+                    submitterUsername: c.submitterUsername,
+                    submitterDiscordId: c.submitterDiscordId,
+                    createdAt: c.createdAt ? new Date(c.createdAt).toISOString() : new Date().toISOString()
+                });
+                modifiedCoupons = true;
+            }
+        });
+
+        // 2. Auto-purge coupons that have been marked expired for over 30 days
+        const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+        const now = Date.now();
+        const filteredCoupons = coupons.filter(c => {
+            if (!c.expiredAt) return true;
+            const expMs = new Date(c.expiredAt).getTime();
+            return !isNaN(expMs) && (now - expMs) <= THIRTY_DAYS_MS;
+        });
+
+        if (filteredCoupons.length !== coupons.length || modifiedCoupons) {
+            coupons = filteredCoupons;
+            await Game.collection.updateOne({ id: req.params.id }, { $set: { coupons } });
+            game.coupons = coupons;
+        }
+
         res.json(game);
     } catch (err) {
         console.error("Failed to fetch game:", err);
@@ -225,6 +284,12 @@ app.post('/api/games/:id/rate', async (req, res) => {
         const decoded = jwt.verify(sessionToken, process.env.JWT_SECRET);
         const user = await User.findById(decoded.userId);
         if (!user) return res.status(401).json({ error: "User not found." });
+
+        const clientIp = getClientIp(req);
+        await User.collection.updateOne({ _id: user._id }, { $set: { lastIp: clientIp } });
+        if (await checkUserOrIpBanned(user, clientIp)) {
+            return res.status(403).json({ error: "Your account or IP address has been restricted from contributing." });
+        }
 
         const gameId = req.params.id;
         const { f2p, afk, story, gameplay } = req.body;
@@ -292,236 +357,6 @@ app.post('/api/games/:id/rate', async (req, res) => {
     }
 });
 
-// --- UPDATED DISCORD INTERACTIONS (APPROVE / DENY / REPLY LOGIC) ---
-app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY), async (req, res) => {
-    const interaction = req.body;
-    if (interaction.type === InteractionType.PING) return res.send({ type: InteractionResponseType.PONG });
-
-    if (interaction.type === InteractionType.MESSAGE_COMPONENT) {
-        const customId = interaction.data.custom_id;
-        const [action, targetId] = customId.split('_');
-
-        try {
-            if (action === 'replymail') {
-                return res.send({
-                    type: InteractionResponseType.MODAL,
-                    data: {
-                        custom_id: `modal_replymail_${targetId}`,
-                        title: "Reply to User",
-                        components: [{ type: 1, components: [{ type: 4, custom_id: "reply_text", label: "Message:", style: 2, min_length: 1, max_length: 2000, required: true }] }]
-                    }
-                });
-            }
-
-            const contribution = await Contribution.findById(targetId);
-            if (!contribution) return res.send({ type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE, data: { content: "Contribution not found.", flags: 64 } });
-
-            if (action === 'tweak') {
-                return res.send({
-                    type: InteractionResponseType.MODAL,
-                    data: {
-                        custom_id: `modal_tweak_${targetId}`,
-                        title: "Tweak Contribution",
-                        components: [{ type: 1, components: [{ type: 4, custom_id: "tweaked_data", label: "Edit JSON:", style: 2, value: JSON.stringify(contribution.data, null, 2), required: true }] }]
-                    }
-                });
-            }
-
-            // NOTE: No early res.send() here. We await all database processes first.
-            const user = await User.findOne({ discordId: contribution.submitterDiscordId });
-            const adminAvatar = interaction.member.user.avatar ? `https://cdn.discordapp.com/avatars/${interaction.member.user.id}/${interaction.member.user.avatar}.png` : 'https://cdn.discordapp.com/embed/avatars/0.png';
-
-            if (action === 'approve') {
-                await Contribution.updateOne({ _id: contribution._id }, { $set: { status: 'approved' } });
-
-                if (contribution.itemCategory === 'Game' && contribution.actionType === 'CREATE') {
-                    const existing = await Game.findOne({ id: contribution.gameId });
-                    if (!existing) await Game.create(contribution.data);
-                } else if (contribution.gameId) {
-                    const game = await Game.findOne({ id: contribution.gameId });
-                    if (game) {
-                        if (contribution.itemCategory === 'Overview' || contribution.itemCategory === 'Game') {
-                            let updates = {};
-                            
-                            if (contribution.data.overview_text !== undefined) updates.overview_text = contribution.data.overview_text;
-                            if (contribution.data.new_player_guide !== undefined) updates.new_player_guide = contribution.data.new_player_guide;
-                            
-                            // Keep the starter guide and the trailer completely separate
-                            if (contribution.data.new_player_video_id !== undefined) updates.new_player_video_id = contribution.data.new_player_video_id;
-                            if (contribution.data.trailer_id !== undefined) updates.trailer_id = contribution.data.trailer_id; 
-                            
-                            if (contribution.data.age !== undefined) {
-                                updates['ratings.age'] = contribution.data.age;
-                            }
-                            
-                            await Game.collection.updateOne({ id: contribution.gameId }, { $set: updates });
-                        } else {
-                            const catKey = contribution.itemCategory.toLowerCase() + 's';
-                            const catArray = game[catKey] || game[contribution.itemCategory.toLowerCase()];
-                            if (catArray) {
-                                if (contribution.actionType === 'CREATE') {
-                                    catArray.push({ 
-                                        ...contribution.data, 
-                                        submitterUsername: contribution.submitterUsername,
-                                        submitterDiscordId: contribution.submitterDiscordId,
-                                        _id: new mongoose.Types.ObjectId() 
-                                    });
-                                }
-                                else if (contribution.actionType === 'EDIT') {
-                                    const idx = catArray.findIndex(item => item._id?.toString() === contribution.targetIdentifier || item.title === contribution.targetIdentifier);
-                                    if (idx !== -1) catArray[idx] = { ...catArray[idx], ...contribution.data };
-                                }
-                                else if (contribution.actionType === 'DELETE') {
-                                    const idx = catArray.findIndex(item => item._id?.toString() === contribution.targetIdentifier || item.title === contribution.targetIdentifier);
-                                    if (idx !== -1) catArray.splice(idx, 1);
-                                }
-                                game.markModified(catKey);
-                                await game.save(); // Only save if we manipulated the array via Mongoose
-                            }
-                        }
-                        // Destructive outer game.save() removed from here
-                    }
-                }
-
-                if (user) {
-                    user.totalPoints = (user.totalPoints || 0) + 1; // Exactly +1 point assigned
-                    if (contribution.gameId) {
-                        if (!user.gamePoints) user.gamePoints = new Map();
-                        
-                        // Mongoose strict typing handler for Maps vs POJOs
-                        if (typeof user.gamePoints.get === 'function') {
-                            user.gamePoints.set(contribution.gameId, (user.gamePoints.get(contribution.gameId) || 0) + 1);
-                        } else {
-                            user.gamePoints[contribution.gameId] = (user.gamePoints[contribution.gameId] || 0) + 1;
-                            user.markModified('gamePoints');
-                        }
-                    }
-                    user.mailbox.push({ direction: 'INBOUND', subject: 'Contribution Approved! (+1 pt)', content: `Your submission for ${contribution.itemCategory} was approved!`, adminUsername: interaction.member.user.username, adminAvatar: adminAvatar, date: new Date() });
-                    await user.save();
-                }
-
-                // EXACTLY ONE RESPONSE FIRED AT THE VERY END
-                return res.send({ type: InteractionResponseType.UPDATE_MESSAGE, data: { content: `✅ **Approved by <@${interaction.member.user.id}>**`, components: [] } });
-            }
-
-            if (action === 'deny') {
-                await Contribution.updateOne({ _id: contribution._id }, { $set: { status: 'rejected' } });
-                if (user) {
-                    user.mailbox.push({ direction: 'INBOUND', subject: 'Contribution Denied', content: `Your submission for ${contribution.itemCategory} was reviewed and rejected.`, adminUsername: interaction.member.user.username, adminAvatar: adminAvatar, date: new Date() });
-                    await user.save();
-                }
-                return res.send({ type: InteractionResponseType.UPDATE_MESSAGE, data: { content: `❌ **Denied by <@${interaction.member.user.id}>**`, components: [] } });
-            }
-        } catch (err) { 
-            console.error("Interaction error:", err);
-            return res.send({ type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE, data: { content: `❌ **Error processing action.**`, flags: 64 } });
-        }
-    }
-
-    if (interaction.type === InteractionType.MODAL_SUBMIT) {
-        const customId = interaction.data.custom_id;
-        
-        if (customId.startsWith('modal_replymail_')) {
-            const userId = customId.split('_')[2];
-            const replyText = interaction.data.components[0].components[0].value;
-            const user = await User.findById(userId);
-            if (user) {
-                user.mailbox.push({
-                    direction: 'INBOUND',
-                    subject: 'Message from Admin',
-                    content: replyText,
-                    adminUsername: interaction.member.user.username,
-                    adminAvatar: interaction.member.user.avatar ? `https://cdn.discordapp.com/avatars/${interaction.member.user.id}/${interaction.member.user.avatar}.png` : 'https://cdn.discordapp.com/embed/avatars/0.png',
-                    date: new Date()
-                });
-                await user.save();
-            }
-            return res.send({ type: InteractionResponseType.UPDATE_MESSAGE, data: { content: `✅ **Replied by <@${interaction.member.user.id}>:**\n> ${replyText.split('\n').join('\n> ')}`, components: [] } });
-        }
-        
-        if (customId.startsWith('modal_tweak_')) {
-            const contributionId = customId.split('_')[2];
-            const newJsonDataRaw = interaction.data.components[0].components[0].value;
-            
-            try {
-                const parsedData = JSON.parse(newJsonDataRaw); 
-                const contribution = await Contribution.findById(contributionId);
-                await Contribution.updateOne({ _id: contribution._id }, { $set: { status: 'approved', data: parsedData } });
-                contribution.data = parsedData;
-
-                if (contribution.itemCategory === 'Game' && contribution.actionType === 'CREATE') {
-                    const existing = await Game.findOne({ id: contribution.gameId });
-                    if (!existing) await Game.create(contribution.data);
-                } else if (contribution.gameId) {
-                    const game = await Game.findOne({ id: contribution.gameId });
-                    if (game) {
-                        if (contribution.itemCategory === 'Overview' || contribution.itemCategory === 'Game') {
-                            let updates = {};
-                            
-                            if (contribution.data.overview_text !== undefined) updates.overview_text = contribution.data.overview_text;
-                            if (contribution.data.new_player_guide !== undefined) updates.new_player_guide = contribution.data.new_player_guide;
-                            
-                            if (contribution.data.new_player_video_id !== undefined) updates.new_player_video_id = contribution.data.new_player_video_id;
-                            if (contribution.data.trailer_id !== undefined) updates.trailer_id = contribution.data.trailer_id; 
-                            
-                            if (contribution.data.age !== undefined) {
-                                updates['ratings.age'] = contribution.data.age;
-                            }
-                            
-                            await Game.collection.updateOne({ id: contribution.gameId }, { $set: updates });
-                        } else {
-                            const catKey = contribution.itemCategory.toLowerCase() + 's';
-                            const catArray = game[catKey] || game[contribution.itemCategory.toLowerCase()];
-                            if (catArray) {
-                                if (contribution.actionType === 'CREATE') {
-                                    catArray.push({ 
-                                        ...contribution.data, 
-                                        submitterUsername: contribution.submitterUsername,
-                                        submitterDiscordId: contribution.submitterDiscordId,
-                                        _id: new mongoose.Types.ObjectId() 
-                                    });
-                                }
-                                else if (contribution.actionType === 'EDIT') {
-                                    const idx = catArray.findIndex(item => item._id?.toString() === contribution.targetIdentifier || item.title === contribution.targetIdentifier);
-                                    if (idx !== -1) catArray[idx] = { ...catArray[idx], ...contribution.data };
-                                }
-                                else if (contribution.actionType === 'DELETE') {
-                                    const idx = catArray.findIndex(item => item._id?.toString() === contribution.targetIdentifier || item.title === contribution.targetIdentifier);
-                                    if (idx !== -1) catArray.splice(idx, 1);
-                                }
-                                game.markModified(catKey);
-                                await game.save();
-                            }
-                        }
-                    }
-                }
-
-                const user = await User.findOne({ discordId: contribution.submitterDiscordId });
-                if (user) {
-                    user.totalPoints = (user.totalPoints || 0) + 1; // Exactly +1 point assigned
-                    if (contribution.gameId) {
-                        if (!user.gamePoints) user.gamePoints = new Map();
-                        
-                        // Mongoose strict typing handler
-                        if (typeof user.gamePoints.get === 'function') {
-                            user.gamePoints.set(contribution.gameId, (user.gamePoints.get(contribution.gameId) || 0) + 1);
-                        } else {
-                            user.gamePoints[contribution.gameId] = (user.gamePoints[contribution.gameId] || 0) + 1;
-                            user.markModified('gamePoints');
-                        }
-                    }
-                    user.mailbox.push({ direction: 'INBOUND', subject: 'Contribution Approved! (+1 pt)', content: `Your submission for ${contribution.itemCategory} was tweaked and approved by an admin!`, adminUsername: interaction.member.user.username, adminAvatar: interaction.member.user.avatar ? `https://cdn.discordapp.com/avatars/${interaction.member.user.id}/${interaction.member.user.avatar}.png` : 'https://cdn.discordapp.com/embed/avatars/0.png', date: new Date() });
-                    await user.save();
-                }
-
-                return res.send({ type: InteractionResponseType.UPDATE_MESSAGE, data: { content: `✏️ ✅ **Tweaked & Approved by <@${interaction.member.user.id}>**`, components: [] } });
-            } catch (error) {
-                return res.send({ type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE, data: { content: `❌ **Failed to save tweak! Invalid JSON syntax.**\n\`${error.message}\``, flags: 64 } });
-            }
-        }
-    }
-});
-
 // --- CONTRIBUTION ROUTES ---
 app.post('/api/contribute', async (req, res) => {
     const sessionToken = req.cookies.nurture_session;
@@ -532,6 +367,12 @@ app.post('/api/contribute', async (req, res) => {
         const user = await User.findById(decoded.userId);
         
         if (!user) return res.status(401).json({ error: "User not found." });
+        
+        const clientIp = getClientIp(req);
+        await User.collection.updateOne({ _id: user._id }, { $set: { lastIp: clientIp } });
+        if (await checkUserOrIpBanned(user, clientIp)) {
+            return res.status(403).json({ error: "Your account or IP address has been restricted from contributing." });
+        }
 
         // Anti-Spam / DoS Mitigation: 30-second cooldown
         const now = Date.now();
@@ -587,7 +428,8 @@ app.post('/api/contribute', async (req, res) => {
                 components: [
                     { type: 2, style: 3, label: "Approve", custom_id: `approve_${newContribution._id}` },
                     { type: 2, style: 1, label: "Tweak & Approve", custom_id: `tweak_${newContribution._id}` },
-                    { type: 2, style: 4, label: "Deny", custom_id: `deny_${newContribution._id}` }
+                    { type: 2, style: 4, label: "Deny", custom_id: `deny_${newContribution._id}` },
+                    { type: 2, style: 4, label: "Ban User + IP", custom_id: `banuser_${user.discordId}` }
                 ]
             }]
         };
@@ -826,6 +668,13 @@ app.post('/api/mailbox/send', async (req, res) => {
     try {
         const decoded = jwt.verify(sessionToken, process.env.JWT_SECRET);
         const user = await User.findById(decoded.userId);
+
+        const clientIp = getClientIp(req);
+        await User.collection.updateOne({ _id: user._id }, { $set: { lastIp: clientIp } });
+        if (await checkUserOrIpBanned(user, clientIp)) {
+            return res.status(403).json({ error: "Your account or IP address has been restricted from messaging." });
+        }
+
         let { subject, content } = req.body;
         
         // Strict Type & Length Enforcement
@@ -950,18 +799,18 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                         });
                     }
                 } else if (contribution.gameId) {
-                    const game = await Game.findOne({ id: contribution.gameId });
+                    const game = await Game.collection.findOne({ id: contribution.gameId });
                     if (game) {
-                        if (contribution.itemCategory === 'Overview' || contribution.itemCategory === 'Game') {
+                        // If a coupon code was submitted, always route it to game.coupons
+                        const isCouponSubmission = contribution.itemCategory === 'Coupon' || Boolean(contribution.data && contribution.data.code);
+
+                        if (!isCouponSubmission && (contribution.itemCategory === 'Overview' || contribution.itemCategory === 'Game')) {
                             let updates = { last_edited_at: nowIso };
                             
                             if (contribution.data.overview_text !== undefined) updates.overview_text = contribution.data.overview_text;
                             if (contribution.data.new_player_guide !== undefined) updates.new_player_guide = contribution.data.new_player_guide;
-                            
-                            // Save both "Where to Redeem" and "Where to Get Codes" links
                             if (contribution.data.redeem_portal_url !== undefined) updates.redeem_portal_url = contribution.data.redeem_portal_url;
                             if (contribution.data.redeem_codes_url !== undefined) updates.redeem_codes_url = contribution.data.redeem_codes_url;
-                            
                             if (contribution.data.new_player_video_id !== undefined) updates.new_player_video_id = contribution.data.new_player_video_id;
                             if (contribution.data.trailer_id !== undefined) updates.trailer_id = contribution.data.trailer_id; 
                             
@@ -971,11 +820,9 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                             
                             await Game.collection.updateOne({ id: contribution.gameId }, { $set: updates });
                         } else {
-                            // Supports Guide -> guides, Asset -> assets, Community -> communities, Mod -> mods, Coupon -> coupons
-                            const lowerCat = contribution.itemCategory.toLowerCase();
+                            const lowerCat = isCouponSubmission ? 'coupon' : contribution.itemCategory.toLowerCase();
                             const catKey = lowerCat === 'community' ? 'communities' : `${lowerCat}s`;
-                            if (!Array.isArray(game[catKey])) game[catKey] = [];
-                            const catArray = game[catKey];
+                            const catArray = Array.isArray(game[catKey]) ? [...game[catKey]] : [];
 
                             if (contribution.actionType === 'CREATE') {
                                 catArray.push({ 
@@ -998,7 +845,14 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                             }
                             else if (contribution.actionType === 'DELETE') {
                                 const idx = catArray.findIndex(item => item._id?.toString() === contribution.targetIdentifier || item.title === contribution.targetIdentifier || item.code === contribution.targetIdentifier);
-                                if (idx !== -1) catArray.splice(idx, 1);
+                                if (idx !== -1) {
+                                    if (catKey === 'coupons') {
+                                        // Wrap expired coupon in red for 30 days instead of deleting immediately
+                                        catArray[idx] = { ...catArray[idx], expiredAt: nowIso };
+                                    } else {
+                                        catArray.splice(idx, 1);
+                                    }
+                                }
                             }
 
                             await Game.collection.updateOne(
@@ -1044,6 +898,25 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                     await user.save();
                 }
                 await axios.patch(`https://discord.com/api/v10/webhooks/${process.env.DISCORD_CLIENT_ID}/${interaction.token}/messages/@original`, { content: `❌ **Denied by <@${interaction.member.user.id}>**` });
+            }
+
+            if (action === 'banuser') {
+                const targetUser = await User.collection.findOne({ discordId: targetId });
+                if (!targetUser) {
+                    return res.send({ type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE, data: { content: "User not found.", flags: 64 } });
+                }
+                const bannedIps = Array.isArray(targetUser.bannedIps) ? targetUser.bannedIps : [];
+                if (targetUser.lastIp && !bannedIps.includes(targetUser.lastIp)) {
+                    bannedIps.push(targetUser.lastIp);
+                }
+                await User.collection.updateOne(
+                    { discordId: targetId },
+                    { $set: { isBanned: true, bannedIps, bannedAt: new Date().toISOString() } }
+                );
+                return res.send({
+                    type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+                    data: { content: `🔨 **Banned user \`${targetUser.username}\` (${targetId}) and IP \`${targetUser.lastIp || 'N/A'}\` from contributing.**` }
+                });
             }
         } catch (err) { console.error("Interaction error:", err); }
     }
@@ -1176,17 +1049,20 @@ app.get('/api/profile/:query', async (req, res) => {
     try {
         const query = validateInput.sanitizeString(req.params.query);
         
-        // Lookup by discordId first, then exact username fallback
-        let user = await User.findOne({ discordId: query }).lean();
-        if (!user) user = await User.findOne({ username: new RegExp(`^${query}$`, 'i') }).lean();
-        
+        let user = await User.collection.findOne({ discordId: query });
+        if (!user) user = await User.collection.findOne({ username: new RegExp(`^${query}$`, 'i') });
         if (!user) return res.status(404).json({ error: "User not found" });
 
-        // Fetch their approved contributions
-        const contributions = await Contribution.find({ submitterDiscordId: user.discordId, status: 'approved' })
-            .sort({ createdAt: -1 })
-            .limit(25)
-            .lean();
+        const contributions = await Contribution.collection.find({ 
+            submitterDiscordId: user.discordId, 
+            status: 'approved' 
+        }).sort({ createdAt: -1 }).toArray();
+
+        // Join Game Data for Icons and Names
+        const gameIds = [...new Set(contributions.map(c => c.gameId))];
+        const games = await Game.collection.find({ id: { $in: gameIds } }).toArray();
+        const gameMap = {};
+        games.forEach(g => { gameMap[g.id] = g; });
 
         res.json({
             username: user.username,
@@ -1195,10 +1071,12 @@ app.get('/api/profile/:query', async (req, res) => {
             totalPoints: user.totalPoints || 0,
             contributions: contributions.map(c => ({
                 gameId: c.gameId,
+                gameName: gameMap[c.gameId]?.name || c.gameId,
+                gameIcon: gameMap[c.gameId]?.banner_url || '/Assets/placeholder.png',
                 category: c.itemCategory,
                 action: c.actionType,
                 commitMessage: c.data?.commitMessage || '',
-                target: c.targetIdentifier || (c.data && (c.data.title || c.data.name)) || 'Unknown Submission',
+                target: c.targetIdentifier || (c.data && (c.data.title || c.data.name || c.data.code)) || 'Unknown Submission',
                 date: c.createdAt || c._id.getTimestamp()
             }))
         });
@@ -1286,6 +1164,10 @@ app.get('/games/:id', async (req, res) => {
         console.error("Error rendering game page embed:", err);
         res.sendFile(path.join(__dirname, 'game.html'));
     }
+});
+
+app.get('/profile/:id', (req, res) => {
+    res.sendFile(path.join(__dirname, 'profile.html'));
 });
 
 app.get('/auth/discord/callback', async (req, res) => {

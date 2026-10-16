@@ -392,6 +392,61 @@
             gap: 8px;
         }
 
+        /* === EXPIRED COUPON (RED WRAP FOR 30 DAYS) & REPORT BUTTON === */
+        .coupon-row-wrapper {
+            display: flex;
+            align-items: stretch;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .coupon-card-btn.expired {
+            border: 1.5px solid #ff4d5e !important;
+            background: rgba(45, 14, 22, 0.92) !important;
+            box-shadow: 0 0 12px rgba(255, 77, 94, 0.28);
+            opacity: 0.85;
+        }
+
+        .coupon-card-btn.expired .coupon-top-row {
+            background: linear-gradient(90deg, rgba(180, 35, 55, 0.45) 0%, rgba(55, 18, 28, 0.85) 100%) !important;
+        }
+
+        .coupon-card-btn.expired .coupon-code-str {
+            color: #ff7a8a !important;
+            text-decoration: line-through;
+        }
+
+        .coupon-card-btn.expired .coupon-copy-pill {
+            background: rgba(255, 77, 94, 0.22) !important;
+            color: #ff9aa6 !important;
+            border-color: #ff4d5e !important;
+        }
+
+        .coupon-report-expired-btn {
+            display: flex;
+             flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0 12px;
+            background: rgba(255, 77, 94, 0.12);
+            border: 1px solid rgba(255, 77, 94, 0.4);
+            border-radius: 12px 4px 12px 4px;
+            color: #ff7a8a;
+            font-family: inherit;
+            font-size: 0.72em;
+            font-weight: bold;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+        }
+
+        .coupon-report-expired-btn:hover {
+            background: #ff4d5e;
+            color: #ffffff;
+            border-color: #ffa3ad;
+        }
+
         .redeem-btn {
             display: inline-flex;
             align-items: center;
@@ -802,20 +857,7 @@
                         </div>
                     </div>
 
-                    <button type="button" id="redeemCodesBtn" class="redeem-btn" onclick="openRedeemModal()" title="Redeem Codes & Links">
-                        <img src="/Assets/ticket.png" alt="Redeem Codes">
-                        <span>Redeem Codes</span>
-                    </button>
-                </div>
-
-                <div id="miniFocusContainer" style="display: none; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;"></div>
-
-                <div class="content-area" id="dynamicContent">
-                    <h2>Loading content...</h2>
-                </div>
-            </div>
-
-            <!-- Stacked Redeem Codes Button with Attached Top & Bottom Banners -->
+                    <!-- Single Stacked Redeem Codes Button with Attached Top & Bottom Banners -->
                     <div class="redeem-stack-wrapper no-top-banner" id="redeemStackWrapper">
                         <div class="redeem-top-new-banner" id="redeemNewCodeBanner" style="display: none;">NEW CODE</div>
                         <button type="button" id="redeemCodesBtn" class="redeem-btn" onclick="openRedeemModal()" title="Redeem Codes & Links">
@@ -842,7 +884,7 @@
                     <div style="font-size: 0.76em; color: #a99ec7; margin-top: 4px;">Link Discord & Join Server for No Ads Forever!</div>
                 </div>
 
-                <aside class="leaderboard-sidebar" id="leaderboardSidebar">
+                <aside class="leaderboard-sidebar" id="leaderboardSidebar" style="min-height: auto;">
                     <div class="lb-header">Game Leaderboard</div>
                     <div id="gameLeaderboardList" style="flex-grow: 1; overflow-y: auto; margin-bottom: 10px; padding-right: 5px;">
                         <div class="lb-row" style="justify-content:center;color:#ccc;">Loading game ranks...</div>
@@ -1123,24 +1165,51 @@
             renderContent();
         });
 
+        function copyCouponCode(codeStr) {
+            if (!codeStr) return;
+            navigator.clipboard.writeText(codeStr).catch(() => {});
+
+            if (!copiedCoupons.includes(codeStr)) {
+                copiedCoupons.push(codeStr);
+                localStorage.setItem(copiedCodesKey, JSON.stringify(copiedCoupons));
+                if (typeof window.syncUserPreferences === 'function') {
+                    window.syncUserPreferences({ copiedCoupons: { [gameId]: copiedCoupons } });
+                }
+            }
+            // Re-render the modal list immediately to show the Copied state
+            selectRedeemOption('RedeemCodes');
+        }
+
+        const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+
+        function getVisibleCoupons() {
+            const raw = Array.isArray(gameData?.coupons) ? gameData.coupons : [];
+            const now = Date.now();
+            // Hide any coupon that has been marked expired for more than 30 days
+            return raw.filter(c => {
+                if (!c.expiredAt) return true;
+                const expMs = new Date(c.expiredAt).getTime();
+                return !isNaN(expMs) && (now - expMs) <= THIRTY_DAYS_MS;
+            });
+        }
+
         function updateRedeemButtonBanners() {
             const wrapper = document.getElementById('redeemStackWrapper');
             const topBanner = document.getElementById('redeemNewCodeBanner');
             const bottomBanner = document.getElementById('redeemLastAddedBanner');
             if (!wrapper || !topBanner || !bottomBanner) return;
 
-            const coupons = Array.isArray(gameData?.coupons) ? gameData.coupons : [];
-            if (coupons.length === 0) {
+            const activeCoupons = getVisibleCoupons().filter(c => !c.expiredAt);
+            if (activeCoupons.length === 0) {
                 topBanner.style.display = 'none';
                 wrapper.classList.add('no-top-banner');
                 bottomBanner.textContent = 'No codes yet';
                 return;
             }
 
-            // Find the most recently added coupon
             let latestMs = 0;
-            let latestItem = coupons[coupons.length - 1];
-            coupons.forEach(c => {
+            let latestItem = activeCoupons[activeCoupons.length - 1];
+            activeCoupons.forEach(c => {
                 let ms = c.createdAt ? new Date(c.createdAt).getTime() : 0;
                 if (!ms && typeof c._id === 'string' && /^[a-f\d]{24}$/i.test(c._id)) {
                     ms = parseInt(c._id.substring(0, 8), 16) * 1000;
@@ -1163,22 +1232,39 @@
             }
 
             const dateStr = formatItemDate(latestItem);
-            bottomBanner.textContent = dateStr ? `Last code: ${dateStr}` : `${coupons.length} code${coupons.length !== 1 ? 's' : ''} active`;
+            bottomBanner.textContent = dateStr ? `Last code: ${dateStr}` : `${activeCoupons.length} code${activeCoupons.length !== 1 ? 's' : ''} active`;
         }
 
-        function copyCouponCode(codeStr) {
+        async function reportCouponExpired(codeStr) {
             if (!codeStr) return;
-            navigator.clipboard.writeText(codeStr).catch(() => {});
+            const cachedUser = JSON.parse(localStorage.getItem('nurture_user_session') || '{}');
+            if (!cachedUser.discordId) return alert("Must be signed in with Discord to report expired codes!");
+            if (!confirm(`Report code "${codeStr}" as expired to the admins?`)) return;
 
-            if (!copiedCoupons.includes(codeStr)) {
-                copiedCoupons.push(codeStr);
-                localStorage.setItem(copiedCodesKey, JSON.stringify(copiedCoupons));
-                if (typeof window.syncUserPreferences === 'function') {
-                    window.syncUserPreferences({ copiedCoupons: { [gameId]: copiedCoupons } });
+            try {
+                const payload = {
+                    gameId: gameData.id,
+                    itemCategory: 'Coupon',
+                    actionType: 'DELETE',
+                    targetIdentifier: codeStr,
+                    data: {
+                        code: codeStr,
+                        commitMessage: `Reported coupon code "${codeStr}" as expired.`
+                    }
+                };
+                const res = await fetch('/api/contribute', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.error || 'Failed to submit report');
                 }
+                alert(`Reported "${codeStr}" as expired! Once approved by an admin, it will be marked in red for 30 days and then removed.`);
+            } catch (e) {
+                alert("Error: " + e.message);
             }
-            // Re-render the modal list immediately to show the Copied state
-            selectRedeemOption('RedeemCodes');
         }
 
         function selectRedeemOption(type) {
@@ -1219,39 +1305,59 @@
                     `;
                 }
             } else {
-                // "Where to Get Codes" -> Live Coupon Codes Window with Copy Memory + Attached Rewards
                 titleEl.textContent = 'Live Coupon Codes';
                 pencilBtn.style.display = 'inline-flex';
                 pencilBtn.querySelector('span').textContent = '+ Suggest Code';
 
-                const coupons = Array.isArray(gameData?.coupons) ? [...gameData.coupons].reverse() : [];
-                if (coupons.length === 0) {
+                // Sort active codes first (newest on top), and expired (<30 days) codes at the bottom
+                const visibleCoupons = getVisibleCoupons().slice().reverse().sort((a, b) => {
+                    const aExp = a.expiredAt ? 1 : 0;
+                    const bExp = b.expiredAt ? 1 : 0;
+                    return aExp - bExp;
+                });
+
+                if (visibleCoupons.length === 0) {
                     body.innerHTML = `
                         <div style="color: #b8a6e8; padding: 14px 0;">No active coupon codes have been submitted for this game yet.</div>
                     `;
                 } else {
-                    const listHtml = coupons.map(c => {
+                    const listHtml = visibleCoupons.map(c => {
                         const codeStr = (c.code || c.title || '').trim();
                         const rewardsStr = c.rewards || c.author || 'In-game rewards';
                         const isCopied = copiedCoupons.includes(codeStr);
+                        const isExpired = Boolean(c.expiredAt);
                         const addedDate = formatItemDate(c);
 
-                        return `
-                            <button type="button" class="coupon-card-btn ${isCopied ? 'copied' : ''}" onclick="copyCouponCode('${escapeHtml(codeStr)}')">
-                                <div class="coupon-top-row">
-                                    <span class="coupon-code-str">${escapeHtml(codeStr)}</span>
-                                    <span class="coupon-copy-pill">${isCopied ? '✓ Copied' : 'Click to Copy'}</span>
-                                </div>
-                                <div class="coupon-bottom-rewards">
-                                    <span>Gives: <b>${escapeHtml(rewardsStr)}</b></span>
-                                    ${addedDate ? `<span style="font-size:0.85em; color:#887da8; font-family:monospace;">${addedDate}</span>` : ''}
-                                </div>
+                        const statusLabel = isExpired
+                            ? 'EXPIRED'
+                            : (isCopied ? '✓ Copied' : 'Click to Copy');
+
+                        const reportBtnHtml = isExpired ? '' : `
+                            <button type="button" class="coupon-report-expired-btn" onclick="reportCouponExpired('${escapeHtml(codeStr)}')" title="Report this code as expired">
+                                <span>🏳️</span>
+                                <span>Expired?</span>
                             </button>
+                        `;
+
+                        return `
+                            <div class="coupon-row-wrapper">
+                                <button type="button" class="coupon-card-btn ${isCopied ? 'copied' : ''} ${isExpired ? 'expired' : ''}" onclick="${isExpired ? '' : `copyCouponCode('${escapeHtml(codeStr)}')`}">
+                                    <div class="coupon-top-row">
+                                        <span class="coupon-code-str">${escapeHtml(codeStr)}</span>
+                                        <span class="coupon-copy-pill">${statusLabel}</span>
+                                    </div>
+                                    <div class="coupon-bottom-rewards">
+                                        <span>Gives: <b>${escapeHtml(rewardsStr)}</b></span>
+                                        ${addedDate ? `<span style="font-size:0.85em; color:#887da8; font-family:monospace;">${addedDate}</span>` : ''}
+                                    </div>
+                                </button>
+                                ${reportBtnHtml}
+                            </div>
                         `;
                     }).join('');
 
                     body.innerHTML = `
-                        <div style="font-size: 0.82em; color: #a99ec7;">Click any code below to copy it to your clipboard:</div>
+                        <div style="font-size: 0.82em; color: #a99ec7;">Click any active code to copy it, or flag expired codes on the right:</div>
                         <div class="coupon-list-container">${listHtml}</div>
                     `;
                 }
@@ -1745,13 +1851,13 @@
                 dataPayload = { title, url, author, platform: author, type: author, version: author, commitMessage };
             }
 
-            const isGameLevelCategory = ['Overview', 'RedeemPortal', 'RedeemCodes'].includes(currentSuggestCategory);
+            const isGameLevelCategory = ['Overview', 'RedeemPortal'].includes(currentSuggestCategory);
 
             const payload = {
                 gameId: gameData.id,
-                itemCategory: isGameLevelCategory ? 'Game' : currentSuggestCategory,
+                itemCategory: isGameLevelCategory ? 'Game' : (currentSuggestCategory === 'RedeemCodes' ? 'Coupon' : currentSuggestCategory),
                 actionType: currentSuggestAction,
-                targetIdentifier: currentSuggestTarget || (dataPayload.title || 'New Item'),
+                targetIdentifier: currentSuggestTarget || (dataPayload.code || dataPayload.title || 'New Item'),
                 data: dataPayload
             };
 

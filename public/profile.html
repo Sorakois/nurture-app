@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="/Assets/nurture_icon.ico">
+    <title>Nurture | User Profile</title>
+    <link rel="stylesheet" href="/Assets/common.css">
+    <style>
+        .profile-layout {
+            max-width: 1400px;
+            width: 95%;
+            margin: 40px auto;
+            display: flex;
+            gap: 26px;
+            align-items: flex-start;
+        }
+
+        .profile-sidebar {
+            width: 320px;
+            min-width: 320px;
+            background: linear-gradient(180deg, rgba(32, 25, 48, 0.95) 0%, rgba(21, 17, 33, 0.95) 100%);
+            border: 1px solid rgba(157, 142, 199, 0.28);
+            border-radius: 24px 8px 24px 8px;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+            position: sticky;
+            top: 24px;
+        }
+
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(157, 142, 199, 0.2);
+        }
+
+        .profile-avatar {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            border: 2.5px solid #9d8ec7;
+            object-fit: cover;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+
+        .profile-game-filter {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            background: rgba(20, 16, 31, 0.6);
+            border: 1px solid rgba(157, 142, 199, 0.2);
+            border-radius: 12px 4px 12px 4px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            color: #d0c2f7;
+            font-weight: bold;
+            transition: all 0.2s ease;
+        }
+
+        .profile-game-filter:hover {
+            background: rgba(157, 142, 199, 0.15);
+            border-color: #d0c2f7;
+        }
+
+        .profile-game-filter.active {
+            background: linear-gradient(135deg, #684ea8 0%, #433075 100%);
+            color: #fff;
+            border-color: #f6c85f;
+            box-shadow: inset 4px 0 0 #f6c85f;
+        }
+
+        .profile-content-area {
+            flex-grow: 1;
+            background: radial-gradient(circle at bottom left, rgba(123, 201, 150, 0.05), transparent 60%), rgba(30, 25, 43, 0.92);
+            border: 1px solid rgba(157, 142, 199, 0.25);
+            border-radius: 24px 8px 24px 8px;
+            padding: 30px;
+            min-height: 500px;
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4);
+        }
+
+        @media (max-width: 768px) {
+            .profile-layout { flex-direction: column; padding: 0 10px; }
+            .profile-sidebar { width: 100%; min-width: 0; position: static; }
+        }
+    </style>
+</head>
+<body>
+    <div class="background-container">
+        <!-- Re-use the existing floral background layers here -->
+        <div class="floral-bg-layer"></div>
+    </div>
+
+    <div class="banner">
+        <div class="banner-row">
+            <a href="/" style="cursor: pointer;"><img src="/Assets/nurture_banner.png" alt="Nurture Banner" style="height:90px; padding-left: 10px;"></a>
+            <div class="banner-actions" id="authContainer"></div>
+        </div>
+    </div>
+
+    <div class="profile-layout">
+        <!-- Module 1: My Games (Left) -->
+        <aside class="profile-sidebar">
+            <div class="profile-header">
+                <img id="pageAvatar" src="/Assets/placeholder.png" class="profile-avatar">
+                <div>
+                    <h1 id="pageUsername" style="margin: 0 0 6px 0; font-size: 1.8em; color: #f4f0ff;">Loading...</h1>
+                    <div id="pagePoints" style="color: #7bc996; font-weight: bold; font-size: 1.1em;">...</div>
+                </div>
+            </div>
+            
+            <div style="font-size: 0.8em; text-transform: uppercase; color: #a99ec7; font-weight: bold; margin-bottom: 12px;">Contributed Games</div>
+            <div id="gameFiltersList"></div>
+        </aside>
+
+        <!-- Module 2: My Items (Right) -->
+        <div class="profile-content-area">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 24px; border-bottom: 1px solid rgba(157, 142, 199, 0.2); padding-bottom: 12px;">
+                <h2 style="margin: 0; color: #d0c2f7;" id="itemsHeaderTitle">All Items</h2>
+                <button class="btn-floral" onclick="navigator.clipboard.writeText(window.location.href); alert('Profile Link Copied!')">🔗 Share Profile</button>
+            </div>
+            
+            <div id="itemsContainer" style="display: flex; flex-direction: column; gap: 12px;"></div>
+        </div>
+    </div>
+
+    <script src="/Assets/common.js"></script>
+    <script>
+        const profileId = window.location.pathname.split('/').pop();
+        let allContributions = [];
+        let groupedGames = {};
+
+        async function initProfilePage() {
+            try {
+                const res = await fetch(`/api/profile/${encodeURIComponent(profileId)}`);
+                if (!res.ok) throw new Error();
+                const data = await res.json();
+
+                document.title = `Nurture | ${data.username}'s Profile`;
+                document.getElementById('pageUsername').textContent = data.username;
+                document.getElementById('pageAvatar').src = data.avatar ? `https://cdn.discordapp.com/avatars/${data.discordId}/${data.avatar}.png` : '/Assets/placeholder.png';
+                document.getElementById('pagePoints').textContent = `${data.totalPoints} pts`;
+
+                allContributions = data.contributions || [];
+                
+                allContributions.forEach(c => {
+                    if (!groupedGames[c.gameId]) groupedGames[c.gameId] = { name: c.gameName, icon: c.gameIcon, count: 0 };
+                    groupedGames[c.gameId].count++;
+                });
+
+                renderGameFilters();
+                renderItems('ALL');
+
+            } catch (e) {
+                document.getElementById('pageUsername').textContent = "User Not Found";
+                document.getElementById('itemsContainer').innerHTML = "<p style='color:#ff4d5e;'>Could not load this profile.</p>";
+            }
+        }
+
+        function renderGameFilters() {
+            const list = document.getElementById('gameFiltersList');
+            let html = `
+                <div class="profile-game-filter active" id="filter_ALL" onclick="renderItems('ALL')">
+                    <span style="font-size: 1.2em;">✿</span>
+                    <span style="flex-grow:1;">View ALL Items</span>
+                    <span style="background: rgba(157,142,199,0.2); padding: 2px 8px; border-radius: 8px;">${allContributions.length}</span>
+                </div>
+            `;
+
+            Object.entries(groupedGames).forEach(([gId, g]) => {
+                html += `
+                    <div class="profile-game-filter" id="filter_${gId}" onclick="renderItems('${gId}')">
+                        <img src="${g.icon}" style="width: 24px; height: 24px; border-radius: 4px; object-fit: cover;">
+                        <span style="flex-grow:1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${g.name}</span>
+                        <span style="background: rgba(157,142,199,0.2); padding: 2px 8px; border-radius: 8px;">${g.count}</span>
+                    </div>
+                `;
+            });
+            list.innerHTML = html;
+        }
+
+        function renderItems(filterGameId) {
+            document.querySelectorAll('.profile-game-filter').forEach(el => el.classList.remove('active'));
+            document.getElementById(`filter_${filterGameId}`).classList.add('active');
+
+            document.getElementById('itemsHeaderTitle').textContent = filterGameId === 'ALL' ? 'All Contributions' : `${groupedGames[filterGameId].name} Contributions`;
+
+            const filtered = filterGameId === 'ALL' ? allContributions : allContributions.filter(c => c.gameId === filterGameId);
+            const container = document.getElementById('itemsContainer');
+            
+            const escapeTxt = (txt) => (txt || '').toString().replace(/[&<>"']/g, m => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[m]));
+
+            container.innerHTML = filtered.map(c => `
+                <a href="${c.gameId ? `/games/${c.gameId}` : '/'}" class="floral-mail-card" style="display:flex; gap:16px; align-items:center; text-decoration:none; color:white;">
+                    <img src="${c.gameIcon}" style="width: 48px; height: 48px; border-radius: 8px; border: 1.5px solid #9d8ec7; object-fit: cover; flex-shrink: 0;">
+                    <div style="flex-grow: 1;">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px;">
+                            <div style="font-weight:bold; color:#d0c2f7; font-size:1.1em;">${escapeTxt(c.target)}</div>
+                            <span style="font-size:0.75em; color:#a99ec7;">${new Date(c.date).toLocaleDateString()}</span>
+                        </div>
+                        <div style="font-size:0.85em; color:#a99ec7; display:flex; align-items:center; gap:8px;">
+                            <strong style="color:#f6c85f; background:rgba(246, 200, 95, 0.12); padding:2px 8px; border-radius:8px 2px 8px 2px; border:1px solid rgba(246, 200, 95, 0.35);">${c.action ? c.action.toUpperCase() : 'EDIT'}</strong> 
+                            <span>in ${c.category}</span>
+                            <span style="color:#5e4796;">•</span>
+                            <span style="font-family:monospace; color:#d0c2f7;">${escapeTxt(c.gameName)}</span>
+                        </div>
+                        ${c.commitMessage ? `<div style="font-size:0.9em; color:#e5dcff; border-left:2px solid #9d8ec7; padding-left:10px; margin-top:10px; font-style: italic;">${escapeTxt(c.commitMessage)}</div>` : ''}
+                    </div>
+                </a>
+            `).join('');
+        }
+
+        initProfilePage();
+    </script>
+</body>
+</html>

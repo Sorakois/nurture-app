@@ -5,6 +5,18 @@
 // =========================================================================
 const SITE_CHANGELOGS = [
     {
+        version: "v1.0.1",
+        date: "2026-10-16",
+        title: "New 'My Stuff', Security, UI, and Coupon Fixes ",
+        changes: [
+            "[UI] Coupon overhaul: new interface",
+            "[NEW] Account banning",
+            "[UI] Grammar tweaks",
+            "[UI] New Contributions UI (when you click your/a name)",
+            "[NEW] 'My Stuff' - just see what you want/need to see!"
+        ]
+    },
+    {
         version: "v1.0.0",
         date: "2026-10-15",
         title: "GUI Overhaul and Suggestions/Editing",
