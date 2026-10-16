@@ -436,7 +436,7 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                 });
                 await user.save();
             }
-            return res.send({ type: InteractionResponseType.UPDATE_MESSAGE, data: { content: `✅ **Replied by <@${interaction.member.user.id}>:**\n>${replyText.split('\n').join('\n> ')}`, components: [] } });
+            return res.send({ type: InteractionResponseType.UPDATE_MESSAGE, data: { content: `✅ **Replied by <@${interaction.member.user.id}>:**\n> ${replyText.split('\n').join('\n> ')}`, components: [] } });
         }
         
         if (customId.startsWith('modal_tweak_')) {
@@ -1066,7 +1066,7 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                 });
                 await user.save();
             }
-            return res.send({ type: InteractionResponseType.UPDATE_MESSAGE, data: { content: `✅ **Replied by <@${interaction.member.user.id}>:**\n>${replyText.split('\n').join('\n> ')}`, components: [] } });
+            return res.send({ type: InteractionResponseType.UPDATE_MESSAGE, data: { content: `✅ **Replied by <@${interaction.member.user.id}>:**\n> ${replyText.split('\n').join('\n> ')}`, components: [] } });
         }
         
         // REMEMBER ME 2

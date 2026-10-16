@@ -882,7 +882,7 @@
                         <button type="button" class="clear-filters-btn" onclick="clearAllFilters()">Reset</button>
                     </div>
 
-                    <div class="tags-section-title">🌸 Genre Tags</div>
+                    <div class="tags-section-title">📚 Genre Tags</div>
                     <div class="tags-pills-grid" id="genreTagsGrid">
                         <button type="button" class="tag-pill" data-tag="RPG" onclick="toggleGenreTag('RPG', this)">RPG</button>
                         <button type="button" class="tag-pill" data-tag="Action" onclick="toggleGenreTag('Action', this)">Action</button>
@@ -1498,8 +1498,8 @@
                     if (isNew || isUpdated || isEdited) {
                         badgesHtml = `
                             <div class="card-badges-row">
-                                ${isNew ? '<span class="status-badge badge-new" title="Added within the last 7 days">NEW!</span>' : ''}
-                                ${isUpdated ? `<span class="status-badge badge-update" title="Major App Store update${game.latest_version ? ` (v${escapeHtml(game.latest_version)})` : ''} within the last 7 days">UPDATE!</span>` : ''}
+                                ${isNew ? '<span class="status-badge badge-new" title="Added within the last 7 days">NEW GAME!</span>' : ''}
+                                ${isUpdated ? `<span class="status-badge badge-update" title="Major App Store update${game.latest_version ? ` (v${escapeHtml(game.latest_version)})` : ''} within the last 7 days">GAME UPDATE!</span>` : ''}
                                 ${isEdited ? '<span class="status-badge badge-edited" title="Community data edited within the last 2 days">EDITED!</span>' : ''}
                             </div>
                         `;
