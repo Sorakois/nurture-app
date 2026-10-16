@@ -888,6 +888,9 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                             
                             if (contribution.data.overview_text !== undefined) updates.overview_text = contribution.data.overview_text;
                             if (contribution.data.new_player_guide !== undefined) updates.new_player_guide = contribution.data.new_player_guide;
+                            
+                            // Save both "Where to Redeem" and "Where to Get Codes" links
+                            if (contribution.data.redeem_portal_url !== undefined) updates.redeem_portal_url = contribution.data.redeem_portal_url;
                             if (contribution.data.redeem_codes_url !== undefined) updates.redeem_codes_url = contribution.data.redeem_codes_url;
                             
                             if (contribution.data.new_player_video_id !== undefined) updates.new_player_video_id = contribution.data.new_player_video_id;
@@ -907,7 +910,7 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                                         ...contribution.data, 
                                         submitterUsername: contribution.submitterUsername,
                                         submitterDiscordId: contribution.submitterDiscordId,
-                                        updatedAt: nowIso,
+                                        createdAt: nowIso,
                                         _id: new mongoose.Types.ObjectId() 
                                     });
                                 }
@@ -927,7 +930,6 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                                 }
                                 game.markModified(catKey);
                                 await game.save();
-                                // Stamp last_edited_at on the parent game for the EDITED! badge
                                 await Game.collection.updateOne({ id: contribution.gameId }, { $set: { last_edited_at: nowIso } });
                             }
                         }
@@ -1024,6 +1026,9 @@ const nowIso = new Date().toISOString();
                             
                             if (contribution.data.overview_text !== undefined) updates.overview_text = contribution.data.overview_text;
                             if (contribution.data.new_player_guide !== undefined) updates.new_player_guide = contribution.data.new_player_guide;
+                            
+                            // Save both "Where to Redeem" and "Where to Get Codes" links
+                            if (contribution.data.redeem_portal_url !== undefined) updates.redeem_portal_url = contribution.data.redeem_portal_url;
                             if (contribution.data.redeem_codes_url !== undefined) updates.redeem_codes_url = contribution.data.redeem_codes_url;
                             
                             if (contribution.data.new_player_video_id !== undefined) updates.new_player_video_id = contribution.data.new_player_video_id;
@@ -1043,7 +1048,7 @@ const nowIso = new Date().toISOString();
                                         ...contribution.data, 
                                         submitterUsername: contribution.submitterUsername,
                                         submitterDiscordId: contribution.submitterDiscordId,
-                                        updatedAt: nowIso,
+                                        createdAt: nowIso,
                                         _id: new mongoose.Types.ObjectId() 
                                     });
                                 }
@@ -1063,7 +1068,6 @@ const nowIso = new Date().toISOString();
                                 }
                                 game.markModified(catKey);
                                 await game.save();
-                                // Stamp last_edited_at on the parent game for the EDITED! badge
                                 await Game.collection.updateOne({ id: contribution.gameId }, { $set: { last_edited_at: nowIso } });
                             }
                         }

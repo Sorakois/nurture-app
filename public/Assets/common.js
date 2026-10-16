@@ -447,24 +447,27 @@ function applySettings() {
     const { showLb, lbSide } = JSON.parse(raw);
     
     const lbEl = document.getElementById('leaderboardSidebar');
-    const spacerEl = document.getElementById('lbSpacer'); // Grab the invisible spacer
+    const spacerEl = document.getElementById('lbSpacer');
+    const subNavEl = document.getElementById('subNavSidebar'); // Opposite column on game.html
     
     if (lbEl) {
         if (showLb) {
             lbEl.style.display = 'flex';
             if (spacerEl) spacerEl.style.display = 'block';
-            
-            // Swap both elements around the center content to maintain perfect symmetry
-            if (lbSide === 'left') {
-                lbEl.style.order = '-1';
-                if (spacerEl) spacerEl.style.order = '1';
-            } else {
-                lbEl.style.order = '1';
-                if (spacerEl) spacerEl.style.order = '-1';
-            }
         } else {
             lbEl.style.display = 'none';
             if (spacerEl) spacerEl.style.display = 'none';
+        }
+
+        // Keep the spacer (index.html) or subnav column (game.html) on the opposite side of the leaderboard
+        if (lbSide === 'left') {
+            lbEl.style.order = '-1';
+            if (spacerEl) spacerEl.style.order = '1';
+            if (subNavEl) subNavEl.style.order = '1';
+        } else {
+            lbEl.style.order = '1';
+            if (spacerEl) spacerEl.style.order = '-1';
+            if (subNavEl) subNavEl.style.order = '-1';
         }
     }
 

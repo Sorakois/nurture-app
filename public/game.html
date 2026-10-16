@@ -16,64 +16,65 @@
     <script defer src="/_vercel/insights/script.js"></script>
 
     <style>
-        /* === GAME LAYOUT STYLES (BOTANICAL THEME) === */
+        /* === PC 3-COLUMN DASHBOARD LAYOUT === */
         .game-layout {
-            max-width: 1200px;
-            margin: 40px auto;
-            padding: 0 20px;
+            max-width: 1680px;
+            width: 95%;
+            margin: 26px auto 40px auto;
+            padding: 0;
+            box-sizing: border-box;
         }
 
-        .game-header {
+        .game-main-wrapper {
             display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: radial-gradient(circle at top right, rgba(157, 142, 199, 0.2), transparent 60%), rgba(30, 25, 43, 0.92);
-            padding: 30px;
-            border-radius: 24px 8px 0 0;
+            align-items: stretch;
+            gap: 26px;
+            min-height: calc(100vh - 155px);
+        }
+
+        /* Left / Opposite Vertical Subnav Column */
+        .subnav-sidebar {
+            width: 260px;
+            min-width: 260px;
+            background: linear-gradient(180deg, rgba(32, 25, 48, 0.95) 0%, rgba(21, 17, 33, 0.95) 100%);
             border: 1px solid rgba(157, 142, 199, 0.28);
-            border-bottom: none;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+            border-radius: 24px 8px 24px 8px;
+            padding: 20px;
+            box-sizing: border-box;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            position: sticky;
+            top: 24px;
+            min-height: calc(100vh - 155px);
+            align-self: flex-start;
+            order: -1;
         }
 
-        .header-left {
+        .subnav-sidebar-label {
+            font-size: 0.76em;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: #a99ec7;
+            font-weight: bold;
+            padding: 0 6px 8px 6px;
+            border-bottom: 1px solid rgba(157, 142, 199, 0.2);
+        }
+
+        /* Back to All Games Button inside Subnav Column */
+        .back-home-btn {
             display: flex;
             align-items: center;
-            gap: 20px;
-        }
-
-        .game-header img#gameIcon {
-            width: 120px;
-            height: 120px;
-            border-radius: 22px 6px 22px 6px;
-            border: 2px solid rgba(208, 194, 247, 0.35);
-            object-fit: cover;
-            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
-        }
-
-        .game-title {
-            font-size: 2.5em;
-            margin: 0 0 10px 0;
-            color: #f4f0ff;
-        }
-
-        .game-dev {
-            color: #b8a6e8;
-            font-family: monospace;
-            font-size: 1.1em;
-            margin: 0;
-        }
-
-        /* === BOTANICAL BACK TO ALL GAMES BUTTON === */
-        .back-home-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            margin: 0 0 20px 20px;
-            padding: 9px 18px;
-            background: linear-gradient(135deg, rgba(50, 39, 74, 0.9) 0%, rgba(28, 22, 43, 0.95) 100%);
-            color: #d0c2f7;
-            border: 1px solid rgba(208, 194, 247, 0.35);
-            border-radius: 18px 6px 18px 6px;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 12px 16px;
+            box-sizing: border-box;
+            background: linear-gradient(135deg, rgba(65, 50, 99, 0.9) 0%, rgba(35, 27, 54, 0.95) 100%);
+            color: #e5dcff;
+            border: 1px solid rgba(208, 194, 247, 0.4);
+            border-radius: 16px 5px 16px 5px;
             text-decoration: none;
             font-weight: bold;
             font-size: 0.92em;
@@ -86,13 +87,14 @@
             height: 18px;
             fill: currentColor;
             transition: transform 0.2s ease;
+            flex-shrink: 0;
         }
 
         .back-home-btn:hover {
-            background: linear-gradient(135deg, #684ea8 0%, #433075 100%);
+            background: linear-gradient(135deg, #7359b5 0%, #4c3780 100%);
             color: #ffffff;
             border-color: #f6c85f;
-            border-radius: 6px 18px 6px 18px;
+            border-radius: 5px 16px 5px 16px;
             transform: translateY(-2px);
         }
 
@@ -100,7 +102,137 @@
             transform: translateX(-4px);
         }
 
-        /* === REDEEM CODES BUTTON WITH TEXT === */
+        /* Enhanced Vertical Subnav Buttons on PC */
+        .sub-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            flex-grow: 1;
+        }
+
+        .sub-nav a {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 18px;
+            background: rgba(20, 16, 30, 0.75);
+            border: 1px solid rgba(157, 142, 199, 0.2);
+            border-radius: 16px 5px 16px 5px;
+            color: #b8a6e8;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 0.95em;
+            letter-spacing: 0.5px;
+            transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sub-nav-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .sub-nav-icon {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+            opacity: 0.85;
+            flex-shrink: 0;
+        }
+
+        .sub-nav-count {
+            font-size: 0.75em;
+            padding: 2px 8px;
+            border-radius: 10px 3px 10px 3px;
+            background: rgba(157, 142, 199, 0.15);
+            color: #d0c2f7;
+            border: 1px solid rgba(157, 142, 199, 0.25);
+        }
+
+        .sub-nav a:hover {
+            background: rgba(52, 41, 79, 0.85);
+            color: #ffffff;
+            border-color: rgba(208, 194, 247, 0.5);
+            transform: translateX(4px);
+        }
+
+        .sub-nav a.active {
+            background: linear-gradient(135deg, #684ea8 0%, #433075 100%);
+            color: #ffffff;
+            border-color: #f6c85f;
+            box-shadow: 0 6px 18px rgba(104, 78, 168, 0.4), inset 4px 0 0 #f6c85f;
+        }
+
+        .sub-nav a.active .sub-nav-count {
+            background: rgba(246, 200, 95, 0.22);
+            color: #ffe6a3;
+            border-color: rgba(246, 200, 95, 0.5);
+        }
+
+        /* Wide Center Column */
+        .game-center-col {
+            flex: 1 1 0%;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            order: 0;
+        }
+
+        /* Full-Height Sticky Leaderboard Column on PC */
+        .game-layout .leaderboard-sidebar {
+            width: 290px;
+            min-width: 290px;
+            min-height: calc(100vh - 155px);
+            position: sticky;
+            top: 24px;
+            align-self: flex-start;
+            display: flex;
+            flex-direction: column;
+            order: 1;
+        }
+
+        .game-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: radial-gradient(circle at top right, rgba(157, 142, 199, 0.22), transparent 60%), rgba(30, 25, 43, 0.94);
+            padding: 28px 34px;
+            border-radius: 24px 8px 24px 8px;
+            border: 1px solid rgba(157, 142, 199, 0.3);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.38);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 22px;
+        }
+
+        .game-header img#gameIcon {
+            width: 115px;
+            height: 115px;
+            border-radius: 22px 6px 22px 6px;
+            border: 2px solid rgba(208, 194, 247, 0.35);
+            object-fit: cover;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+        }
+
+        .game-title {
+            font-size: 2.4em;
+            margin: 0 0 8px 0;
+            color: #f4f0ff;
+        }
+
+        .game-dev {
+            color: #b8a6e8;
+            font-family: monospace;
+            font-size: 1.08em;
+            margin: 0;
+        }
+
         .redeem-btn {
             display: inline-flex;
             align-items: center;
@@ -109,7 +241,7 @@
             background: linear-gradient(135deg, #4c3780 0%, #2b1f4a 100%);
             border: 1px solid rgba(208, 194, 247, 0.4);
             border-radius: 18px 6px 18px 6px;
-            padding: 10px 18px;
+            padding: 12px 20px;
             color: #f4f0ff;
             font-family: inherit;
             font-size: 0.95em;
@@ -118,6 +250,7 @@
             transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
             text-decoration: none;
             box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+            flex-shrink: 0;
         }
 
         .redeem-btn:hover {
@@ -134,70 +267,13 @@
             object-fit: contain;
         }
 
-        .item-title {
-            font-size: 1.05em;
-            font-weight: bold;
-            color: #d0c2f7;
-            margin: 0 0 3px 0;
-        }
-
-        .item-date {
-            font-size: 0.76em;
-            color: #b8a6e8;
-            font-family: monospace;
-            margin: 0 0 4px 0;
-            opacity: 0.9;
-        }
-
-        .item-meta {
-            font-size: 0.85em;
-            color: #9a8fb8;
-            margin: 0;
-        }
-
-        .sub-nav {
-            display: flex;
-            background-color: rgba(20, 16, 30, 0.95);
-            border: 1px solid rgba(157, 142, 199, 0.28);
-            border-radius: 0 0 8px 24px;
-            overflow: hidden;
-        }
-
-        .sub-nav a {
-            flex: 1;
-            text-align: center;
-            padding: 15px 20px;
-            color: #a99ec7;
-            text-decoration: none;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            transition: all 0.2s ease;
-            border-right: 1px solid rgba(157, 142, 199, 0.15);
-        }
-
-        .sub-nav a:last-child {
-            border-right: none;
-        }
-
-        .sub-nav a:hover {
-            background-color: rgba(157, 142, 199, 0.12);
-            color: #f4f0ff;
-        }
-
-        .sub-nav a.active {
-            background: linear-gradient(180deg, rgba(104, 78, 168, 0.5) 0%, rgba(76, 58, 144, 0.85) 100%);
-            color: white;
-            box-shadow: inset 0 -4px 0 #d0c2f7;
-        }
-
         .content-area {
             background: radial-gradient(circle at bottom left, rgba(123, 201, 150, 0.05), transparent 60%), rgba(30, 25, 43, 0.92);
             border: 1px solid rgba(157, 142, 199, 0.25);
             border-radius: 24px 8px 24px 8px;
-            padding: 40px;
-            margin-top: 20px;
-            min-height: 400px;
+            padding: 36px 40px;
+            flex-grow: 1;
+            min-height: 480px;
             box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4);
         }
         
@@ -236,11 +312,11 @@
             box-shadow: 0 4px 12px rgba(122, 107, 181, 0.35);
         }
 
-        /* === BOTANICAL CARD ITEM STYLES === */
+        /* === BOTANICAL CARD ITEM STYLES & 2-DAY MODIFIER BADGES === */
         .item-card {
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 14px;
             background: rgba(20, 16, 30, 0.85);
             border: 1px solid rgba(157, 142, 199, 0.2);
             padding: 16px 20px;
@@ -248,14 +324,30 @@
             margin-bottom: 12px;
             text-decoration: none;
             color: white;
-            transition: all 0.25s ease;
+            transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
         }
 
         .item-card:hover {
             transform: translateX(6px);
             background: rgba(38, 32, 56, 0.95);
             border-color: #b8a6e8;
-            box-shadow: 0 6px 18px rgba(122, 107, 181, 0.2);
+        }
+
+        .item-card.item-featured {
+            border-color: rgba(246, 200, 95, 0.45);
+            background: linear-gradient(90deg, rgba(246, 200, 95, 0.07) 0%, rgba(20, 16, 30, 0.9) 45%);
+        }
+
+        .item-star-btn {
+            width: 22px;
+            height: 22px;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: transform 0.15s ease, fill 0.15s ease;
+        }
+
+        .item-star-btn:hover {
+            transform: scale(1.2);
         }
 
         .item-icon {
@@ -267,13 +359,22 @@
 
         .item-details {
             flex-grow: 1;
+            min-width: 0;
+        }
+
+        .item-title-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 3px;
         }
 
         .item-title {
             font-size: 1.05em;
             font-weight: bold;
             color: #d0c2f7;
-            margin: 0 0 3px 0;
+            margin: 0;
         }
 
         .item-date {
@@ -290,16 +391,167 @@
             margin: 0;
         }
 
-        @media (max-width: 768px) {
-            .game-layout { margin: 20px auto; padding: 0 10px; }
-            .game-header { flex-direction: column; padding: 20px; text-align: center; gap: 15px; }
-            .header-left { flex-direction: column; }
-            .game-title { font-size: 1.8em; }
-            .redeem-btn { width: 100%; box-sizing: border-box; }
-            .sub-nav { flex-wrap: wrap; }
-            .sub-nav a { flex: 1 1 33%; padding: 12px 10px; font-size: 0.8em; border-bottom: 1px solid rgba(157, 142, 199, 0.2); }
-            .content-area { padding: 20px; }
-            .filter-bar { justify-content: center; }
+        /* 3D Status Badges for Subnav Items (NEW! / EDITED!) */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2px 7px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+            line-height: 1.2;
+            user-select: none;
+        }
+
+        .status-badge.badge-new {
+            background-color: #ef2b2d;
+            color: #ffffff;
+            border-bottom: 3px solid #7a0b0c;
+        }
+
+        .status-badge.badge-edited {
+            background-color: #ffd014;
+            color: #1a1228;
+            border-bottom: 3px solid #7d6708;
+        }
+
+        /* === TWO-OPTION REDEEM CHOICE CARDS === */
+        .redeem-choice-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 14px;
+            margin: 18px 0 8px 0;
+        }
+
+        .redeem-choice-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 20px 14px;
+            background: linear-gradient(145deg, rgba(46, 36, 68, 0.92) 0%, rgba(24, 19, 36, 0.96) 100%);
+            border: 1px solid rgba(208, 194, 247, 0.35);
+            border-radius: 18px 6px 18px 6px;
+            color: #f4f0ff;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .redeem-choice-card:hover {
+            background: linear-gradient(145deg, #5e4796 0%, #3b2a66 100%);
+            border-color: #f6c85f;
+            border-radius: 6px 18px 6px 18px;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
+        }
+
+        .redeem-choice-title {
+            font-size: 1.02em;
+            font-weight: bold;
+            color: #d0c2f7;
+        }
+
+        .redeem-choice-sub {
+            font-size: 0.78em;
+            color: #a99ec7;
+            line-height: 1.35;
+        }
+
+        /* === TABLET & MOBILE RESPONSIVENESS (COMPLEMENTS MOBILE VIEW) === */
+        @media (max-width: 980px) {
+            .game-layout {
+                width: 100%;
+                margin: 16px auto;
+                padding: 0 12px;
+            }
+
+            .game-main-wrapper {
+                flex-direction: column;
+                gap: 14px;
+                min-height: auto;
+            }
+
+            .subnav-sidebar {
+                width: 100%;
+                min-width: 0;
+                min-height: auto;
+                position: static;
+                padding: 12px;
+                gap: 10px;
+                order: -1 !important;
+                background: transparent;
+                border: none;
+                box-shadow: none;
+            }
+
+            .subnav-sidebar-label {
+                display: none;
+            }
+
+            .back-home-btn {
+                width: fit-content;
+                padding: 8px 14px;
+            }
+
+            .sub-nav {
+                flex-direction: row;
+                flex-wrap: wrap;
+                gap: 6px;
+            }
+
+            .sub-nav a {
+                flex: 1 1 30%;
+                justify-content: center;
+                padding: 10px 8px;
+                font-size: 0.8em;
+                text-align: center;
+            }
+
+            .sub-nav a:hover {
+                transform: none;
+            }
+
+            .sub-nav-icon, .sub-nav-count {
+                display: none;
+            }
+
+            .game-header {
+                flex-direction: column;
+                padding: 20px;
+                text-align: center;
+                gap: 15px;
+            }
+
+            .header-left {
+                flex-direction: column;
+            }
+
+            .game-title {
+                font-size: 1.8em;
+            }
+            
+            .redeem-btn {
+                width: 100%;
+                box-sizing: border-box;
+            }
+
+            .content-area {
+                padding: 20px;
+                min-height: 320px;
+            }
+            
+            .filter-bar {
+                justify-content: center;
+            }
+
+            .redeem-choice-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -367,61 +619,64 @@
     </div>
 
     <div class="game-layout">
-        <a href="/" class="back-home-btn">
-            <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
-            <span>Back to All Games</span>
-        </a>
-        <div class="main-wrapper" id="mainWrapper" style="display: flex; max-width: 1400px; margin: 0 auto; gap: 30px; padding: 0 20px;">
-            <div style="flex-grow: 1; min-width: 0;">
+        <div class="game-main-wrapper" id="mainWrapper">
+            
+            <!-- Column 1: Vertical Subnav Sidebar (Opposite the Leaderboard on PC) -->
+            <aside class="subnav-sidebar" id="subNavSidebar">
+                <a href="/" class="back-home-btn">
+                    <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+                    <span>Back to All Games</span>
+                </a>
+                <div class="subnav-sidebar-label">Game Navigation</div>
+                <div class="sub-nav" id="tabMenu"></div>
+            </aside>
+
+            <!-- Column 2: Wide Center Header & Content Area -->
+            <div class="game-center-col">
                 <div class="game-header">
                     <div class="header-left">
                         <img src="/Assets/placeholder.png" alt="Game Icon" id="gameIcon" referrerpolicy="no-referrer">
                         <div>
                             <h1 class="game-title" id="gameTitle">Loading...</h1>
                             <p class="game-dev" id="gameDev">-</p>
-                            <div class="header-left">
-                                <img src="/Assets/placeholder.png" alt="Game Icon" id="gameIcon" referrerpolicy="no-referrer">
-                            <div>
-                            <h1 class="game-title" id="gameTitle">Loading...</h1>
-                            <p class="game-dev" id="gameDev">-</p>
                             <div id="gamePatchMeta" style="margin-top: 8px; font-size: 0.85em; color: #d0c2f7; display: none;"></div>
                         </div>
                     </div>
 
-                    <button type="button" id="redeemCodesBtn" class="redeem-btn" onclick="openRedeemModal()" title="Active Redeem Codes">
+                    <button type="button" id="redeemCodesBtn" class="redeem-btn" onclick="openRedeemModal()" title="Redeem Codes & Links">
                         <img src="/Assets/ticket.png" alt="Redeem Codes">
                         <span>Redeem Codes</span>
                     </button>
                 </div>
 
-                <!--This is the "guides/tools, raw assets, etc tabs"-->
-                <div class="sub-nav" id="tabMenu"></div>
-                <!--This is "Hey sorakoi is coding something"-->
-                <div id="miniFocusContainer" style="display: none; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin: 15px 0;"></div>
+                <div id="miniFocusContainer" style="display: none; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;"></div>
 
                 <div class="content-area" id="dynamicContent">
                     <h2>Loading content...</h2>
                 </div>
             </div>
-            <div class="leaderboard-sidebar" id="leaderboardSidebar" style="display: flex; flex-direction: column;">
+
+            <!-- Column 3: Full-Height Sticky Leaderboard Sidebar -->
+            <aside class="leaderboard-sidebar" id="leaderboardSidebar">
                 <div class="lb-header">Game Leaderboard</div>
                 <div id="gameLeaderboardList" style="flex-grow: 1; overflow-y: auto; margin-bottom: 10px; padding-right: 5px;">
                     <div class="lb-row" style="justify-content:center;color:#ccc;">Loading game ranks...</div>
                 </div>
-                <!-- Pinned User Rank Container -->
                 <div id="userGameRankContainer"></div>
-            </div>
+            </aside>
+
         </div>
     </div>
 
-    <!-- Redeem Codes Confirmation & Edit Modal -->
+    <!-- Two-Step Redeem Codes Modal (Step 1: Choose Section -> Step 2: Confirm / Suggest Edit) -->
     <div id="redeemModal" class="modal-overlay">
-        <div class="modal-window" style="max-width: 480px; text-align: center;">
+        <div class="modal-window" style="max-width: 520px; text-align: center;">
             <button class="modal-close" onclick="document.getElementById('redeemModal').classList.remove('active')">×</button>
             
             <h2 class="modal-title" style="display:flex; justify-content:space-between; align-items:center; padding-right: 48px; text-align: left;">
-                <span>Redeem Codes</span>
-                <button type="button" onclick="openRedeemSuggestFromModal()" title="Suggest Redeem Link Edit" style="display:inline-flex; align-items:center; gap:5px; background:rgba(157, 142, 199, 0.15); border:1px solid rgba(208, 194, 247, 0.4); border-radius:12px 4px 12px 4px; padding:5px 10px; color:#d0c2f7; font-family:inherit; font-size:0.48em; cursor:pointer; transition:all 0.15s ease;" onmouseover="this.style.background='#5e4796'; this.style.color='#fff'" onmouseout="this.style.background='rgba(157, 142, 199, 0.15)'; this.style.color='#d0c2f7'">
+                <span id="redeemModalTitle">Redeem Codes</span>
+                <!-- Pencil button appears on Step 2 when viewing a specific link -->
+                <button type="button" id="redeemEditPencilBtn" onclick="openRedeemSuggestFromModal()" title="Suggest Link Edit" style="display:none; align-items:center; gap:5px; background:rgba(157, 142, 199, 0.15); border:1px solid rgba(208, 194, 247, 0.4); border-radius:12px 4px 12px 4px; padding:5px 10px; color:#d0c2f7; font-family:inherit; font-size:0.48em; cursor:pointer; transition:all 0.15s ease;" onmouseover="this.style.background='#5e4796'; this.style.color='#fff'" onmouseout="this.style.background='rgba(157, 142, 199, 0.15)'; this.style.color='#d0c2f7'">
                     <svg style="width:16px; height:16px; fill:currentColor;" viewBox="0 0 24 24">
                         <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
                     </svg>
@@ -429,7 +684,7 @@
                 </button>
             </h2>
 
-            <div id="redeemModalBody" style="margin: 18px 0 22px 0; color: #e5dcff; font-size: 0.98em; line-height: 1.5;"></div>
+            <div id="redeemModalBody" style="margin: 16px 0 20px 0; color: #e5dcff; font-size: 0.96em; line-height: 1.5;"></div>
 
             <div id="redeemModalActions" style="display: flex; gap: 12px; justify-content: center;"></div>
         </div>
@@ -493,17 +748,41 @@
     <!-- Page Specific Script -->
     <script>
         let gameData = null;
+        let activeRedeemType = null; // 'RedeemPortal' or 'RedeemCodes'
         
         const pathParts = window.location.pathname.split('/').filter(p => p);
         const gameId = pathParts[1];
-        let currentSection = pathParts[2] || 'overview';
+        const urlTabParam = new URLSearchParams(window.location.search).get('tab');
+        let currentSection = urlTabParam || pathParts[2] || 'overview';
+
+        // Per-game subnav item favorites stored locally per user
+        const favStorageKey = `nurture_fav_items_${gameId}`;
+        let favoritedSubItems = JSON.parse(localStorage.getItem(favStorageKey) || '[]');
+
+        function getSubItemId(item) {
+            return String(item._id || item.url || item.download_url || item.title || item.name || '');
+        }
+
+        function toggleFavoriteSubItem(itemId, e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (!itemId) return;
+
+            if (favoritedSubItems.includes(itemId)) {
+                favoritedSubItems = favoritedSubItems.filter(id => id !== itemId);
+            } else {
+                favoritedSubItems.push(itemId);
+            }
+            localStorage.setItem(favStorageKey, JSON.stringify(favoritedSubItems));
+            renderContent();
+        }
 
         const sections = [
-            { id: 'overview', label: 'Overview' },
-            { id: 'guides', label: 'Guides/Tools' },
-            { id: 'assets', label: 'Raw Assets' },
-            { id: 'communities', label: 'Communities' },
-            { id: 'mods', label: 'Mods' }
+            { id: 'overview', label: 'Overview', key: null, svg: '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>' },
+            { id: 'guides', label: 'Guides/Tools', key: 'guides', svg: '<path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"/>' },
+            { id: 'assets', label: 'Raw Assets', key: 'assets', svg: '<path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/>' },
+            { id: 'communities', label: 'Communities', key: 'communities', svg: '<path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>' },
+            { id: 'mods', label: 'Mods', key: 'mods', svg: '<path d="M20.5 11H19V7c0-1.1-.9-2-2-2h-4V3.5C13 2.12 11.88 1 10.5 1S8 2.12 8 3.5V5H4c-1.1 0-1.99.9-1.99 2v3.8H3.5c1.49 0 2.7 1.21 2.7 2.7s-1.21 2.7-2.7 2.7H2V20c0 1.1.9 2 2 2h3.8v-1.5c0-1.49 1.21-2.7 2.7-2.7 1.49 0 2.7 1.21 2.7 2.7V22H17c1.1 0 2-.9 2-2v-4h1.5c1.38 0 2.5-1.12 2.5-2.5S21.88 11 20.5 11z"/>' }
         ];
 
         const tabMenu = document.getElementById('tabMenu');
@@ -517,7 +796,17 @@
                 const link = document.createElement('a');
                 const url = sec.id === 'overview' ? `/games/${gameId}` : `/games/${gameId}?tab=${sec.id}`;
                 link.href = url;
-                link.textContent = sec.label;
+
+                const count = (sec.key && gameData && Array.isArray(gameData[sec.key])) ? gameData[sec.key].length : null;
+                const countHtml = count !== null ? `<span class="sub-nav-count">${count}</span>` : '';
+
+                link.innerHTML = `
+                    <span class="sub-nav-left">
+                        <svg class="sub-nav-icon" viewBox="0 0 24 24">${sec.svg}</svg>
+                        <span>${sec.label}</span>
+                    </span>
+                    ${countHtml}
+                `;
                 
                 if (sec.id === currentSection) {
                     link.classList.add('active');
@@ -536,6 +825,126 @@
                 
                 tabMenu.appendChild(link);
             });
+        }
+
+        // Formats date strings / ObjectIds as "Oct. 15, 2026"
+        function formatItemDate(item) {
+            const months = ["Jan.", "Feb.", "Mar.", "Apr.", "May", "Jun.", "Jul.", "Aug.", "Sep.", "Oct.", "Nov.", "Dec."];
+            let rawDate = item.updatedAt || item.lastUpdated || item.date || item.createdAt;
+            
+            if (!rawDate && typeof item._id === 'string' && /^[a-f\d]{24}$/i.test(item._id)) {
+                rawDate = new Date(parseInt(item._id.substring(0, 8), 16) * 1000);
+            }
+            if (!rawDate) return '';
+
+            if (typeof rawDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(rawDate.trim())) {
+                const [y, m, d] = rawDate.trim().split('-').map(Number);
+                return `${months[m - 1]} ${d}, ${y}`;
+            }
+
+            const parsed = new Date(rawDate);
+            if (isNaN(parsed.getTime())) return '';
+            return `${months[parsed.getMonth()]} ${parsed.getDate()}, ${parsed.getFullYear()}`;
+        }
+
+        // Evaluates whether an item was added or edited within the past 2 days
+        function getItemRecentModifier(item) {
+            const TWO_DAYS_MS = 2 * 24 * 60 * 60 * 1000;
+            const now = Date.now();
+
+            let createdMs = item.createdAt ? new Date(item.createdAt).getTime() : 0;
+            if (!createdMs && typeof item._id === 'string' && /^[a-f\d]{24}$/i.test(item._id)) {
+                createdMs = parseInt(item._id.substring(0, 8), 16) * 1000;
+            }
+
+            const updatedMs = (item.updatedAt || item.lastUpdated) ? new Date(item.updatedAt || item.lastUpdated).getTime() : 0;
+
+            if (createdMs > 0 && (now - createdMs) <= TWO_DAYS_MS) {
+                return 'NEW';
+            }
+            if (updatedMs > 0 && (now - updatedMs) <= TWO_DAYS_MS) {
+                return 'EDITED';
+            }
+            return null;
+        }
+
+        // --- TWO-STEP REDEEM CODES MODAL LOGIC ---
+        function openRedeemModal() {
+            activeRedeemType = null;
+            const modal = document.getElementById('redeemModal');
+            const titleEl = document.getElementById('redeemModalTitle');
+            const pencilBtn = document.getElementById('redeemEditPencilBtn');
+            const body = document.getElementById('redeemModalBody');
+            const actions = document.getElementById('redeemModalActions');
+
+            titleEl.textContent = 'Redeem Codes';
+            pencilBtn.style.display = 'none';
+
+            body.innerHTML = `
+                <div style="color: #b8a6e8; margin-bottom: 6px;">Select what you are looking for:</div>
+                <div class="redeem-choice-grid">
+                    <button type="button" class="redeem-choice-card" onclick="selectRedeemOption('RedeemPortal')">
+                        <div class="redeem-choice-title">Where to Redeem</div>
+                        <div class="redeem-choice-sub">Official code redemption page or guide</div>
+                    </button>
+                    <button type="button" class="redeem-choice-card" onclick="selectRedeemOption('RedeemCodes')">
+                        <div class="redeem-choice-title">Where to Get Codes</div>
+                        <div class="redeem-choice-sub">Active coupon codes list & community tracker</div>
+                    </button>
+                </div>
+            `;
+
+            actions.innerHTML = `
+                <button type="button" class="btn-floral" style="width: 100%; padding: 10px;" onclick="document.getElementById('redeemModal').classList.remove('active')">Close</button>
+            `;
+
+            modal.classList.add('active');
+        }
+
+        function selectRedeemOption(type) {
+            activeRedeemType = type;
+            const titleEl = document.getElementById('redeemModalTitle');
+            const pencilBtn = document.getElementById('redeemEditPencilBtn');
+            const body = document.getElementById('redeemModalBody');
+            const actions = document.getElementById('redeemModalActions');
+
+            const isPortal = type === 'RedeemPortal';
+            titleEl.textContent = isPortal ? 'Where to Redeem' : 'Where to Get Codes';
+            pencilBtn.style.display = 'inline-flex';
+
+            const rawUrl = isPortal ? (gameData?.redeem_portal_url || '') : (gameData?.redeem_codes_url || '');
+            const url = rawUrl.trim();
+
+            if (url) {
+                const safeUrl = url.replace(/[&<>"']/g, m => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[m]));
+                body.innerHTML = `
+                    <div>This will bring you to the website:</div>
+                    <div style="margin: 10px 0; padding: 10px 12px; background: rgba(17, 13, 25, 0.85); border: 1px solid rgba(157, 142, 199, 0.3); border-radius: 12px 4px 12px 4px; font-family: monospace; font-size: 0.88em; color: #f6c85f; word-break: break-all;">
+                        ${safeUrl}
+                    </div>
+                    <div>Continue?</div>
+                `;
+                actions.innerHTML = `
+                    <button type="button" class="btn-floral" style="padding: 11px 16px;" onclick="openRedeemModal()">← Back</button>
+                    <a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="btn-floral pollen" style="flex: 1; padding: 11px;" onclick="document.getElementById('redeemModal').classList.remove('active')">Yes</a>
+                    <button type="button" class="btn-floral blossom" style="flex: 1; padding: 11px;" onclick="document.getElementById('redeemModal').classList.remove('active')">No</button>
+                `;
+            } else {
+                body.innerHTML = `
+                    <div style="color: #f7a1c4; font-weight: bold; margin-bottom: 6px;">This link currently goes nowhere.</div>
+                    <div style="font-size: 0.9em; color: #b8a6e8;">No link has been added for this section yet. Click <b>Suggest Edit</b> in the top right to contribute one!</div>
+                `;
+                actions.innerHTML = `
+                    <button type="button" class="btn-floral" style="flex: 1; padding: 11px;" onclick="openRedeemModal()">← Back</button>
+                    <button type="button" class="btn-floral blossom" style="flex: 1; padding: 11px;" onclick="openRedeemSuggestFromModal()">Suggest Link</button>
+                `;
+            }
+        }
+
+        function openRedeemSuggestFromModal() {
+            if (!activeRedeemType) return;
+            document.getElementById('redeemModal').classList.remove('active');
+            openGameSuggestModal(activeRedeemType);
         }
 
         function getItemIcon(item, section) {
@@ -609,7 +1018,7 @@
                 </div>
             `;
         }
-        // Fetch Game Leaderboard
+
         async function loadGameLeaderboard() {
             try {
                 const res = await fetch(`/api/leaderboard/game/${gameId}`);
@@ -641,68 +1050,8 @@
                     </div>`;
                 }
             } catch (e) { 
-                document.getElementById('leaderboardList') 
-                    ? document.getElementById('leaderboardList').innerHTML = '<div class="lb-row" style="justify-content:center;color:#ccc;font-weight:bold;">NEW! Could be you!</div>'
-                    : document.getElementById('gameLeaderboardList').innerHTML = '<div class="lb-row" style="justify-content:center;color:#ccc;font-weight:bold;">NEW! Could be you!</div>';
+                document.getElementById('gameLeaderboardList').innerHTML = '<div class="lb-row" style="justify-content:center;color:#ccc;font-weight:bold;">NEW! Could be you!</div>';
             }
-        }
-
-        // Helper to format dates as "Oct. 15, 2026" (supports ISO strings, YYYY-MM-DD, and MongoDB ObjectId timestamps)
-        function formatItemDate(item) {
-            const months = ["Jan.", "Feb.", "Mar.", "Apr.", "May", "Jun.", "Jul.", "Aug.", "Sep.", "Oct.", "Nov.", "Dec."];
-            let rawDate = item.updatedAt || item.lastUpdated || item.date || item.createdAt;
-            
-            // Fallback: Extract embedded timestamp from 24-char hex MongoDB _id if no explicit date field exists
-            if (!rawDate && typeof item._id === 'string' && /^[a-f\d]{24}$/i.test(item._id)) {
-                rawDate = new Date(parseInt(item._id.substring(0, 8), 16) * 1000);
-            }
-            if (!rawDate) return '';
-
-            if (typeof rawDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(rawDate.trim())) {
-                const [y, m, d] = rawDate.trim().split('-').map(Number);
-                return `${months[m - 1]} ${d}, ${y}`;
-            }
-
-            const parsed = new Date(rawDate);
-            if (isNaN(parsed.getTime())) return '';
-            return `${months[parsed.getMonth()]} ${parsed.getDate()}, ${parsed.getFullYear()}`;
-        }
-
-        function openRedeemModal() {
-            const modal = document.getElementById('redeemModal');
-            const body = document.getElementById('redeemModalBody');
-            const actions = document.getElementById('redeemModalActions');
-            const url = (gameData && gameData.redeem_codes_url) ? gameData.redeem_codes_url.trim() : '';
-
-            if (url) {
-                const safeUrl = url.replace(/[&<>"']/g, m => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[m]));
-                body.innerHTML = `
-                    <div>This will bring you to the website:</div>
-                    <div style="margin: 10px 0; padding: 10px 12px; background: rgba(17, 13, 25, 0.85); border: 1px solid rgba(157, 142, 199, 0.3); border-radius: 12px 4px 12px 4px; font-family: monospace; font-size: 0.88em; color: #f6c85f; word-break: break-all;">
-                        ${safeUrl}
-                    </div>
-                    <div>Continue?</div>
-                `;
-                actions.innerHTML = `
-                    <a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="btn-floral pollen" style="flex: 1; padding: 11px;" onclick="document.getElementById('redeemModal').classList.remove('active')">Yes</a>
-                    <button type="button" class="btn-floral" style="flex: 1; padding: 11px;" onclick="document.getElementById('redeemModal').classList.remove('active')">No</button>
-                `;
-            } else {
-                body.innerHTML = `
-                    <div style="color: #f7a1c4; font-weight: bold; margin-bottom: 6px;">This link currently goes nowhere.</div>
-                    <div style="font-size: 0.9em; color: #b8a6e8;">No redemption code website has been added for this game yet. Click the pencil icon in the top right to suggest one!</div>
-                `;
-                actions.innerHTML = `
-                    <button type="button" class="btn-floral" style="width: 100%; padding: 11px;" onclick="document.getElementById('redeemModal').classList.remove('active')">Close</button>
-                `;
-            }
-
-            modal.classList.add('active');
-        }
-
-        function openRedeemSuggestFromModal() {
-            document.getElementById('redeemModal').classList.remove('active');
-            openGameSuggestModal('Redeem');
         }
 
         function renderContent() {
@@ -713,12 +1062,10 @@
             
             const mfContainer = document.getElementById('miniFocusContainer');
 
-            // ONLY show on the 'guides' section
             if (currentSection === 'guides' && gameData.mini_focuses && gameData.mini_focuses.length > 0) {
                 mfContainer.style.display = 'grid';
-                
                 mfContainer.innerHTML = gameData.mini_focuses.map(focus => `
-                        <div style="display: flex; align-items: center; gap: 15px; background: linear-gradient(135deg, #4C3A90 0%, #2a2a35 100%); padding: 18px; border-radius: 12px; border: 1px solid #7A6BB5; user-select: none;">
+                        <div style="display: flex; align-items: center; gap: 15px; background: linear-gradient(135deg, #4C3A90 0%, #2a2a35 100%); padding: 18px; border-radius: 18px 6px 18px 6px; border: 1px solid #7A6BB5; user-select: none;">
                             <img src="${focus.icon || '/Assets/placeholder.png'}" style="width: 50px; height: 50px; border-radius: 8px; object-fit: cover; border: 1px solid #3a3a45;">
                             <div>
                                 <div style="font-weight: bold; font-size: 1.1em; color: #fff; margin-bottom: 4px;">${focus.title}</div>
@@ -727,7 +1074,6 @@
                         </div>
                     `).join('');
             } else {
-                // Hide entirely on Overview, Assets, Communities, and Mods
                 mfContainer.style.display = 'none';
             }
 
@@ -737,9 +1083,8 @@
                     
                     let guideContent = '';
                     if (gameData.new_player_video_id) {
-                        // 1. Prioritize legacy embedded YouTube Video
                         guideContent = `
-                            <div style="position: relative; width: 100%; padding-bottom: 56.25%; height: 0; border-radius: 8px; overflow: hidden; background: #000; margin-top: 10px;">
+                            <div style="position: relative; width: 100%; max-width: 720px; aspect-ratio: 16 / 9; border-radius: 16px 5px 16px 5px; overflow: hidden; background: #000; margin-top: 12px; border: 1px solid rgba(208, 194, 247, 0.35);">
                                 <iframe 
                                     src="https://www.youtube.com/embed/${gameData.new_player_video_id}" 
                                     style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;"
@@ -750,21 +1095,19 @@
                             </div>
                         `;
                     } else if (gameData.new_player_guide) {
-                        // 2. Fallback to external URL Link Button
                         guideContent = `
-                            <a href="${gameData.new_player_guide}" target="_blank" style="display:inline-block; padding:12px 20px; background:#4C3A90; color:white; text-decoration:none; border-radius:8px; border:1px solid #7A6BB5; font-weight:bold; margin-top:10px;">📺 View Recommended Guide</a>
+                            <a href="${gameData.new_player_guide}" target="_blank" class="btn-floral" style="margin-top:10px;">View Recommended Guide</a>
                         `;
                     } else {
-                        // 3. Fallback to Suggest Button
                         guideContent = `
-                            <button onclick="openGameSuggestModal('Overview')" style="display:inline-block; padding:10px 16px; background:#2a2a35; color:#aaa; border:1px dashed #7A6BB5; border-radius:8px; cursor:pointer; margin-top:10px; transition:color 0.2s, border 0.2s;" onmouseover="this.style.color='#fff'; this.style.borderColor='#9d8ec7'" onmouseout="this.style.color='#aaa'; this.style.borderColor='#7A6BB5'">+ Suggest Beginner Guide</button>
+                            <button onclick="openGameSuggestModal('Overview')" style="display:inline-block; padding:10px 16px; background:#2a2a35; color:#aaa; border:1px dashed #7A6BB5; border-radius:14px 4px 14px 4px; cursor:pointer; margin-top:10px; transition:color 0.2s, border 0.2s;" onmouseover="this.style.color='#fff'; this.style.borderColor='#9d8ec7'" onmouseout="this.style.color='#aaa'; this.style.borderColor='#7A6BB5'">+ Suggest Beginner Guide</button>
                         `;
                     }
                     
                     let overviewHtml = `
-                        <h2>Overview ${editOverviewSvg}</h2>
-                        <p style="line-height: 1.6; color: #ddd; white-space: pre-wrap;">${gameData.overview_text || 'No overview available for this game yet.'}</p>
-                        <h3 style="margin-top:40px; border-bottom:1px solid #3a3a45; padding-bottom:8px; color:#9d8ec7;">New Player Guide</h3>
+                        <h2 style="margin-top: 0;">Overview ${editOverviewSvg}</h2>
+                        <p style="line-height: 1.65; color: #e5dcff; white-space: pre-wrap;">${gameData.overview_text || 'No overview available for this game yet.'}</p>
+                        <h3 style="margin-top:40px; border-bottom:1px solid rgba(157, 142, 199, 0.25); padding-bottom:8px; color:#d0c2f7;">New Player Guide</h3>
                         ${guideContent}
                     `;
 
@@ -782,7 +1125,7 @@
 
                 const config = sectionConfig[currentSection];
                 const addNewBtn = `<button class="btn-floral" onclick="openGameSuggestModal('${config.dbKey}')" style="padding: 6px 14px; font-size: 0.6em;">+ Add New</button>`;
-                const headerHtml = `<h2 style="display: flex; justify-content: space-between; align-items: center;">${config.title} ${addNewBtn}</h2>`;
+                const headerHtml = `<h2 style="display: flex; justify-content: space-between; align-items: center; margin-top: 0;">${config.title} ${addNewBtn}</h2>`;
 
                 if (!config || !config.data || config.data.length === 0) {
                     contentArea.innerHTML = headerHtml + `<p style="color: #aaa;">No items found.</p>`;
@@ -790,8 +1133,8 @@
                     return;
                 }
 
-                const filteredData = activeFilter === 'All' 
-                    ? config.data 
+                let filteredData = activeFilter === 'All' 
+                    ? [...config.data] 
                     : config.data.filter(item => {
                         const val = item[config.catKey];
                         if (!val) return false;
@@ -800,13 +1143,38 @@
                         return val === activeFilter;
                     });
 
+                // Sort items: 1) Favorited items & 2-day NEW!/EDITED! items pushed to the top
+                filteredData.sort((a, b) => {
+                    const aFav = favoritedSubItems.includes(getSubItemId(a)) ? 1 : 0;
+                    const bFav = favoritedSubItems.includes(getSubItemId(b)) ? 1 : 0;
+                    if (aFav !== bFav) return bFav - aFav;
+
+                    const aMod = getItemRecentModifier(a) ? 1 : 0;
+                    const bMod = getItemRecentModifier(b) ? 1 : 0;
+                    if (aMod !== bMod) return bMod - aMod;
+
+                    return 0;
+                });
+
                 const filterHtml = buildFilterBar(config.data, config.catKey);
                 const safeStr = (text) => (text || '').toString().replace(/[&<>"']/g, m => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[m]));
 
-                // Store globally so the modal knows what to edit
+                // Store sorted list so clicking the Edit pencil maps to the exact displayed item
                 currentDisplayedItems = filteredData;
 
                 const cardsHtml = filteredData.map((item, index) => {
+                    const itemId = getSubItemId(item);
+                    const isFav = favoritedSubItems.includes(itemId);
+                    const starColor = isFav ? '#f6c85f' : 'rgba(157, 142, 199, 0.35)';
+
+                    const recentMod = getItemRecentModifier(item);
+                    let modBadgeHtml = '';
+                    if (recentMod === 'NEW') {
+                        modBadgeHtml = `<span class="status-badge badge-new" title="Added within the past 2 days">NEW!</span>`;
+                    } else if (recentMod === 'EDITED') {
+                        modBadgeHtml = `<span class="status-badge badge-edited" title="Edited within the past 2 days">EDITED!</span>`;
+                    }
+
                     let metaVal = item[config.metaKey];
                     if (Array.isArray(metaVal)) metaVal = metaVal.join(', ');
                     let metaHtml = safeStr(metaVal);
@@ -823,7 +1191,6 @@
                     const formattedDate = formatItemDate(item);
                     const dateHtml = formattedDate ? `<div class="item-date">Last updated: ${formattedDate}</div>` : '';
                     
-                    // Individual edit pencil
                     const editBtnHtml = `
                         <div style="margin-left: auto; padding-left: 15px; display: flex; align-items: center;">
                             <svg onclick="event.preventDefault(); event.stopPropagation(); openGameSuggestModal('${config.dbKey}', ${index})" style="width:20px;height:20px;fill:#aaa;cursor:pointer;transition:fill 0.2s;" onmouseover="this.style.fill='#fff'" onmouseout="this.style.fill='#aaa'" title="Suggest Edit" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
@@ -831,10 +1198,16 @@
                     `;
 
                     return `
-                        <a href="${safeStr(item.url || item.download_url || '#')}" target="_blank" class="item-card">
+                        <a href="${safeStr(item.url || item.download_url || '#')}" target="_blank" class="item-card ${(isFav || recentMod) ? 'item-featured' : ''}">
+                            <svg class="item-star-btn" onclick="toggleFavoriteSubItem('${safeStr(itemId)}', event)" style="fill:${starColor};" title="${isFav ? 'Remove from Favorites' : 'Favorite Item'}" viewBox="0 0 24 24">
+                                <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                            </svg>
                             <img src="${getItemIcon(item, currentSection)}" class="item-icon" alt="icon" onerror="this.src='/Assets/placeholder.png'">
                             <div class="item-details">
-                                <div class="item-title">${safeStr(item.title || item.name)}</div>
+                                <div class="item-title-row">
+                                    <div class="item-title">${safeStr(item.title || item.name)}</div>
+                                    ${modBadgeHtml}
+                                </div>
                                 ${dateHtml}
                                 <div class="item-meta">${primaryMeta}${submitterHtml}</div>
                             </div>
@@ -857,7 +1230,7 @@
 
         window.addEventListener('popstate', () => {
             const urlParams = new URLSearchParams(window.location.search);
-            let currentSection = urlParams.get('tab') || 'overview';
+            currentSection = urlParams.get('tab') || 'overview';
             renderTabs();
             renderContent();
         });
@@ -880,37 +1253,13 @@
                     patchMetaEl.textContent = `Last Major Patch: ${verText}${formattedPatchDate}`;
                     patchMetaEl.style.display = 'block';
                 }
-
-                const mfContainer = document.getElementById('miniFocusContainer');
-                if (gameData.mini_focuses && gameData.mini_focuses.length > 0) {
-                    mfContainer.style.display = 'grid';
-                    mfContainer.innerHTML = gameData.mini_focuses.map(focus => `
-                        <div style="display: flex; align-items: center; gap: 15px; background: linear-gradient(135deg, #4C3A90 0%, #2a2a35 100%); padding: 18px; border-radius: 12px; border: 1px solid #7A6BB5; user-select: none;">
-                            <img src="${focus.icon || '/Assets/placeholder.png'}" style="width: 50px; height: 50px; border-radius: 8px; object-fit: cover; border: 1px solid #3a3a45;">
-                            <div>
-                                <div style="font-weight: bold; font-size: 1.1em; color: #fff; margin-bottom: 4px;">${focus.title}</div>
-                                <div style="font-size: 0.85em; color: #ccc;">${focus.description}</div>
-                            </div>
-                        </div>
-                    `).join('');
-                } else {
-                    mfContainer.style.display = 'none';
-                }
-
-                const redeemBtn = document.getElementById('redeemCodesBtn');
-                // if (gameData.redeem_codes_url) {
-                redeemBtn.href = gameData.redeem_codes_url;
-                redeemBtn.style.display = 'inline-flex';
-                // } 
-                // else {
-                //     redeemBtn.style.display = 'none';
-                // }
                 
                 loadGameLeaderboard();
                 
                 contentArea.style.transition = 'opacity 0.2s ease';
                 renderTabs();
                 renderContent();
+                if (typeof applySettings === 'function') applySettings();
 
             } catch (error) {
                 console.error("Failed to load page data:", error);
@@ -946,10 +1295,11 @@
                 document.getElementById('gsNewPlayerGuide').style.display = 'block';
                 document.getElementById('gsOverviewText').value = gameData.overview_text || '';
                 document.getElementById('gsNewPlayerGuide').value = gameData.new_player_guide || '';
-            } else if (category === 'Redeem') {
+            } else if (category === 'RedeemPortal' || category === 'RedeemCodes') {
+                const isPortal = category === 'RedeemPortal';
                 currentSuggestAction = 'EDIT';
-                currentSuggestTarget = 'Redeem Codes URL';
-                titleEl.textContent = 'Suggest Redeem Codes Link';
+                currentSuggestTarget = isPortal ? 'Where to Redeem URL' : 'Where to Get Codes URL';
+                titleEl.textContent = isPortal ? 'Edit "Where to Redeem" Link' : 'Edit "Where to Get Codes" Link';
                 historyBtn.style.display = 'inline-flex';
 
                 document.getElementById('gsStandardInputs').style.display = 'flex';
@@ -958,8 +1308,8 @@
                 overviewWrap.style.display = 'none';
                 document.getElementById('gsNewPlayerGuide').style.display = 'none';
 
-                urlInput.placeholder = 'Redeem Codes Website URL (e.g. https://...)';
-                urlInput.value = gameData.redeem_codes_url || '';
+                urlInput.placeholder = isPortal ? 'Official Redemption Page URL (https://...)' : 'Coupon Codes List / Tracker URL (https://...)';
+                urlInput.value = isPortal ? (gameData.redeem_portal_url || '') : (gameData.redeem_codes_url || '');
             } else {
                 document.getElementById('gsStandardInputs').style.display = 'flex';
                 titleRow.style.display = 'block';
@@ -991,6 +1341,8 @@
             }
             document.getElementById('gameSuggestModal').classList.add('active');
         }
+
+        const escapeHtml = (text) => (text || '').toString().replace(/[&<>"']/g, m => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[m]));
 
         async function viewEditHistory() {
             if (!currentSuggestTarget) return;
@@ -1036,13 +1388,14 @@
                     new_player_guide: document.getElementById('gsNewPlayerGuide').value.trim(),
                     commitMessage 
                 };
-            } else if (currentSuggestCategory === 'Redeem') {
-                const redeemUrl = document.getElementById('gsUrl').value.trim();
-                if (!redeemUrl) return alert("Redeem Codes URL is required.");
-                dataPayload = {
-                    redeem_codes_url: redeemUrl,
-                    commitMessage
-                };
+            } else if (currentSuggestCategory === 'RedeemPortal') {
+                const portalUrl = document.getElementById('gsUrl').value.trim();
+                if (!portalUrl) return alert("Redemption Page URL is required.");
+                dataPayload = { redeem_portal_url: portalUrl, commitMessage };
+            } else if (currentSuggestCategory === 'RedeemCodes') {
+                const codesUrl = document.getElementById('gsUrl').value.trim();
+                if (!codesUrl) return alert("Where to Get Codes URL is required.");
+                dataPayload = { redeem_codes_url: codesUrl, commitMessage };
             } else {
                 const title = document.getElementById('gsTitle').value.trim();
                 const author = document.getElementById('gsAuthor').value.trim();
@@ -1051,9 +1404,11 @@
                 dataPayload = { title, url, author, platform: author, type: author, version: author, commitMessage };
             }
 
+            const isGameLevelCategory = ['Overview', 'RedeemPortal', 'RedeemCodes'].includes(currentSuggestCategory);
+
             const payload = {
                 gameId: gameData.id,
-                itemCategory: (currentSuggestCategory === 'Overview' || currentSuggestCategory === 'Redeem') ? 'Game' : currentSuggestCategory,
+                itemCategory: isGameLevelCategory ? 'Game' : currentSuggestCategory,
                 actionType: currentSuggestAction,
                 targetIdentifier: currentSuggestTarget || (dataPayload.title || 'New Item'),
                 data: dataPayload
@@ -1070,21 +1425,19 @@
             } catch (e) { alert("Failed to submit: " + e.message); }
         }
 
-
         initPage();
 
         // Silently monitor for Discord admin approvals every 15 seconds
         setInterval(async () => {
-            // Do not refresh data while a modal is actively open to prevent typing interruptions
             if (document.visibilityState !== 'visible' || document.querySelector('.modal-overlay.active')) return;
             
             try {
                 const res = await fetch(`/api/games/${gameId}`);
                 if (res.ok) {
                     const newData = await res.json();
-                    // If the database changed, instantly re-render the screen
                     if (JSON.stringify(newData) !== JSON.stringify(gameData)) {
                         gameData = newData;
+                        renderTabs();
                         renderContent();
                         loadGameLeaderboard();
                     }
