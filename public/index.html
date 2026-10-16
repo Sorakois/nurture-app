@@ -15,6 +15,15 @@
     </script>
     <script defer src="/_vercel/insights/script.js"></script>
 
+    <!-- Open Graph / Discord / Twitter Link Embed Preview -->
+    <meta name="theme-color" content="#9d8ec7">
+    <meta property="og:site_name" content="Nurture">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Nurture | Meta, Guides, Redeem Codes, Assets & Communities">
+    <meta property="og:description" content="Community-driven gaming hub for guides, tools, active coupon codes, raw assets, and mods.">
+    <meta property="og:image" content="https://nurture.how/Assets/nurture_icon.png">
+    <meta name="twitter:card" content="summary">
+
     <style>
         .main-wrapper {
             display: flex;
@@ -905,13 +914,31 @@
             <div class="grid-container" id="gameGrid"></div>
         </div>
         
-        <!-- Single PC Leaderboard aligned flush with the top of the Game Grid -->
-        <div class="leaderboard-sidebar" id="leaderboardSidebar" style="display: flex; flex-direction: column; flex-shrink: 0;">
-            <div class="lb-header">Top Contributors</div>
-            <div id="leaderboardList" style="flex-grow: 1; overflow-y: auto; margin-bottom: 10px; padding-right: 5px;">
-                <div class="lb-row" style="justify-content:center;color:#ccc;font-weight:bold;">Loading ranks...</div>
+        <!-- Right Rail: Top-Right Ad Window + Sticky PC Leaderboard -->
+        <div class="right-rail-column" id="rightRailColumn">
+            <div class="nurture-ad-unit nurture-ad-sidebar" id="indexSidebarAd">
+                <span class="ad-tag-label">Sponsored</span>
+                <button type="button" class="ad-close-btn" onclick="dismissAllAdsForSession()" title="Close ads for this session">×</button>
+                <div style="font-size: 0.85em; color: #d0c2f7; font-weight: bold; margin-top: 8px;">Support Nurture</div>
+                <div style="font-size: 0.76em; color: #a99ec7; margin-top: 4px;">Link Discord & Join Server for No Ads Forever!</div>
             </div>
-            <div id="userRankContainer"></div>
+
+            <div class="leaderboard-sidebar" id="leaderboardSidebar" style="display: flex; flex-direction: column; flex-shrink: 0;">
+                <div class="lb-header">Top Contributors</div>
+                <div id="leaderboardList" style="flex-grow: 1; overflow-y: auto; margin-bottom: 10px; padding-right: 5px;">
+                    <div class="lb-row" style="justify-content:center;color:#ccc;font-weight:bold;">Loading ranks...</div>
+                </div>
+                <div id="userRankContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Screen Dismissible Ad Banner -->
+    <div class="nurture-ad-unit nurture-ad-bottom" id="bottomAdBanner">
+        <span class="ad-tag-label">Sponsored</span>
+        <button type="button" class="ad-close-btn" onclick="dismissAllAdsForSession()" title="Close ads for this session">×</button>
+        <div style="font-size: 0.88em; color: #e5dcff;">
+            Want an ad-free experience forever? <a href="/auth/discord" style="color: #f6c85f; font-weight: bold; text-decoration: underline;">Link your Discord & join Nurture!</a>
         </div>
     </div>
 

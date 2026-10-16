@@ -15,6 +15,16 @@
     </script>
     <script defer src="/_vercel/insights/script.js"></script>
 
+    <!-- Dynamic Open Graph / Discord Embed Preview (Populated by server.js) -->
+    <meta name="theme-color" content="#9d8ec7">
+    <meta property="og:site_name" content="Nurture">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="__OG_TITLE__">
+    <meta property="og:description" content="__OG_DESC__">
+    <meta property="og:image" content="__OG_IMAGE__">
+    <meta property="og:url" content="__OG_URL__">
+    <meta name="twitter:card" content="summary">
+
     <style>
         /* === PC 3-COLUMN DASHBOARD LAYOUT === */
         .game-layout {
@@ -231,6 +241,155 @@
             font-family: monospace;
             font-size: 1.08em;
             margin: 0;
+        }
+
+        /* === STACKED REDEEM CODES BUTTON WITH ATTACHED TOP & BOTTOM BANNERS === */
+        .redeem-stack-wrapper {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: stretch;
+            flex-shrink: 0;
+            border-radius: 18px 6px 18px 6px;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+            transition: transform 0.2s ease;
+        }
+
+        .redeem-stack-wrapper:hover {
+            transform: translateY(-3px);
+        }
+
+        .redeem-top-new-banner {
+            background: linear-gradient(90deg, #ef2b2d 0%, #c91e5a 100%);
+            color: #ffffff;
+            font-size: 0.68em;
+            font-weight: 900;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            text-align: center;
+            padding: 3px 10px;
+            border-radius: 16px 6px 0 0;
+            border: 1px solid #ff7a8a;
+            border-bottom: none;
+        }
+
+        .redeem-stack-wrapper .redeem-btn {
+            border-radius: 0;
+            box-shadow: none;
+            margin: 0;
+        }
+
+        .redeem-stack-wrapper .redeem-btn:hover {
+            transform: none;
+            border-radius: 0;
+        }
+
+        .redeem-stack-wrapper.no-top-banner .redeem-btn {
+            border-top-left-radius: 18px;
+            border-top-right-radius: 6px;
+        }
+
+        .redeem-bottom-date-banner {
+            background: rgba(16, 12, 26, 0.95);
+            color: #d0c2f7;
+            font-size: 0.7em;
+            font-family: monospace;
+            text-align: center;
+            padding: 4px 10px;
+            border: 1px solid rgba(208, 194, 247, 0.35);
+            border-top: none;
+            border-radius: 0 0 18px 6px;
+        }
+
+        .coupon-list-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 310px;
+            overflow-y: auto;
+            padding-right: 4px;
+            margin: 12px 0;
+        }
+
+        .coupon-card-btn {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            padding: 0;
+            background: rgba(20, 16, 30, 0.9);
+            border: 1px solid rgba(208, 194, 247, 0.38);
+            border-radius: 16px 5px 16px 5px;
+            color: white;
+            font-family: inherit;
+            cursor: pointer;
+            overflow: hidden;
+            text-align: left;
+            transition: border-color 0.15s ease, transform 0.15s ease;
+        }
+
+        .coupon-card-btn:hover {
+            border-color: #f6c85f;
+            transform: translateX(3px);
+        }
+
+        .coupon-card-btn.copied {
+            border-color: rgba(123, 201, 150, 0.55);
+            opacity: 0.78;
+        }
+
+        .coupon-top-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            background: linear-gradient(90deg, rgba(94, 71, 150, 0.32) 0%, rgba(36, 28, 54, 0.7) 100%);
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .coupon-card-btn.copied .coupon-top-row {
+            background: linear-gradient(90deg, rgba(65, 115, 85, 0.3) 0%, rgba(28, 36, 34, 0.7) 100%);
+        }
+
+        .coupon-code-str {
+            font-family: monospace;
+            font-size: 1.08em;
+            font-weight: 900;
+            letter-spacing: 1px;
+            color: #f6c85f;
+        }
+
+        .coupon-card-btn.copied .coupon-code-str {
+            color: #7bc996;
+        }
+
+        .coupon-copy-pill {
+            font-size: 0.75em;
+            font-weight: bold;
+            padding: 3px 10px;
+            border-radius: 8px 2px 8px 2px;
+            background: rgba(246, 200, 95, 0.18);
+            color: #ffe6a3;
+            border: 1px solid rgba(246, 200, 95, 0.45);
+        }
+
+        .coupon-card-btn.copied .coupon-copy-pill {
+            background: rgba(123, 201, 150, 0.2);
+            color: #7bc996;
+            border-color: rgba(123, 201, 150, 0.5);
+        }
+
+        .coupon-bottom-rewards {
+            padding: 8px 14px;
+            background: rgba(14, 11, 22, 0.92);
+            border-top: 1px solid rgba(157, 142, 199, 0.2);
+            font-size: 0.82em;
+            color: #d0c2f7;
+            width: 100%;
+            box-sizing: border-box;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
         }
 
         .redeem-btn {
@@ -656,15 +815,51 @@
                 </div>
             </div>
 
-            <!-- Column 3: Full-Height Sticky Leaderboard Sidebar -->
-            <aside class="leaderboard-sidebar" id="leaderboardSidebar">
-                <div class="lb-header">Game Leaderboard</div>
-                <div id="gameLeaderboardList" style="flex-grow: 1; overflow-y: auto; margin-bottom: 10px; padding-right: 5px;">
-                    <div class="lb-row" style="justify-content:center;color:#ccc;">Loading game ranks...</div>
+            <!-- Stacked Redeem Codes Button with Attached Top & Bottom Banners -->
+                    <div class="redeem-stack-wrapper no-top-banner" id="redeemStackWrapper">
+                        <div class="redeem-top-new-banner" id="redeemNewCodeBanner" style="display: none;">NEW CODE</div>
+                        <button type="button" id="redeemCodesBtn" class="redeem-btn" onclick="openRedeemModal()" title="Redeem Codes & Links">
+                            <img src="/Assets/ticket.png" alt="Redeem Codes">
+                            <span>Redeem Codes</span>
+                        </button>
+                        <div class="redeem-bottom-date-banner" id="redeemLastAddedBanner">No codes yet</div>
+                    </div>
                 </div>
-                <div id="userGameRankContainer"></div>
-            </aside>
 
+                <div id="miniFocusContainer" style="display: none; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;"></div>
+
+                <div class="content-area" id="dynamicContent">
+                    <h2>Loading content...</h2>
+                </div>
+            </div>
+
+            <!-- Column 3: Ad Window (Above Leaderboard & Right of Redeem Area) + Leaderboard -->
+            <div class="right-rail-column" id="rightRailColumn">
+                <div class="nurture-ad-unit nurture-ad-sidebar" id="gameSidebarAd">
+                    <span class="ad-tag-label">Sponsored</span>
+                    <button type="button" class="ad-close-btn" onclick="dismissAllAdsForSession()" title="Close ads for this session">×</button>
+                    <div style="font-size: 0.85em; color: #d0c2f7; font-weight: bold; margin-top: 8px;">Support Nurture</div>
+                    <div style="font-size: 0.76em; color: #a99ec7; margin-top: 4px;">Link Discord & Join Server for No Ads Forever!</div>
+                </div>
+
+                <aside class="leaderboard-sidebar" id="leaderboardSidebar">
+                    <div class="lb-header">Game Leaderboard</div>
+                    <div id="gameLeaderboardList" style="flex-grow: 1; overflow-y: auto; margin-bottom: 10px; padding-right: 5px;">
+                        <div class="lb-row" style="justify-content:center;color:#ccc;">Loading game ranks...</div>
+                    </div>
+                    <div id="userGameRankContainer"></div>
+                </aside>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Bottom Screen Dismissible Ad Banner -->
+    <div class="nurture-ad-unit nurture-ad-bottom" id="bottomAdBanner">
+        <span class="ad-tag-label">Sponsored</span>
+        <button type="button" class="ad-close-btn" onclick="dismissAllAdsForSession()" title="Close ads for this session">×</button>
+        <div style="font-size: 0.88em; color: #e5dcff;">
+            Want an ad-free experience forever? <a href="/auth/discord" style="color: #f6c85f; font-weight: bold; text-decoration: underline;">Link your Discord & join Nurture!</a>
         </div>
     </div>
 
@@ -910,6 +1105,82 @@
             modal.classList.add('active');
         }
 
+        // Per-game copied coupon codes (synced across devices)
+        const copiedCodesKey = `nurture_copied_codes_${gameId}`;
+        let copiedCoupons = JSON.parse(localStorage.getItem(copiedCodesKey) || '[]');
+
+        window.addEventListener('nurtureUserSynced', (e) => {
+            const serverFavs = e.detail?.starredSubItems;
+            if (serverFavs && Array.isArray(serverFavs[gameId])) {
+                favoritedSubItems = serverFavs[gameId];
+                localStorage.setItem(favStorageKey, JSON.stringify(favoritedSubItems));
+            }
+            const serverCopied = e.detail?.copiedCoupons;
+            if (serverCopied && Array.isArray(serverCopied[gameId])) {
+                copiedCoupons = serverCopied[gameId];
+                localStorage.setItem(copiedCodesKey, JSON.stringify(copiedCoupons));
+            }
+            renderContent();
+        });
+
+        function updateRedeemButtonBanners() {
+            const wrapper = document.getElementById('redeemStackWrapper');
+            const topBanner = document.getElementById('redeemNewCodeBanner');
+            const bottomBanner = document.getElementById('redeemLastAddedBanner');
+            if (!wrapper || !topBanner || !bottomBanner) return;
+
+            const coupons = Array.isArray(gameData?.coupons) ? gameData.coupons : [];
+            if (coupons.length === 0) {
+                topBanner.style.display = 'none';
+                wrapper.classList.add('no-top-banner');
+                bottomBanner.textContent = 'No codes yet';
+                return;
+            }
+
+            // Find the most recently added coupon
+            let latestMs = 0;
+            let latestItem = coupons[coupons.length - 1];
+            coupons.forEach(c => {
+                let ms = c.createdAt ? new Date(c.createdAt).getTime() : 0;
+                if (!ms && typeof c._id === 'string' && /^[a-f\d]{24}$/i.test(c._id)) {
+                    ms = parseInt(c._id.substring(0, 8), 16) * 1000;
+                }
+                if (ms >= latestMs) {
+                    latestMs = ms;
+                    latestItem = c;
+                }
+            });
+
+            const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+            const isRecentCode = latestMs > 0 && (Date.now() - latestMs) <= SEVEN_DAYS_MS;
+
+            if (isRecentCode) {
+                topBanner.style.display = 'block';
+                wrapper.classList.remove('no-top-banner');
+            } else {
+                topBanner.style.display = 'none';
+                wrapper.classList.add('no-top-banner');
+            }
+
+            const dateStr = formatItemDate(latestItem);
+            bottomBanner.textContent = dateStr ? `Last code: ${dateStr}` : `${coupons.length} code${coupons.length !== 1 ? 's' : ''} active`;
+        }
+
+        function copyCouponCode(codeStr) {
+            if (!codeStr) return;
+            navigator.clipboard.writeText(codeStr).catch(() => {});
+
+            if (!copiedCoupons.includes(codeStr)) {
+                copiedCoupons.push(codeStr);
+                localStorage.setItem(copiedCodesKey, JSON.stringify(copiedCoupons));
+                if (typeof window.syncUserPreferences === 'function') {
+                    window.syncUserPreferences({ copiedCoupons: { [gameId]: copiedCoupons } });
+                }
+            }
+            // Re-render the modal list immediately to show the Copied state
+            selectRedeemOption('RedeemCodes');
+        }
+
         function selectRedeemOption(type) {
             activeRedeemType = type;
             const titleEl = document.getElementById('redeemModalTitle');
@@ -917,35 +1188,77 @@
             const body = document.getElementById('redeemModalBody');
             const actions = document.getElementById('redeemModalActions');
 
-            const isPortal = type === 'RedeemPortal';
-            titleEl.textContent = isPortal ? 'Where to Redeem' : 'Where to Get Codes';
-            pencilBtn.style.display = 'inline-flex';
+            if (type === 'RedeemPortal') {
+                titleEl.textContent = 'Where to Redeem';
+                pencilBtn.style.display = 'inline-flex';
+                pencilBtn.querySelector('span').textContent = 'Suggest Edit';
 
-            const rawUrl = isPortal ? (gameData?.redeem_portal_url || '') : (gameData?.redeem_codes_url || '');
-            const url = rawUrl.trim();
-
-            if (url) {
-                const safeUrl = url.replace(/[&<>"']/g, m => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[m]));
-                body.innerHTML = `
-                    <div>This will bring you to the website:</div>
-                    <div style="margin: 10px 0; padding: 10px 12px; background: rgba(17, 13, 25, 0.85); border: 1px solid rgba(157, 142, 199, 0.3); border-radius: 12px 4px 12px 4px; font-family: monospace; font-size: 0.88em; color: #f6c85f; word-break: break-all;">
-                        ${safeUrl}
-                    </div>
-                    <div>Continue?</div>
-                `;
-                actions.innerHTML = `
-                    <button type="button" class="btn-floral" style="padding: 11px 16px;" onclick="openRedeemModal()">← Back</button>
-                    <a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="btn-floral pollen" style="flex: 1; padding: 11px;" onclick="document.getElementById('redeemModal').classList.remove('active')">Yes</a>
-                    <button type="button" class="btn-floral blossom" style="flex: 1; padding: 11px;" onclick="document.getElementById('redeemModal').classList.remove('active')">No</button>
-                `;
+                const url = (gameData?.redeem_portal_url || '').trim();
+                if (url) {
+                    const safeUrl = escapeHtml(url);
+                    body.innerHTML = `
+                        <div>This will bring you to the official redemption website:</div>
+                        <div style="margin: 10px 0; padding: 10px 12px; background: rgba(17, 13, 25, 0.85); border: 1px solid rgba(157, 142, 199, 0.3); border-radius: 12px 4px 12px 4px; font-family: monospace; font-size: 0.88em; color: #f6c85f; word-break: break-all;">
+                            ${safeUrl}
+                        </div>
+                        <div>Continue?</div>
+                    `;
+                    actions.innerHTML = `
+                        <button type="button" class="btn-floral" style="padding: 11px 16px;" onclick="openRedeemModal()">← Back</button>
+                        <a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="btn-floral pollen" style="flex: 1; padding: 11px;" onclick="document.getElementById('redeemModal').classList.remove('active')">Yes</a>
+                        <button type="button" class="btn-floral blossom" style="flex: 1; padding: 11px;" onclick="document.getElementById('redeemModal').classList.remove('active')">No</button>
+                    `;
+                } else {
+                    body.innerHTML = `
+                        <div style="color: #f7a1c4; font-weight: bold; margin-bottom: 6px;">This link currently goes nowhere.</div>
+                        <div style="font-size: 0.9em; color: #b8a6e8;">No official redemption portal link has been added yet. Click <b>Suggest Edit</b> in the top right to add one!</div>
+                    `;
+                    actions.innerHTML = `
+                        <button type="button" class="btn-floral" style="flex: 1; padding: 11px;" onclick="openRedeemModal()">← Back</button>
+                        <button type="button" class="btn-floral blossom" style="flex: 1; padding: 11px;" onclick="openRedeemSuggestFromModal()">Suggest Link</button>
+                    `;
+                }
             } else {
-                body.innerHTML = `
-                    <div style="color: #f7a1c4; font-weight: bold; margin-bottom: 6px;">This link currently goes nowhere.</div>
-                    <div style="font-size: 0.9em; color: #b8a6e8;">No link has been added for this section yet. Click <b>Suggest Edit</b> in the top right to contribute one!</div>
-                `;
+                // "Where to Get Codes" -> Live Coupon Codes Window with Copy Memory + Attached Rewards
+                titleEl.textContent = 'Live Coupon Codes';
+                pencilBtn.style.display = 'inline-flex';
+                pencilBtn.querySelector('span').textContent = '+ Suggest Code';
+
+                const coupons = Array.isArray(gameData?.coupons) ? [...gameData.coupons].reverse() : [];
+                if (coupons.length === 0) {
+                    body.innerHTML = `
+                        <div style="color: #b8a6e8; padding: 14px 0;">No active coupon codes have been submitted for this game yet.</div>
+                    `;
+                } else {
+                    const listHtml = coupons.map(c => {
+                        const codeStr = (c.code || c.title || '').trim();
+                        const rewardsStr = c.rewards || c.author || 'In-game rewards';
+                        const isCopied = copiedCoupons.includes(codeStr);
+                        const addedDate = formatItemDate(c);
+
+                        return `
+                            <button type="button" class="coupon-card-btn ${isCopied ? 'copied' : ''}" onclick="copyCouponCode('${escapeHtml(codeStr)}')">
+                                <div class="coupon-top-row">
+                                    <span class="coupon-code-str">${escapeHtml(codeStr)}</span>
+                                    <span class="coupon-copy-pill">${isCopied ? '✓ Copied' : 'Click to Copy'}</span>
+                                </div>
+                                <div class="coupon-bottom-rewards">
+                                    <span>Gives: <b>${escapeHtml(rewardsStr)}</b></span>
+                                    ${addedDate ? `<span style="font-size:0.85em; color:#887da8; font-family:monospace;">${addedDate}</span>` : ''}
+                                </div>
+                            </button>
+                        `;
+                    }).join('');
+
+                    body.innerHTML = `
+                        <div style="font-size: 0.82em; color: #a99ec7;">Click any code below to copy it to your clipboard:</div>
+                        <div class="coupon-list-container">${listHtml}</div>
+                    `;
+                }
+
                 actions.innerHTML = `
-                    <button type="button" class="btn-floral" style="flex: 1; padding: 11px;" onclick="openRedeemModal()">← Back</button>
-                    <button type="button" class="btn-floral blossom" style="flex: 1; padding: 11px;" onclick="openRedeemSuggestFromModal()">Suggest Link</button>
+                    <button type="button" class="btn-floral" style="flex: 1; padding: 10px;" onclick="openRedeemModal()">← Back</button>
+                    <button type="button" class="btn-floral pollen" style="flex: 1; padding: 10px;" onclick="openRedeemSuggestFromModal()">+ Add New Code</button>
                 `;
             }
         }
@@ -1251,6 +1564,8 @@
                 
                 gameData = await response.json();
 
+                updateRedeemButtonBanners();
+
                 document.getElementById('gameTitle').textContent = gameData.name;
                 document.getElementById('gameDev').textContent = gameData.developer;
                 document.getElementById('gameIcon').src = gameData.banner_url || '/Assets/placeholder.png';
@@ -1304,6 +1619,22 @@
                 document.getElementById('gsNewPlayerGuide').style.display = 'block';
                 document.getElementById('gsOverviewText').value = gameData.overview_text || '';
                 document.getElementById('gsNewPlayerGuide').value = gameData.new_player_guide || '';
+            } else if (category === 'RedeemCodes') {
+                currentSuggestAction = 'CREATE';
+                currentSuggestTarget = 'New Coupon Code';
+                titleEl.textContent = 'Suggest a Live Coupon Code';
+                historyBtn.style.display = 'none';
+
+                document.getElementById('gsStandardInputs').style.display = 'flex';
+                titleRow.style.display = 'block';
+                authorInput.style.display = 'none';
+                overviewWrap.style.display = 'none';
+                document.getElementById('gsNewPlayerGuide').style.display = 'none';
+
+                document.getElementById('gsTitle').placeholder = 'Coupon Code (e.g. STARRAILGIFT)';
+                document.getElementById('gsTitle').value = '';
+                urlInput.placeholder = 'What does this code give? (e.g. 50 Stellar Jade & 10,000 Credits)';
+                urlInput.value = '';
             } else if (category === 'RedeemPortal' || category === 'RedeemCodes') {
                 const isPortal = category === 'RedeemPortal';
                 currentSuggestAction = 'EDIT';
@@ -1402,9 +1733,10 @@
                 if (!portalUrl) return alert("Redemption Page URL is required.");
                 dataPayload = { redeem_portal_url: portalUrl, commitMessage };
             } else if (currentSuggestCategory === 'RedeemCodes') {
-                const codesUrl = document.getElementById('gsUrl').value.trim();
-                if (!codesUrl) return alert("Where to Get Codes URL is required.");
-                dataPayload = { redeem_codes_url: codesUrl, commitMessage };
+                const code = document.getElementById('gsTitle').value.trim().toUpperCase();
+                const rewards = document.getElementById('gsUrl').value.trim();
+                if (!code || !rewards) return alert("Both the Coupon Code and what it gives are required.");
+                dataPayload = { code, rewards, title: code, commitMessage };
             } else {
                 const title = document.getElementById('gsTitle').value.trim();
                 const author = document.getElementById('gsAuthor').value.trim();

@@ -11,6 +11,8 @@ const User = require('./models/User');
 const Contribution = require('./models/Contribution');
 const { verifyKeyMiddleware, InteractionType, InteractionResponseType } = require('discord-interactions');
 const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
 require('dotenv').config();
 
 const app = express();
@@ -737,6 +739,18 @@ app.post('/api/user/sync', async (req, res) => {
             }
         }
 
+        //  4. Copied Coupon Codes [historical]
+        if (req.body.copiedCoupons && typeof req.body.copiedCoupons === 'object') {
+            for (const [gId, codes] of Object.entries(req.body.copiedCoupons)) {
+                const cleanGameId = validateInput.sanitizeString(gId).replace(/[.$]/g, '');
+                if (cleanGameId && Array.isArray(codes)) {
+                    updates[`copiedCoupons.${cleanGameId}`] = codes
+                        .slice(0, 200)
+                        .map(c => validateInput.sanitizeString(String(c)));
+                }
+            }
+        }
+
         if (Object.keys(updates).length > 0) {
             await User.collection.updateOne(
                 { _id: new mongoose.Types.ObjectId(decoded.userId) },
@@ -957,36 +971,40 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                             
                             await Game.collection.updateOne({ id: contribution.gameId }, { $set: updates });
                         } else {
-                            const catKey = contribution.itemCategory.toLowerCase() + 's';
-                            const catArray = game[catKey] || game[contribution.itemCategory.toLowerCase()];
-                            if (catArray) {
-                                if (contribution.actionType === 'CREATE') {
-                                    catArray.push({ 
-                                        ...contribution.data, 
-                                        submitterUsername: contribution.submitterUsername,
-                                        submitterDiscordId: contribution.submitterDiscordId,
-                                        createdAt: nowIso,
-                                        _id: new mongoose.Types.ObjectId() 
-                                    });
-                                }
-                                else if (contribution.actionType === 'EDIT') {
-                                    const idx = catArray.findIndex(item => item._id?.toString() === contribution.targetIdentifier || item.title === contribution.targetIdentifier);
-                                    if (idx !== -1) {
-                                        catArray[idx] = { 
-                                            ...catArray[idx], 
-                                            ...contribution.data,
-                                            updatedAt: nowIso
-                                        };
-                                    }
-                                }
-                                else if (contribution.actionType === 'DELETE') {
-                                    const idx = catArray.findIndex(item => item._id?.toString() === contribution.targetIdentifier || item.title === contribution.targetIdentifier);
-                                    if (idx !== -1) catArray.splice(idx, 1);
-                                }
-                                game.markModified(catKey);
-                                await game.save();
-                                await Game.collection.updateOne({ id: contribution.gameId }, { $set: { last_edited_at: nowIso } });
+                            // Supports Guide -> guides, Asset -> assets, Community -> communities, Mod -> mods, Coupon -> coupons
+                            const lowerCat = contribution.itemCategory.toLowerCase();
+                            const catKey = lowerCat === 'community' ? 'communities' : `${lowerCat}s`;
+                            if (!Array.isArray(game[catKey])) game[catKey] = [];
+                            const catArray = game[catKey];
+
+                            if (contribution.actionType === 'CREATE') {
+                                catArray.push({ 
+                                    ...contribution.data, 
+                                    submitterUsername: contribution.submitterUsername,
+                                    submitterDiscordId: contribution.submitterDiscordId,
+                                    createdAt: nowIso,
+                                    _id: new mongoose.Types.ObjectId() 
+                                });
                             }
+                            else if (contribution.actionType === 'EDIT') {
+                                const idx = catArray.findIndex(item => item._id?.toString() === contribution.targetIdentifier || item.title === contribution.targetIdentifier || item.code === contribution.targetIdentifier);
+                                if (idx !== -1) {
+                                    catArray[idx] = { 
+                                        ...catArray[idx], 
+                                        ...contribution.data,
+                                        updatedAt: nowIso
+                                    };
+                                }
+                            }
+                            else if (contribution.actionType === 'DELETE') {
+                                const idx = catArray.findIndex(item => item._id?.toString() === contribution.targetIdentifier || item.title === contribution.targetIdentifier || item.code === contribution.targetIdentifier);
+                                if (idx !== -1) catArray.splice(idx, 1);
+                            }
+
+                            await Game.collection.updateOne(
+                                { id: contribution.gameId },
+                                { $set: { [catKey]: catArray, last_edited_at: nowIso } }
+                            );
                         }
                     }
                 }
@@ -1063,7 +1081,7 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                 const contribution = await Contribution.findById(contributionId);
                 await Contribution.updateOne({ _id: contribution._id }, { $set: { status: 'approved', data: parsedData } });
                 contribution.data = parsedData;
-const nowIso = new Date().toISOString();
+                const nowIso = new Date().toISOString();
 
                 if (contribution.itemCategory === 'Game' && contribution.actionType === 'CREATE') {
                     const existing = await Game.collection.findOne({ id: contribution.gameId });
@@ -1095,36 +1113,40 @@ const nowIso = new Date().toISOString();
                             
                             await Game.collection.updateOne({ id: contribution.gameId }, { $set: updates });
                         } else {
-                            const catKey = contribution.itemCategory.toLowerCase() + 's';
-                            const catArray = game[catKey] || game[contribution.itemCategory.toLowerCase()];
-                            if (catArray) {
-                                if (contribution.actionType === 'CREATE') {
-                                    catArray.push({ 
-                                        ...contribution.data, 
-                                        submitterUsername: contribution.submitterUsername,
-                                        submitterDiscordId: contribution.submitterDiscordId,
-                                        createdAt: nowIso,
-                                        _id: new mongoose.Types.ObjectId() 
-                                    });
-                                }
-                                else if (contribution.actionType === 'EDIT') {
-                                    const idx = catArray.findIndex(item => item._id?.toString() === contribution.targetIdentifier || item.title === contribution.targetIdentifier);
-                                    if (idx !== -1) {
-                                        catArray[idx] = { 
-                                            ...catArray[idx], 
-                                            ...contribution.data,
-                                            updatedAt: nowIso
-                                        };
-                                    }
-                                }
-                                else if (contribution.actionType === 'DELETE') {
-                                    const idx = catArray.findIndex(item => item._id?.toString() === contribution.targetIdentifier || item.title === contribution.targetIdentifier);
-                                    if (idx !== -1) catArray.splice(idx, 1);
-                                }
-                                game.markModified(catKey);
-                                await game.save();
-                                await Game.collection.updateOne({ id: contribution.gameId }, { $set: { last_edited_at: nowIso } });
+                            // Supports Guide -> guides, Asset -> assets, Community -> communities, Mod -> mods, Coupon -> coupons
+                            const lowerCat = contribution.itemCategory.toLowerCase();
+                            const catKey = lowerCat === 'community' ? 'communities' : `${lowerCat}s`;
+                            if (!Array.isArray(game[catKey])) game[catKey] = [];
+                            const catArray = game[catKey];
+
+                            if (contribution.actionType === 'CREATE') {
+                                catArray.push({ 
+                                    ...contribution.data, 
+                                    submitterUsername: contribution.submitterUsername,
+                                    submitterDiscordId: contribution.submitterDiscordId,
+                                    createdAt: nowIso,
+                                    _id: new mongoose.Types.ObjectId() 
+                                });
                             }
+                            else if (contribution.actionType === 'EDIT') {
+                                const idx = catArray.findIndex(item => item._id?.toString() === contribution.targetIdentifier || item.title === contribution.targetIdentifier || item.code === contribution.targetIdentifier);
+                                if (idx !== -1) {
+                                    catArray[idx] = { 
+                                        ...catArray[idx], 
+                                        ...contribution.data,
+                                        updatedAt: nowIso
+                                    };
+                                }
+                            }
+                            else if (contribution.actionType === 'DELETE') {
+                                const idx = catArray.findIndex(item => item._id?.toString() === contribution.targetIdentifier || item.title === contribution.targetIdentifier || item.code === contribution.targetIdentifier);
+                                if (idx !== -1) catArray.splice(idx, 1);
+                            }
+
+                            await Game.collection.updateOne(
+                                { id: contribution.gameId },
+                                { $set: { [catKey]: catArray, last_edited_at: nowIso } }
+                            );
                         }
                     }
                 }
@@ -1232,6 +1254,39 @@ app.get('/api/suggest/lookup', async (req, res) => {
     }
 });
 
+// --- DYNAMIC OPEN GRAPH EMBED ROUTE FOR GAME PAGES ---
+app.get('/games/:id', async (req, res) => {
+    try {
+        const gamePath = path.join(__dirname, 'game.html');
+        let html = fs.readFileSync(gamePath, 'utf8');
+        const game = await Game.collection.findOne({ id: req.params.id });
+
+        if (game) {
+            const escMeta = (str) => (str || '').toString().replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+            const title = `Nurture | ${escMeta(game.name)} — Guides, Codes, Assets & Mods`;
+            const rawDesc = game.overview_text 
+                ? game.overview_text.replace(/\s+/g, ' ').trim().substring(0, 195) + '...'
+                : `Explore community-curated guides, active redeem codes, raw assets, and mods for ${game.name} on Nurture.`;
+            const desc = escMeta(rawDesc);
+            const image = game.banner_url && game.banner_url.startsWith('http')
+                ? escMeta(game.banner_url)
+                : `https://${req.get('host')}${game.banner_url || '/Assets/nurture_icon.png'}`;
+            const pageUrl = `https://${req.get('host')}${req.originalUrl}`;
+
+            html = html
+                .replace(/<title>.*?<\/title>/i, `<title>${title}</title>`)
+                .replace(/content="__OG_TITLE__"/g, `content="${title}"`)
+                .replace(/content="__OG_DESC__"/g, `content="${desc}"`)
+                .replace(/content="__OG_IMAGE__"/g, `content="${image}"`)
+                .replace(/content="__OG_URL__"/g, `content="${pageUrl}"`);
+        }
+        res.setHeader('Content-Type', 'text/html');
+        res.send(html);
+    } catch (err) {
+        console.error("Error rendering game page embed:", err);
+        res.sendFile(path.join(__dirname, 'game.html'));
+    }
+});
 
 app.get('/auth/discord/callback', async (req, res) => {
     const code = req.query.code;
@@ -1322,9 +1377,11 @@ app.get('/api/auth/me', async (req, res) => {
                 starredGames: user.starredGames || [],
                 starredSubItems: user.starredSubItems || {},
                 settings: user.settings || null,
-                collapsedChangelogId: user.collapsedChangelogId || ''
+                collapsedChangelogId: user.collapsedChangelogId || '',
+                copiedCoupons: user.copiedCoupons || {}
             }
         });
+        
     } catch (err) {
         console.error("Auth validation error:", err);
         res.status(401).json({ authenticated: false });
