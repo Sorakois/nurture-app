@@ -140,6 +140,19 @@ function renderLoggedInUI(container, user) {
 
 function clearCachedAuth() { localStorage.removeItem('nurture_user_session'); }
 
+// Global helper to push any preference change to MongoDB if signed in
+window.syncUserPreferences = async function(payload) {
+    const cachedUserRaw = localStorage.getItem('nurture_user_session');
+    if (!cachedUserRaw) return;
+    try {
+        await fetch('/api/user/sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+    } catch (e) {}
+};
+
 function initAuth() {
     const authContainer = document.getElementById('authContainer');
     if (!authContainer) return;
@@ -163,6 +176,32 @@ function initAuth() {
             if (data && data.authenticated && data.user) {
                 localStorage.setItem('nurture_user_session', JSON.stringify(data.user));
                 renderLoggedInUI(authContainer, data.user);
+
+                // 1. Hydrate Display Settings from Cloud
+                if (data.user.settings) {
+                    localStorage.setItem('nurture_settings', JSON.stringify(data.user.settings));
+                    applySettings();
+                }
+
+                // 2. Hydrate Collapsed Changelog State from Cloud
+                if (data.user.collapsedChangelogId !== undefined) {
+                    if (data.user.collapsedChangelogId) {
+                        localStorage.setItem('nurture_collapsed_changelog_id', data.user.collapsedChangelogId);
+                    } else {
+                        localStorage.removeItem('nurture_collapsed_changelog_id');
+                    }
+                    if (typeof initChangelogs === 'function') initChangelogs();
+                }
+
+                // 3. Hydrate Per-Game Subnav Favorites from Cloud
+                if (data.user.starredSubItems && typeof data.user.starredSubItems === 'object') {
+                    for (const [gId, itemIds] of Object.entries(data.user.starredSubItems)) {
+                        localStorage.setItem(`nurture_fav_items_${gId}`, JSON.stringify(itemIds));
+                    }
+                }
+
+                // Notify index.html and game.html to refresh their starred states
+                window.dispatchEvent(new CustomEvent('nurtureUserSynced', { detail: data.user }));
             }
         }).catch(() => {});
 }
@@ -437,8 +476,10 @@ async function sendMail() {
 function saveSettings() {
     const showLb = document.getElementById('toggleLeaderboard').checked;
     const lbSide = document.getElementById('selectLbSide').value;
-    localStorage.setItem('nurture_settings', JSON.stringify({ showLb, lbSide }));
+    const settingsObj = { showLb, lbSide };
+    localStorage.setItem('nurture_settings', JSON.stringify(settingsObj));
     applySettings();
+    window.syncUserPreferences({ settings: settingsObj });
 }
 
 function applySettings() {

@@ -681,18 +681,73 @@ app.post('/api/user/star', async (req, res) => {
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
-        const user = await User.findById(decoded.userId);
-        const { gameId } = req.body;
+        const user = await User.collection.findOne({ _id: new mongoose.Types.ObjectId(decoded.userId) });
+        if (!user) return res.status(401).json({ error: 'User not found' });
 
-        if (user.starredGames.includes(gameId)) {
-            user.starredGames = user.starredGames.filter(id => id !== gameId); 
+        const { gameId } = req.body;
+        let starredGames = Array.isArray(user.starredGames) ? user.starredGames : [];
+
+        if (starredGames.includes(gameId)) {
+            starredGames = starredGames.filter(id => id !== gameId); 
         } else {
-            user.starredGames.push(gameId); 
+            starredGames.push(gameId); 
         }
-        await user.save();
-        res.json({ success: true, starredGames: user.starredGames });
+
+        await User.collection.updateOne(
+            { _id: user._id },
+            { $set: { starredGames } }
+        );
+        res.json({ success: true, starredGames });
     } catch (err) {
         res.status(500).json({ error: 'Server error' });
+    }
+});
+
+// Unified Cross-Device Sync Endpoint (Settings, Subnav Favorites, Changelog State)
+app.post('/api/user/sync', async (req, res) => {
+    const token = req.cookies.nurture_session;
+    if (!token) return res.status(401).json({ error: 'Unauthorized' });
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
+        const updates = {};
+
+        // 1. Display Settings (showLb, lbSide)
+        if (req.body.settings && typeof req.body.settings === 'object') {
+            updates.settings = {
+                showLb: Boolean(req.body.settings.showLb),
+                lbSide: req.body.settings.lbSide === 'left' ? 'left' : 'right'
+            };
+        }
+
+        // 2. Collapsed Changelog Version ID
+        if (req.body.collapsedChangelogId !== undefined) {
+            updates.collapsedChangelogId = validateInput.sanitizeString(String(req.body.collapsedChangelogId || ''));
+        }
+
+        // 3. Per-Game Favorited Subnav Items
+        if (req.body.starredSubItems && typeof req.body.starredSubItems === 'object') {
+            for (const [gId, items] of Object.entries(req.body.starredSubItems)) {
+                const cleanGameId = validateInput.sanitizeString(gId).replace(/[.$]/g, '');
+                if (cleanGameId && Array.isArray(items)) {
+                    updates[`starredSubItems.${cleanGameId}`] = items
+                        .slice(0, 200)
+                        .map(id => validateInput.sanitizeString(String(id)));
+                }
+            }
+        }
+
+        if (Object.keys(updates).length > 0) {
+            await User.collection.updateOne(
+                { _id: new mongoose.Types.ObjectId(decoded.userId) },
+                { $set: updates }
+            );
+        }
+
+        res.json({ success: true });
+    } catch (err) {
+        console.error("User sync error:", err);
+        res.status(500).json({ error: 'Failed to sync preferences' });
     }
 });
 
@@ -1253,7 +1308,7 @@ app.get('/api/auth/me', async (req, res) => {
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
-        const user = await User.findById(decoded.userId);
+        const user = await User.collection.findOne({ _id: new mongoose.Types.ObjectId(decoded.userId) });
         
         if (!user) return res.status(401).json({ authenticated: false });
 
@@ -1263,7 +1318,11 @@ app.get('/api/auth/me', async (req, res) => {
                 username: user.username,
                 discordId: user.discordId,
                 avatar: user.avatar,
-                isNurtureMember: user.isNurtureMember
+                isNurtureMember: user.isNurtureMember,
+                starredGames: user.starredGames || [],
+                starredSubItems: user.starredSubItems || {},
+                settings: user.settings || null,
+                collapsedChangelogId: user.collapsedChangelogId || ''
             }
         });
     } catch (err) {

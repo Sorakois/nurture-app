@@ -117,12 +117,16 @@ function toggleChangelogBox() {
     const isCollapsed = body.classList.toggle('collapsed');
     btn.textContent = isCollapsed ? 'Expand ▼' : 'Hide ▲';
 
-    // Save or clear collapsed state for the current latest changelog
     const currentId = getLatestChangelogId();
-    if (isCollapsed && currentId) {
-        localStorage.setItem(CHANGELOG_STORAGE_KEY, currentId);
+    const syncedValue = (isCollapsed && currentId) ? currentId : '';
+    if (syncedValue) {
+        localStorage.setItem(CHANGELOG_STORAGE_KEY, syncedValue);
     } else {
         localStorage.removeItem(CHANGELOG_STORAGE_KEY);
+    }
+
+    if (typeof window.syncUserPreferences === 'function') {
+        window.syncUserPreferences({ collapsedChangelogId: syncedValue });
     }
 }
 

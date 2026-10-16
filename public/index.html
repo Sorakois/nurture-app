@@ -1078,10 +1078,16 @@
     <!-- Page Specific Script -->
     <script>
         let allGames = [];
-        let userStarredGames = [];
         let cachedSession = JSON.parse(localStorage.getItem('nurture_user_session') || '{}');
+        let userStarredGames = Array.isArray(cachedSession.starredGames) ? cachedSession.starredGames : [];
         let isLoading = false;
         let isSearching = false;
+
+        window.addEventListener('nurtureUserSynced', (e) => {
+            cachedSession = e.detail || {};
+            userStarredGames = Array.isArray(cachedSession.starredGames) ? cachedSession.starredGames : [];
+            if (allGames.length > 0) updateGrid(allGames);
+        });
 
         async function fetchInitialData(silent = false) {
             try {
@@ -1492,6 +1498,8 @@
                         } else {
                             userStarredGames.push(gameId);
                         }
+                        cachedSession.starredGames = userStarredGames;
+                        localStorage.setItem('nurture_user_session', JSON.stringify(cachedSession));
                         updateGrid(allGames); 
                         await fetch('/api/user/star', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ gameId: gameId }) });
                     });

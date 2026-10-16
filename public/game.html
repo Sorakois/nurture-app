@@ -759,9 +759,14 @@
         const favStorageKey = `nurture_fav_items_${gameId}`;
         let favoritedSubItems = JSON.parse(localStorage.getItem(favStorageKey) || '[]');
 
-        function getSubItemId(item) {
-            return String(item._id || item.url || item.download_url || item.title || item.name || '');
-        }
+        window.addEventListener('nurtureUserSynced', (e) => {
+            const serverMap = e.detail?.starredSubItems;
+            if (serverMap && Array.isArray(serverMap[gameId])) {
+                favoritedSubItems = serverMap[gameId];
+                localStorage.setItem(favStorageKey, JSON.stringify(favoritedSubItems));
+                renderContent();
+            }
+        });
 
         function toggleFavoriteSubItem(itemId, e) {
             e.preventDefault();
@@ -775,6 +780,10 @@
             }
             localStorage.setItem(favStorageKey, JSON.stringify(favoritedSubItems));
             renderContent();
+
+            if (typeof window.syncUserPreferences === 'function') {
+                window.syncUserPreferences({ starredSubItems: { [gameId]: favoritedSubItems } });
+            }
         }
 
         const sections = [
