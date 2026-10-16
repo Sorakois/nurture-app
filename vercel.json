@@ -21,7 +21,11 @@
     },
     {
       "src": "/games/.*",
-      "dest": "/public/game.html"
+      "dest": "/server.js"
+    },
+    {
+      "src": "/profile/.*",
+      "dest": "/server.js"
     },
     {
       "src": "/",

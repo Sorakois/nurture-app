@@ -1551,9 +1551,9 @@
                     mods: { title: 'Mods', dbKey: 'Mod', data: gameData.mods, catKey: 'author', metaKey: 'version', metaPrefix: 'Version: ' }
                 };
 
-                const config = sectionConfig[currentSection];
-                const addNewBtn = `<button class="btn-floral" onclick="openGameSuggestModal('${config.dbKey}')" style="padding: 6px 14px; font-size: 0.6em;">+ Add New</button>`;
-                const headerHtml = `<h2 style="display: flex; justify-content: space-between; align-items: center; margin-top: 0;">${config.title} ${addNewBtn}</h2>`;
+                const config = sectionConfig[currentSection] || sectionConfig['overview'];
+                const addNewBtn = `<button class="btn-floral" onclick="openGameSuggestModal('${config?.dbKey || 'Overview'}')" style="padding: 6px 14px; font-size: 0.6em;">+ Add New</button>`;
+                const headerHtml = `<h2 style="display: flex; justify-content: space-between; align-items: center; margin-top: 0;">${config?.title || 'Overview'} ${addNewBtn}</h2>`;
 
                 if (!config || !config.data || config.data.length === 0) {
                     contentArea.innerHTML = headerHtml + `<p style="color: #aaa;">No items found.</p>`;

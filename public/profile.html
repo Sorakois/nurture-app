@@ -5,6 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/x-icon" href="/Assets/nurture_icon.ico">
     <title>Nurture | User Profile</title>
+    
+    <!-- Dynamic Open Graph / Discord Embed Preview -->
+    <meta name="theme-color" content="#9d8ec7">
+    <meta property="og:site_name" content="Nurture">
+    <meta property="og:type" content="profile">
+    <meta property="og:title" content="__OG_TITLE__">
+    <meta property="og:description" content="__OG_DESC__">
+    <meta property="og:image" content="__OG_IMAGE__">
+    <meta property="og:url" content="__OG_URL__">
+    <meta name="twitter:card" content="summary">
+
     <link rel="stylesheet" href="/Assets/common.css">
     <style>
         .profile-layout {
@@ -84,14 +95,13 @@
         }
 
         @media (max-width: 768px) {
-            .profile-layout { flex-direction: column; padding: 0 10px; }
+            .profile-layout { flex-direction: column; padding: 0 10px; margin: 20px auto; }
             .profile-sidebar { width: 100%; min-width: 0; position: static; }
         }
     </style>
 </head>
 <body>
     <div class="background-container">
-        <!-- Re-use the existing floral background layers here -->
         <div class="floral-bg-layer"></div>
     </div>
 
@@ -121,7 +131,7 @@
         <div class="profile-content-area">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 24px; border-bottom: 1px solid rgba(157, 142, 199, 0.2); padding-bottom: 12px;">
                 <h2 style="margin: 0; color: #d0c2f7;" id="itemsHeaderTitle">All Items</h2>
-                <button class="btn-floral" onclick="navigator.clipboard.writeText(window.location.href); alert('Profile Link Copied!')">🔗 Share Profile</button>
+                <button class="btn-floral" onclick="navigator.clipboard.writeText(window.location.href); alert('Profile Link Copied!')" style="padding: 8px 14px;">🔗 Share Profile</button>
             </div>
             
             <div id="itemsContainer" style="display: flex; flex-direction: column; gap: 12px;"></div>
@@ -130,7 +140,7 @@
 
     <script src="/Assets/common.js"></script>
     <script>
-        const profileId = window.location.pathname.split('/').pop();
+        const profileId = window.location.pathname.split('/').pop().split('?')[0].split('#')[0];
         let allContributions = [];
         let groupedGames = {};
 
@@ -165,7 +175,7 @@
             const list = document.getElementById('gameFiltersList');
             let html = `
                 <div class="profile-game-filter active" id="filter_ALL" onclick="renderItems('ALL')">
-                    <span style="font-size: 1.2em;">✿</span>
+                    <span style="font-size: 1.2em; padding: 0 4px;">✿</span>
                     <span style="flex-grow:1;">View ALL Items</span>
                     <span style="background: rgba(157,142,199,0.2); padding: 2px 8px; border-radius: 8px;">${allContributions.length}</span>
                 </div>
@@ -194,11 +204,16 @@
             
             const escapeTxt = (txt) => (txt || '').toString().replace(/[&<>"']/g, m => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[m]));
 
-            container.innerHTML = filtered.map(c => `
-                <a href="${c.gameId ? `/games/${c.gameId}` : '/'}" class="floral-mail-card" style="display:flex; gap:16px; align-items:center; text-decoration:none; color:white;">
-                    <img src="${c.gameIcon}" style="width: 48px; height: 48px; border-radius: 8px; border: 1.5px solid #9d8ec7; object-fit: cover; flex-shrink: 0;">
+            container.innerHTML = filtered.map(c => {
+                const tabMap = { 'Guide': 'guides', 'Asset': 'assets', 'Community': 'communities', 'Mod': 'mods', 'Coupon': 'overview', 'Game': 'overview' };
+                const tab = tabMap[c.category] || 'overview';
+                const link = c.gameId ? `/games/${c.gameId}?tab=${tab}` : '/';
+
+                return `
+                <a href="${link}" class="floral-mail-card" style="display:flex; gap:16px; align-items:center; text-decoration:none; color:white;">
+                    <img src="${c.gameIcon}" style="width: 54px; height: 54px; border-radius: 12px; border: 1.5px solid #9d8ec7; object-fit: cover; flex-shrink: 0;">
                     <div style="flex-grow: 1;">
-                        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px;">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
                             <div style="font-weight:bold; color:#d0c2f7; font-size:1.1em;">${escapeTxt(c.target)}</div>
                             <span style="font-size:0.75em; color:#a99ec7;">${new Date(c.date).toLocaleDateString()}</span>
                         </div>
@@ -211,10 +226,10 @@
                         ${c.commitMessage ? `<div style="font-size:0.9em; color:#e5dcff; border-left:2px solid #9d8ec7; padding-left:10px; margin-top:10px; font-style: italic;">${escapeTxt(c.commitMessage)}</div>` : ''}
                     </div>
                 </a>
-            `).join('');
+            `}).join('');
         }
 
-        initProfilePage();
+        document.addEventListener('DOMContentLoaded', initProfilePage);
     </script>
 </body>
 </html>

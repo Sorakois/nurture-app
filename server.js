@@ -125,6 +125,7 @@ const syncAppStoreUpdatesBackground = async (games) => {
                     if (isMajorAppStoreUpdate(appData)) {
                         updates.last_major_update_date = appData.currentVersionReleaseDate;
                         updates.latest_version = appData.version;
+                        updates.latest_patch_notes = appData.releaseNotes || 'No specific patch notes provided.';
                     }
                 }
                 await Game.collection.updateOne({ id: g.id }, { $set: updates });
@@ -272,6 +273,20 @@ app.get('/api/history/:gameId/:identifier', async (req, res) => {
         res.json(history);
     } catch (err) {
         console.error("History fetch error:", err);
+        res.status(500).json({ error: "Failed to fetch history" });
+    }
+});
+
+app.get('/api/history/game/:gameId', async (req, res) => {
+    try {
+        const history = await Contribution.collection.find({ 
+            gameId: req.params.gameId,
+            status: 'approved'
+        }).sort({ createdAt: -1 }).limit(10).toArray();
+        
+        res.json(history);
+    } catch (err) {
+        console.error("Game History fetch error:", err);
         res.status(500).json({ error: "Failed to fetch history" });
     }
 });
@@ -1135,39 +1150,66 @@ app.get('/api/suggest/lookup', async (req, res) => {
 // --- DYNAMIC OPEN GRAPH EMBED ROUTE FOR GAME PAGES ---
 app.get('/games/:id', async (req, res) => {
     try {
-        const gamePath = path.join(__dirname, 'game.html');
+        const gamePath = path.join(process.cwd(), 'public', 'game.html');
         let html = fs.readFileSync(gamePath, 'utf8');
-        const game = await Game.collection.findOne({ id: req.params.id });
+        
+        // Strip query params (like ?tab=guides) so the DB lookup succeeds
+        const cleanId = req.params.id.split('?')[0].split('#')[0]; 
+        const game = await Game.collection.findOne({ id: cleanId });
 
-        if (game) {
-            const escMeta = (str) => (str || '').toString().replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-            const title = `Nurture | ${escMeta(game.name)} — Guides, Codes, Assets & Mods`;
-            const rawDesc = game.overview_text 
-                ? game.overview_text.replace(/\s+/g, ' ').trim().substring(0, 195) + '...'
-                : `Explore community-curated guides, active redeem codes, raw assets, and mods for ${game.name} on Nurture.`;
-            const desc = escMeta(rawDesc);
-            const image = game.banner_url && game.banner_url.startsWith('http')
-                ? escMeta(game.banner_url)
-                : `https://${req.get('host')}${game.banner_url || '/Assets/nurture_icon.png'}`;
-            const pageUrl = `https://${req.get('host')}${req.originalUrl}`;
+        const escMeta = (str) => (str || '').toString().replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+        const title = game ? `Nurture | ${escMeta(game.name)} — Guides, Codes, Assets & Mods` : "Nurture | Game Hub";
+        const rawDesc = game && game.overview_text 
+            ? game.overview_text.replace(/\s+/g, ' ').trim().substring(0, 195) + '...'
+            : (game ? `Explore community-curated guides, active redeem codes, raw assets, and mods for ${game.name} on Nurture.` : "Community-driven gaming hub.");
+        const desc = escMeta(rawDesc);
+        const image = game && game.banner_url && game.banner_url.startsWith('http')
+            ? escMeta(game.banner_url)
+            : `https://${req.get('host')}/Assets/nurture_icon.png`;
+        const pageUrl = `https://${req.get('host')}${req.originalUrl}`;
 
-            html = html
-                .replace(/<title>.*?<\/title>/i, `<title>${title}</title>`)
-                .replace(/content="__OG_TITLE__"/g, `content="${title}"`)
-                .replace(/content="__OG_DESC__"/g, `content="${desc}"`)
-                .replace(/content="__OG_IMAGE__"/g, `content="${image}"`)
-                .replace(/content="__OG_URL__"/g, `content="${pageUrl}"`);
-        }
+        html = html
+            .replace(/<title>.*?<\/title>/i, `<title>${title}</title>`)
+            .replace(/content="__OG_TITLE__"/g, `content="${title}"`)
+            .replace(/content="__OG_DESC__"/g, `content="${desc}"`)
+            .replace(/content="__OG_IMAGE__"/g, `content="${image}"`)
+            .replace(/content="__OG_URL__"/g, `content="${pageUrl}"`);
+        
         res.setHeader('Content-Type', 'text/html');
         res.send(html);
     } catch (err) {
-        console.error("Error rendering game page embed:", err);
-        res.sendFile(path.join(__dirname, 'game.html'));
+        console.error("Error rendering game embed:", err);
+        res.sendFile(path.join(process.cwd(), 'public', 'game.html'));
     }
 });
 
-app.get('/profile/:id', (req, res) => {
-    res.sendFile(path.join(__dirname, 'profile.html'));
+app.get('/profile/:id', async (req, res) => {
+    try {
+        const profilePath = path.join(process.cwd(), 'public', 'profile.html');
+        let html = fs.readFileSync(profilePath, 'utf8');
+        const cleanId = req.params.id.split('?')[0].split('#')[0];
+        
+        let user = await User.collection.findOne({ discordId: cleanId });
+        if (!user) user = await User.collection.findOne({ username: new RegExp(`^${cleanId}$`, 'i') });
+
+        const escMeta = (str) => (str || '').toString().replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+        const title = user ? `Nurture | ${escMeta(user.username)}'s Profile` : "Nurture | User Profile";
+        const desc = user ? `View ${escMeta(user.username)}'s approved contributions, guides, and edits on Nurture.` : "View user contributions on Nurture.";
+        const image = user && user.avatar ? `https://cdn.discordapp.com/avatars/${user.discordId}/${user.avatar}.png` : `https://${req.get('host')}/Assets/nurture_icon.png`;
+        const pageUrl = `https://${req.get('host')}${req.originalUrl}`;
+
+        html = html
+            .replace(/<title>.*?<\/title>/i, `<title>${title}</title>`)
+            .replace(/content="__OG_TITLE__"/g, `content="${title}"`)
+            .replace(/content="__OG_DESC__"/g, `content="${desc}"`)
+            .replace(/content="__OG_IMAGE__"/g, `content="${image}"`)
+            .replace(/content="__OG_URL__"/g, `content="${pageUrl}"`);
+        
+        res.setHeader('Content-Type', 'text/html');
+        res.send(html);
+    } catch (err) {
+        res.sendFile(path.join(process.cwd(), 'public', 'profile.html'));
+    }
 });
 
 app.get('/auth/discord/callback', async (req, res) => {

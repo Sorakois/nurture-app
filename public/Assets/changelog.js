@@ -13,7 +13,9 @@ const SITE_CHANGELOGS = [
             "[NEW] Account banning",
             "[UI] Grammar tweaks",
             "[UI] New Contributions UI (when you click your/a name)",
-            "[NEW] 'My Stuff' - just see what you want/need to see!"
+            "[MOBILE] UI fix for buttons on the top right",
+            "[NEW] 'My Stuff' - just see what you want/need to see!",
+            "[NEW] Dynamic embed for when sending nurture.how links :)"
         ]
     },
     {

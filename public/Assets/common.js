@@ -439,19 +439,24 @@ async function openUserProfileModal(discordId, username = null) {
                     <span class="toggle-arrow" style="font-size:0.8em; color:#a99ec7;">▼</span>
                 </div>
                 <div class="profile-game-items">
-                    ${group.items.map(c => `
-                        <a href="${c.gameId ? `/games/${c.gameId}` : '/'}" class="floral-mail-card" style="display:block; text-decoration:none; color:white; padding: 10px 14px; margin-bottom: 8px;">
-                            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
-                                <div style="font-weight:bold; color:#d0c2f7; font-size:1.05em;">${escapeTxt(c.target)}</div>
-                                <span style="font-size:0.75em; color:#a99ec7;">${new Date(c.date).toLocaleDateString()}</span>
-                            </div>
-                            <div style="font-size:0.8em; color:#a99ec7; display:flex; align-items:center; gap:6px;">
-                                <strong style="color:#f6c85f; background:rgba(246, 200, 95, 0.12); padding:2px 8px; border-radius:8px 2px 8px 2px; border:1px solid rgba(246, 200, 95, 0.35);">${c.action ? c.action.toUpperCase() : 'EDIT'}</strong> 
-                                <span>in ${c.category}</span>
-                            </div>
-                            ${c.commitMessage ? `<div style="font-size:0.85em; color:#e5dcff; border-left:2px solid #9d8ec7; padding-left:8px; margin-top:8px; font-style: italic;">${escapeTxt(c.commitMessage)}</div>` : ''}
-                        </a>
-                    `).join('')}
+                    ${group.items.map(c => {
+                        const tabMap = { 'Guide': 'guides', 'Asset': 'assets', 'Community': 'communities', 'Mod': 'mods', 'Coupon': 'overview', 'Game': 'overview' };
+                        const tab = tabMap[c.category] || 'overview';
+                        const link = c.gameId ? `/games/${c.gameId}?tab=${tab}` : '/';
+                        return `
+                            <a href="${link}" class="floral-mail-card" style="display:block; text-decoration:none; color:white; padding: 10px 14px; margin-bottom: 8px;">
+                                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
+                                    <div style="font-weight:bold; color:#d0c2f7; font-size:1.05em;">${escapeTxt(c.target)}</div>
+                                    <span style="font-size:0.75em; color:#a99ec7;">${new Date(c.date).toLocaleDateString()}</span>
+                                </div>
+                                <div style="font-size:0.8em; color:#a99ec7; display:flex; align-items:center; gap:6px;">
+                                    <strong style="color:#f6c85f; background:rgba(246, 200, 95, 0.12); padding:2px 8px; border-radius:8px 2px 8px 2px; border:1px solid rgba(246, 200, 95, 0.35);">${c.action ? c.action.toUpperCase() : 'EDIT'}</strong> 
+                                    <span>in ${c.category}</span>
+                                </div>
+                                ${c.commitMessage ? `<div style="font-size:0.85em; color:#e5dcff; border-left:2px solid #9d8ec7; padding-left:8px; margin-top:8px; font-style: italic;">${escapeTxt(c.commitMessage)}</div>` : ''}
+                            </a>
+                        `;
+                    }).join('')}
                 </div>
             </div>
         `).join('');

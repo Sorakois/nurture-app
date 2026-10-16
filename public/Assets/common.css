@@ -662,11 +662,26 @@ body {
         z-index: 10000;
     }
 
+    .banner {
+        padding: 10px 16px;
+    }
     .banner-actions {
         display: flex;
+        flex-direction: row;
+        gap: 8px;
+        align-items: center;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+    }
+    .no-ads-cta-wrap {
         flex-direction: column;
-        gap: 6px;
-        align-items: flex-end;
+        align-items: center;
+    }
+    .no-ads-sub-label {
+        position: static;
+        transform: none;
+        margin-top: 3px;
+        font-size: 8px;
     }
     .social-button, .user-profile-badge {
         padding: 5px 10px;

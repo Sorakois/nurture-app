@@ -167,46 +167,46 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 5px;
+            gap: 6px;
             margin-top: 8px;
-            min-height: 22px;
+            min-height: 28px;
             flex-wrap: wrap;
         }
 
         .status-badge {
             display: inline-flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 2px 7px;
+            padding: 3px 8px;
             border-radius: 6px;
+            text-transform: uppercase;
+            line-height: 1.1;
+            user-select: none;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.35);
+            position: relative;
+            overflow: hidden;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.15s ease, filter 0.15s ease;
+        }
+
+        .status-badge:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.15);
+        }
+
+        .status-badge .badge-title {
             font-size: 10px;
             font-weight: 900;
             letter-spacing: 0.4px;
-            text-transform: uppercase;
-            line-height: 1.2;
-            user-select: none;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.35);
-            /* Added for Glint */
-            position: relative;
-            overflow: hidden;
         }
 
-        /* Glint Animation applied to all status badges */
-        .status-badge::after {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -100%;
-            width: 40%;
-            height: 200%;
-            background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.7) 50%, rgba(255,255,255,0) 100%);
-            transform: rotate(30deg);
-            animation: badgeGlint 3.5s infinite linear;
-        }
-
-        @keyframes badgeGlint {
-            0% { left: -100%; }
-            20%, 100% { left: 250%; }
+        .status-badge .badge-date {
+            font-size: 8px;
+            font-family: monospace;
+            opacity: 0.85;
+            margin-top: 2px;
         }
 
         /* Red NEW! badge with dark crimson bottom lip */
@@ -228,6 +228,24 @@
             background-color: #ffd014;
             color: #1a1228;
             border-bottom: 3px solid #7d6708;
+        }
+
+        /* Glint Animation applied to all status badges */
+        .status-badge::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -100%;
+            width: 40%;
+            height: 200%;
+            background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.7) 50%, rgba(255,255,255,0) 100%);
+            transform: rotate(30deg);
+            animation: badgeGlint 3.5s infinite linear;
+        }
+
+        @keyframes badgeGlint {
+            0% { left: -100%; }
+            20%, 100% { left: 250%; }
         }
 
         /* Petal-shaped info button */
@@ -842,7 +860,7 @@
         </div>
     </div>
 
-    <!-- Unified Main Row: Left Spacer, Center Column (Hero + Changelog + Search + Grid), Right Rail (Top-Right Ad + Leaderboard) -->
+    <!-- Unified Main Row: Left Spacer, Center Column (Hero + Search + Grid), Right Rail (Ad + Leaderboard) -->
     <div class="main-wrapper" id="mainWrapper" style="justify-content: center; align-items: flex-start; gap: 30px; max-width: 1600px; padding: 18px 24px 40px 24px;">
         <!-- Flexible spacer keeps the center column dead-center on wide monitors -->
         <div id="lbSpacer" class="leaderboard-spacer" style="flex: 0 999 290px; width: 290px; min-width: 0; display: block;"></div>
@@ -888,7 +906,7 @@
                 
                 <div class="tags-menu-wrapper" id="tagsMenuWrapper">
                     <button type="button" class="tags-menu-trigger" id="tagsMenuBtn" onclick="toggleTagsMenu(event)">
-                        <span>⚙️ Filters</span>
+                        <span>✿ Filters</span>
                         <span id="activeFilterCount" class="filter-count-badge" style="display:none;">0</span>
                         <span style="font-size: 0.75em; color: #d0c2f7;">▼</span>
                     </button>
@@ -903,7 +921,7 @@
                             <button type="button" class="clear-filters-btn" onclick="clearAllFilters()">Reset</button>
                         </div>
 
-                        <div class="tags-section-title">📚 Genre Tags</div>
+                        <div class="tags-section-title">🌸 Genre Tags</div>
                         <div class="tags-pills-grid" id="genreTagsGrid">
                             <button type="button" class="tag-pill" data-tag="RPG" onclick="toggleGenreTag('RPG', this)">RPG</button>
                             <button type="button" class="tag-pill" data-tag="Action" onclick="toggleGenreTag('Action', this)">Action</button>
@@ -925,10 +943,11 @@
                 </div>
             </div>
 
-            <div class="grid-container" id="gameGrid"></div>
+            <!-- Game Grid -->
+            <div class="grid-container" id="gameGrid" style="padding: 0;"></div>
         </div>
         
-        <!-- Right Rail: Top-Right Ad Window (Beside Hero) + Sticky PC Leaderboard -->
+        <!-- Right Rail: Top-Right Ad Window + Sticky PC Leaderboard -->
         <div class="right-rail-column" id="rightRailColumn">
             <div class="nurture-ad-unit nurture-ad-sidebar" id="indexSidebarAd">
                 <span class="ad-tag-label">Sponsored</span>
@@ -953,6 +972,35 @@
         <button type="button" class="ad-close-btn" onclick="dismissAllAdsForSession()" title="Close ads for this session">×</button>
         <div style="font-size: 0.88em; color: #e5dcff;">
             Want an ad-free experience forever? <a href="/auth/discord" style="color: #f6c85f; font-weight: bold; text-decoration: underline;">Link your Discord & join Nurture!</a>
+        </div>
+    </div>
+
+    <!-- Game Update Patch Notes Modal -->
+    <div id="appUpdateModal" class="modal-overlay">
+        <div class="modal-window" style="max-width: 600px;">
+            <button class="modal-close" onclick="document.getElementById('appUpdateModal').classList.remove('active')">×</button>
+            <h2 class="modal-title" style="border:none; padding-bottom:0; margin-bottom: 5px;">
+                <span id="auGameName">Game</span>
+            </h2>
+            <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 18px; border-bottom: 1px solid rgba(157, 142, 199, 0.28); padding-bottom: 15px;">
+                <span class="status-badge badge-update" style="font-size: 11px; padding: 3px 10px; border-bottom: none;" id="auVersion">Version 0.0.0</span>
+                <span style="font-family: monospace; color: #a99ec7; font-size: 0.85em;" id="auDate">Date</span>
+            </div>
+            <div id="auNotes" style="max-height: 400px; overflow-y: auto; color: #e5dcff; font-size: 0.95em; line-height: 1.6; white-space: pre-wrap; padding-right: 10px;"></div>
+        </div>
+    </div>
+
+    <!-- Game Edits History Modal -->
+    <div id="gameEditsModal" class="modal-overlay">
+        <div class="modal-window" style="max-width: 600px;">
+            <button class="modal-close" onclick="document.getElementById('gameEditsModal').classList.remove('active')">×</button>
+            <h2 class="modal-title" style="border:none; padding-bottom:0; margin-bottom: 5px;">
+                <span id="geGameName">Game</span>
+            </h2>
+            <div style="display: flex; align-items: center; margin-bottom: 18px; border-bottom: 1px solid rgba(157, 142, 199, 0.28); padding-bottom: 15px;">
+                <span class="status-badge badge-edited" style="font-size: 11px; padding: 3px 10px; border-bottom: none;">Recent Community Edits</span>
+            </div>
+            <div id="geContent" style="max-height: 400px; overflow-y: auto; padding-right: 10px;"></div>
         </div>
     </div>
 
@@ -1182,6 +1230,60 @@
                 showError('Failed to load games.');
             } finally {
                 isLoading = false;
+            }
+        }
+
+        const formatBadgeDate = (ms) => {
+            const d = new Date(ms);
+            return `${d.getMonth()+1}/${d.getDate()}/${String(d.getFullYear()).substring(2)}`;
+        };
+
+        function openAppUpdateModal(gameId) {
+            const game = allGames.find(g => g.id === gameId);
+            if (!game) return;
+            document.getElementById('auGameName').textContent = game.name;
+            document.getElementById('auVersion').textContent = game.latest_version ? `Version ${game.latest_version}` : 'Latest Update';
+            const d = new Date(game.last_major_update_date);
+            document.getElementById('auDate').textContent = !isNaN(d.getTime()) ? d.toLocaleDateString() : '';
+            document.getElementById('auNotes').textContent = game.latest_patch_notes || 'No patch notes provided by developer.';
+            document.getElementById('appUpdateModal').classList.add('active');
+        }
+
+        async function openGameEditsModal(gameId) {
+            const game = allGames.find(g => g.id === gameId);
+            if (!game) return;
+            document.getElementById('geGameName').textContent = game.name;
+            document.getElementById('gameEditsModal').classList.add('active');
+            
+            const content = document.getElementById('geContent');
+            content.innerHTML = '<p style="color:#a99ec7; text-align:center;">Loading recent edits...</p>';
+            
+            try {
+                const history = await apiCall(`/api/history/game/${gameId}`);
+                if (!history || history.length === 0) {
+                    content.innerHTML = '<p style="color:#888;">No recent edits found.</p>';
+                    return;
+                }
+
+                content.innerHTML = history.map(h => {
+                    const date = new Date(h.createdAt || h.date || Date.now()).toLocaleDateString();
+                    const msg = h.data?.commitMessage || 'Updated data.';
+                    const tabMap = { 'Guide': 'guides', 'Asset': 'assets', 'Community': 'communities', 'Mod': 'mods', 'Coupon': 'overview', 'Game': 'overview' };
+                    const tab = tabMap[h.itemCategory] || 'overview';
+                    const link = `/games/${gameId}?tab=${tab}`;
+
+                    return `
+                    <a href="${link}" class="floral-mail-card" style="display:block; text-decoration:none; color:white;">
+                        <div style="display:flex; justify-content:space-between; font-size:0.85em; color:#a99ec7; margin-bottom:8px;">
+                            <div><strong style="color:#d0c2f7;">${escapeHtml(h.submitterUsername || 'Unknown')}</strong> • ${h.actionType} in ${h.itemCategory}</div>
+                            <span>${date}</span>
+                        </div>
+                        <div style="color:#e5dcff; font-size:0.95em; border-left: 2px solid #9d8ec7; padding-left: 10px;">${escapeHtml(msg)}</div>
+                    </a>
+                    `;
+                }).join('');
+            } catch (e) {
+                content.innerHTML = '<p style="color:#ff5555;">Failed to load history.</p>';
             }
         }
 
