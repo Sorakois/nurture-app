@@ -162,7 +162,7 @@
             transition: font-size 0.2s ease;
         }
 
-        /* === TWILIGHT BOTANICAL STATUS BADGES (NEW / GAME UPDATE / EDITED) === */
+        /* === TWILIGHT BOTANICAL STATUS BADGES (HIGH-CONTRAST DROP SHADOW) === */
         .card-badges-row {
             display: flex;
             flex-direction: column;
@@ -178,63 +178,64 @@
             flex-direction: column;
             align-items: stretch;
             justify-content: center;
-            min-width: 108px;
+            min-width: 116px;
             padding: 0;
-            border-radius: 12px 3px 12px 3px;
-            text-transform: uppercase;
-            line-height: 1.1;
+            border-radius: 12px 4px 12px 4px;
+            line-height: 1.15;
             user-select: none;
             position: relative;
             overflow: hidden;
             cursor: pointer;
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 3px 10px rgba(10, 7, 16, 0.55);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 4px 10px rgba(0, 0, 0, 0.65);
             transition: transform 0.2s ease, border-radius 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
         }
 
         .status-badge:hover {
             transform: translateY(-2px);
-            border-radius: 3px 12px 3px 12px;
-            filter: brightness(1.1);
+            border-radius: 4px 12px 4px 12px;
+            filter: brightness(1.12);
         }
 
         .status-badge .badge-title {
-            font-size: 9px;
-            font-weight: 900;
-            letter-spacing: 0.5px;
-            padding: 4px 10px 3px 10px;
+            font-size: 10.5px;
+            font-weight: bold;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+            padding: 5px 10px 4px 10px;
             text-align: center;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+            color: #ffffff;
+            /* Crisp dark drop-shadow halo for maximum legibility */
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.95), 0 0 4px rgba(0, 0, 0, 0.85);
         }
 
         .status-badge .badge-date {
-            font-size: 7.5px;
+            font-size: 9px;
             letter-spacing: 0.3px;
-            padding: 2px 8px;
-            background: rgba(14, 10, 22, 0.55);
-            border-top: 1px solid rgba(255, 255, 255, 0.15);
-            color: rgba(244, 240, 255, 0.92);
+            padding: 3px 10px;
+            background: rgba(12, 9, 20, 0.78);
+            border-top: 1px solid rgba(255, 255, 255, 0.18);
+            color: #f4f0ff;
             text-align: center;
+            text-transform: none;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
         }
 
         /* Blossom Rose — NEW GAME! */
         .status-badge.badge-new {
-            background: linear-gradient(135deg, #d95d90 0%, #8f2d56 100%);
-            color: #ffffff;
-            border: 1px solid rgba(255, 194, 218, 0.7);
+            background: linear-gradient(135deg, #c93b72 0%, #7d1941 100%);
+            border: 1.5px solid #ff9ec2;
         }
 
-        /* Canopy Sage — GAME UPDATE! */
+        /* Canopy Emerald — GAME UPDATE! */
         .status-badge.badge-update {
-            background: linear-gradient(135deg, #3ca374 0%, #205c3f 100%);
-            color: #ffffff;
-            border: 1px solid rgba(163, 245, 204, 0.7);
+            background: linear-gradient(135deg, #2b8a5e 0%, #164f34 100%);
+            border: 1.5px solid #88ebb9;
         }
 
-        /* Pollen Gold & Twilight Plum — EDITED! */
+        /* Deep Amber Gold — EDITED! */
         .status-badge.badge-edited {
-            background: linear-gradient(135deg, #d99b26 0%, #87580d 100%);
-            color: #ffffff;
-            border: 1px solid rgba(255, 230, 163, 0.75);
+            background: linear-gradient(135deg, #b87b14 0%, #6e4405 100%);
+            border: 1.5px solid #ffe082;
         }
 
         /* Soft Botanical Shimmer Sweep */
@@ -245,7 +246,7 @@
             left: -120%;
             width: 45%;
             height: 200%;
-            background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.45) 50%, rgba(255,255,255,0) 100%);
+            background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.35) 50%, rgba(255,255,255,0) 100%);
             transform: rotate(28deg);
             animation: badgeGlint 4s infinite ease-in-out;
             pointer-events: none;
@@ -1252,8 +1253,10 @@
         }
 
         const formatBadgeDate = (ms) => {
+            const months = ["Jan.", "Feb.", "Mar.", "Apr.", "May", "Jun.", "Jul.", "Aug.", "Sep.", "Oct.", "Nov.", "Dec."];
             const d = new Date(ms);
-            return `${d.getMonth()+1}/${d.getDate()}/${String(d.getFullYear()).substring(2)}`;
+            if (isNaN(d.getTime())) return '';
+            return `${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
         };
 
         function openAppUpdateModal(gameId) {
