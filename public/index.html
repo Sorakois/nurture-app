@@ -21,7 +21,7 @@
     <meta property="og:type" content="website">
     <meta property="og:title" content="Nurture | Meta, Guides, Redeem Codes, Assets & Communities">
     <meta property="og:description" content="Community-driven gaming hub for guides, tools, active coupon codes, raw assets, and mods.">
-    <meta property="og:image" content="https://nurture.how/Assets/nurture_icon.png">
+    <meta property="og:image" content="https://nurture.how/Assets/nurture_icon.webp">
     <meta name="twitter:card" content="summary">
 
     <style>
@@ -1138,7 +1138,7 @@
 
             <div class="modal-form-stack">
                 <div style="display:flex; gap: 12px; align-items: stretch;">
-                    <img id="sgIconPreview" src="/Assets/placeholder.png" style="width: 108px; height: 108px; border-radius: 16px 5px 16px 5px; object-fit: cover; border: 1.5px solid #9d8ec7; display: none; flex-shrink: 0; align-self: center;">
+                    <img id="sgIconPreview" src="/Assets/placeholder.webp" style="width: 108px; height: 108px; border-radius: 16px 5px 16px 5px; object-fit: cover; border: 1.5px solid #9d8ec7; display: none; flex-shrink: 0; align-self: center;">
                     <div class="modal-form-stack">
                         <div class="req-field-row">
                             <input type="text" id="sgName" class="floral-input" placeholder="Game Name">
@@ -1199,7 +1199,7 @@
                     lbList.innerHTML = lbData.top10.map((u, i) => `
                         <div class="lb-row ${i < 3 ? `rank-${i+1}` : ''}" style="cursor:pointer;" onclick="openUserProfileModal('${u.discordId}')">
                             <div class="lb-rank-badge">#${i+1}</div>
-                            <img src="${u.avatar ? `https://cdn.discordapp.com/avatars/${u.discordId}/${u.avatar}.png` : '/Assets/placeholder.png'}" class="lb-avatar">
+                            <img src="${u.avatar ? `https://cdn.discordapp.com/avatars/${u.discordId}/${u.avatar}.webp` : '/Assets/placeholder.webp'}" class="lb-avatar">
                             <div class="lb-info"><div class="lb-name">${u.username}</div></div>
                             <div class="lb-score">${u.totalPoints} pts</div>
                         </div>
@@ -1211,7 +1211,7 @@
                         <div style="width: 100%; height: 1px; background: linear-gradient(90deg, transparent, rgba(157, 142, 199, 0.4), transparent); margin: 12px 0;"></div>
                         <div class="lb-row" style="border-color:#9d8ec7; margin-bottom: 0; cursor: pointer;" onclick="openUserProfileModal('${lbData.userRank.discordId}')">
                             <div class="lb-rank-badge">#${lbData.userRank.rank}</div>
-                            <img src="${lbData.userRank.avatar ? `https://cdn.discordapp.com/avatars/${lbData.userRank.discordId}/${lbData.userRank.avatar}.png` : '/Assets/placeholder.png'}" class="lb-avatar">
+                            <img src="${lbData.userRank.avatar ? `https://cdn.discordapp.com/avatars/${lbData.userRank.discordId}/${lbData.userRank.avatar}.webp` : '/Assets/placeholder.webp'}" class="lb-avatar">
                             <div class="lb-info"><div class="lb-name">You (${lbData.userRank.username})</div></div>
                             <div class="lb-score">${lbData.userRank.totalPoints} pts</div>
                         </div>`;
@@ -1600,7 +1600,7 @@
                     
                     const gameName = typeof game === 'string' ? game : (game.name || 'Unknown Game');
                     const gameId = game.id || '';
-                    const iconUrl = typeof game === 'object' && game.banner_url ? game.banner_url : '/Assets/placeholder.png';
+                    const iconUrl = typeof game === 'object' && game.banner_url ? game.banner_url : '/Assets/placeholder.webp';
                     const developer = typeof game === 'object' && game.developer ? game.developer : '';
                     
                     const isStarred = userStarredGames.includes(gameId);
@@ -1646,7 +1646,7 @@
                     }
 
                     gridItem.innerHTML = `
-                        <img src="${iconUrl}" alt="${escapeHtml(gameName)}" loading="lazy" onerror="this.src='/Assets/placeholder.png'">
+                        <img src="${iconUrl}" alt="${escapeHtml(gameName)}" loading="lazy" onerror="this.src='/Assets/placeholder.webp'">
                         <div class="title-wrapper">
                             <svg class="star-btn" data-id="${gameId}" style="width:18px;height:18px;cursor:pointer;fill:${starColor}; transition:fill 0.2s;" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
                             <div class="grid-item-title">${escapeHtml(gameName)}</div>

@@ -851,7 +851,7 @@
             <div class="game-center-col">
                 <div class="game-header">
                     <div class="header-left">
-                        <img src="/Assets/placeholder.png" alt="Game Icon" id="gameIcon" referrerpolicy="no-referrer">
+                        <img src="/Assets/placeholder.webp" alt="Game Icon" id="gameIcon" referrerpolicy="no-referrer">
                         <div>
                             <h1 class="game-title" id="gameTitle">Loading...</h1>
                             <p class="game-dev" id="gameDev">-</p>
@@ -863,7 +863,7 @@
                     <div class="redeem-stack-wrapper no-top-banner" id="redeemStackWrapper">
                         <div class="redeem-top-new-banner" id="redeemNewCodeBanner" style="display: none;">NEW CODE</div>
                         <button type="button" id="redeemCodesBtn" class="redeem-btn" onclick="openRedeemModal()" title="Redeem Codes & Links">
-                            <img src="/Assets/ticket.png" alt="Redeem Codes">
+                            <img src="/Assets/ticket.webp" alt="Redeem Codes">
                             <span>Redeem Codes</span>
                         </button>
                         <div class="redeem-bottom-date-banner" id="redeemLastAddedBanner">No codes yet</div>
@@ -1388,7 +1388,7 @@
             const platform = (Array.isArray(item.platform) ? item.platform.join(',') : (item.platform || '')).toLowerCase();
             
             if (platform.includes('google sheets')) return '/Assets/google_sheets_icon.webp';
-            if (platform.includes('nurture')) return '/Assets/nurture_icon.png';
+            if (platform.includes('nurture')) return '/Assets/nurture_icon.webp';
             if (platform.includes('fribbels')) return '/Assets/fribbels.webp';
 
             if (platform.includes('discord')) return 'https://cdn.simpleicons.org/discord/5865F2';
@@ -1412,7 +1412,7 @@
                 mods: 'https://api.iconify.design/fluent-emoji:puzzle-piece.svg'
             };
 
-            return defaultIcons[section] || '/Assets/placeholder.png';
+            return defaultIcons[section] || '/Assets/placeholder.webp';
         }
 
         function buildFilterBar(items, categoryKey) {
@@ -1467,7 +1467,7 @@
                 list.innerHTML = data.top10.map((u, i) => `
                     <div class="lb-row ${i < 3 ? `rank-${i+1}` : ''}" style="cursor:pointer;" onclick="openUserProfileModal('${u.discordId}')">
                         <div class="lb-rank-badge">#${i+1}</div>
-                        <img src="${u.avatar ? `https://cdn.discordapp.com/avatars/${u.discordId}/${u.avatar}.png` : '/Assets/placeholder.png'}" class="lb-avatar">
+                        <img src="${u.avatar ? `https://cdn.discordapp.com/avatars/${u.discordId}/${u.avatar}.webp` : '/Assets/placeholder.webp'}" class="lb-avatar">
                         <div class="lb-info"><div class="lb-name">${u.username}</div></div>
                         <div class="lb-score">${u.points} pts</div>
                     </div>
@@ -1479,7 +1479,7 @@
                     <div style="width: 100%; height: 1px; background: linear-gradient(90deg, transparent, rgba(157, 142, 199, 0.4), transparent); margin: 12px 0;"></div>
                     <div class="lb-row" style="border-color:#9d8ec7; margin-bottom: 0; cursor: pointer;" onclick="openUserProfileModal('${data.userRank.discordId}')">
                         <div class="lb-rank-badge">#${data.userRank.rank}</div>
-                        <img src="${data.userRank.avatar ? `https://cdn.discordapp.com/avatars/${data.userRank.discordId}/${data.userRank.avatar}.png` : '/Assets/placeholder.png'}" class="lb-avatar">
+                        <img src="${data.userRank.avatar ? `https://cdn.discordapp.com/avatars/${data.userRank.discordId}/${data.userRank.avatar}.webp` : '/Assets/placeholder.webp'}" class="lb-avatar">
                         <div class="lb-info"><div class="lb-name">You (${data.userRank.username})</div></div>
                         <div class="lb-score">${data.userRank.points} pts</div>
                     </div>`;
@@ -1500,7 +1500,7 @@
                 mfContainer.style.display = 'grid';
                 mfContainer.innerHTML = gameData.mini_focuses.map(focus => `
                         <div style="display: flex; align-items: center; gap: 15px; background: linear-gradient(135deg, #4C3A90 0%, #2a2a35 100%); padding: 18px; border-radius: 18px 6px 18px 6px; border: 1px solid #7A6BB5; user-select: none;">
-                            <img src="${focus.icon || '/Assets/placeholder.png'}" style="width: 50px; height: 50px; border-radius: 8px; object-fit: cover; border: 1px solid #3a3a45;">
+                            <img src="${focus.icon || '/Assets/placeholder.webp'}" style="width: 50px; height: 50px; border-radius: 8px; object-fit: cover; border: 1px solid #3a3a45;">
                             <div>
                                 <div style="font-weight: bold; font-size: 1.1em; color: #fff; margin-bottom: 4px;">${focus.title}</div>
                                 <div style="font-size: 0.85em; color: #ccc;">${focus.description}</div>
@@ -1636,7 +1636,7 @@
                         <svg class="item-star-btn" onclick="toggleFavoriteSubItem('${safeStr(itemId)}', event)" style="fill:${starColor};" title="${isFav ? 'Remove from Favorites' : 'Favorite Item'}" viewBox="0 0 24 24">
                             <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
                         </svg>
-                        <img src="${getItemIcon(item, currentSection)}" class="item-icon" alt="icon" onerror="this.src='/Assets/placeholder.png'">
+                        <img src="${getItemIcon(item, currentSection)}" class="item-icon" alt="icon" onerror="this.src='/Assets/placeholder.webp'">
                         <div class="item-details">
                             <div class="item-title-row">
                                 <div class="item-title">${safeStr(item.title || item.name)}</div>
@@ -1680,7 +1680,7 @@
 
                 document.getElementById('gameTitle').textContent = gameData.name;
                 document.getElementById('gameDev').textContent = gameData.developer;
-                document.getElementById('gameIcon').src = gameData.banner_url || '/Assets/placeholder.png';
+                document.getElementById('gameIcon').src = gameData.banner_url || '/Assets/placeholder.webp';
 
                 const patchMetaEl = document.getElementById('gamePatchMeta');
                 if (patchMetaEl && gameData.last_major_update_date) {

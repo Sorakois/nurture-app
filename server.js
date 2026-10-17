@@ -1035,7 +1035,7 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                     subject: 'Message from Admin',
                     content: replyText,
                     adminUsername: interaction.member.user.username,
-                    adminAvatar: interaction.member.user.avatar ? `https://cdn.discordapp.com/avatars/${interaction.member.user.id}/${interaction.member.user.avatar}.png` : 'https://cdn.discordapp.com/embed/avatars/0.png',
+                    adminAvatar: interaction.member.user.avatar ? `https://cdn.discordapp.com/avatars/${interaction.member.user.id}/${interaction.member.user.avatar}.webp` : 'https://cdn.discordapp.com/embed/avatars/0.webp',
                     date: new Date()
                 });
                 broadcastLiveEvent('mail_updated', { discordId: user.discordId });
@@ -1196,7 +1196,7 @@ app.get('/api/profile/:query', async (req, res) => {
             contributions: contributions.map(c => ({
                 gameId: c.gameId,
                 gameName: gameMap[c.gameId]?.name || c.gameId,
-                gameIcon: gameMap[c.gameId]?.banner_url || '/Assets/placeholder.png',
+                gameIcon: gameMap[c.gameId]?.banner_url || '/Assets/placeholder.webp',
                 category: c.itemCategory,
                 action: c.actionType,
                 commitMessage: c.data?.commitMessage || '',
