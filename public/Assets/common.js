@@ -16,19 +16,34 @@ function closeOverlayModal(overlayEl) {
     }
 }
 
+function toggleMobileMenu(e) {
+    if (e) e.stopPropagation();
+    const dropdown = document.getElementById('mobileDropdownMenu');
+    const menuBtn = document.getElementById('mobileMenuToggleBtn');
+    if (!dropdown) return;
+    const isOpen = dropdown.classList.toggle('mobile-menu-open');
+    if (menuBtn) {
+        menuBtn.setAttribute('aria-expanded', String(isOpen));
+        menuBtn.innerHTML = isOpen ? '✕' : '☰';
+    }
+}
+
 document.addEventListener('click', (e) => {
     // 1. Clicking directly on the dark .modal-overlay backdrop closes any modal
     if (e.target && e.target.classList && e.target.classList.contains('modal-overlay') && e.target.classList.contains('active')) {
         closeOverlayModal(e.target);
     }
 
-    // 2. Clicking outside the mobile hamburger menu closes it
-    const authContainer = document.getElementById('authContainer');
+    // 2. Clicking outside the mobile hamburger dropdown closes it
+    const dropdown = document.getElementById('mobileDropdownMenu');
     const menuBtn = document.getElementById('mobileMenuToggleBtn');
-    if (authContainer && authContainer.classList.contains('mobile-menu-open')) {
-        if (!authContainer.contains(e.target) && (!menuBtn || !menuBtn.contains(e.target))) {
-            authContainer.classList.remove('mobile-menu-open');
-            if (menuBtn) menuBtn.setAttribute('aria-expanded', 'false');
+    if (dropdown && dropdown.classList.contains('mobile-menu-open')) {
+        if (!dropdown.contains(e.target) && (!menuBtn || !menuBtn.contains(e.target))) {
+            dropdown.classList.remove('mobile-menu-open');
+            if (menuBtn) {
+                menuBtn.setAttribute('aria-expanded', 'false');
+                menuBtn.innerHTML = '☰';
+            }
         }
     }
 });
@@ -37,8 +52,13 @@ document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
         document.querySelectorAll('.modal-overlay.active').forEach(closeOverlayModal);
         if (typeof closeMobileLeaderboard === 'function') closeMobileLeaderboard();
-        const authContainer = document.getElementById('authContainer');
-        if (authContainer) authContainer.classList.remove('mobile-menu-open');
+        const dropdown = document.getElementById('mobileDropdownMenu');
+        const menuBtn = document.getElementById('mobileMenuToggleBtn');
+        if (dropdown) dropdown.classList.remove('mobile-menu-open');
+        if (menuBtn) {
+            menuBtn.setAttribute('aria-expanded', 'false');
+            menuBtn.innerHTML = '☰';
+        }
     }
 });
 
@@ -182,23 +202,34 @@ function getMobileTrophyBtnHtml() {
     `;
 }
 
+function getMobileHamburgerBtnHtml() {
+    return `
+        <button type="button" id="mobileMenuToggleBtn" class="mobile-menu-toggle" onclick="toggleMobileMenu(event)" aria-label="Toggle Navigation Menu" aria-expanded="false">☰</button>
+    `;
+}
+
 // --- UI Render Helpers ---
 function renderLoggedOutUI(container) {
     container.innerHTML = `
-        <div class="no-ads-cta-wrap">
-            <a href="/auth/discord" class="social-button discord-button no-ads-pulse-btn">
-                <img src="https://cdn.simpleicons.org/discord/ffffff" alt="Discord Icon">
-                <span class="sub-text">Sign in with Discord</span>
-            </a>
-            <span class="no-ads-sub-label">Link Discord = No Ads FOREVER</span>
+        <div class="banner-primary-actions">
+            <div class="no-ads-cta-wrap">
+                <a href="/auth/discord" class="social-button discord-button no-ads-pulse-btn">
+                    <img src="https://cdn.simpleicons.org/discord/ffffff" alt="Discord Icon">
+                    <span class="sub-text">Sign in with Discord</span>
+                </a>
+                <span class="no-ads-sub-label">Link Discord = No Ads FOREVER</span>
+            </div>
+            ${getMobileTrophyBtnHtml()}
+            ${getMobileHamburgerBtnHtml()}
         </div>
-        <a href="https://discord.gg/nurture" target="_blank" class="social-button nurture-discord-button">
-            <img src="/Assets/nurture_icon.webp" alt="Nurture Discord"><span class="sub-text">Nurture Discord</span>
-        </a>
-        <a href="https://ko-fi.com/sorakoi" target="_blank" class="social-button kofi-button">
-            <img src="/Assets/kofi_icon.webp" alt="Ko-fi Icon"><span class="sub-text">Ko-fi</span>
-        </a>
-        ${getMobileTrophyBtnHtml()}
+        <div class="banner-secondary-actions" id="mobileDropdownMenu">
+            <a href="https://discord.gg/nurture" target="_blank" class="social-button nurture-discord-button">
+                <img src="/Assets/nurture_icon.webp" alt="Nurture Discord"><span class="sub-text">Nurture Discord</span>
+            </a>
+            <a href="https://ko-fi.com/sorakoi" target="_blank" class="social-button kofi-button">
+                <img src="/Assets/kofi_icon.webp" alt="Ko-fi Icon"><span class="sub-text">Ko-fi</span>
+            </a>
+        </div>
     `;
     window.evaluateAdVisibility(null);
 }
@@ -218,21 +249,26 @@ function renderLoggedInUI(container, user) {
     const settingsSvg = `<svg viewBox="0 0 24 24"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.06-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.73,8.87C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.06,0.94l-2.03,1.58c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.43-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.49-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>`;
     
     container.innerHTML = `
-        <div class="user-profile-badge" style="cursor:pointer;" onclick="window.location.href='/profile/${user.discordId}'" title="View My Stuff">
-            <img src="${avatarUrl}" class="user-avatar"><span class="user-name">${user.username}</span>
-            <a href="/auth/logout" class="sign-out-btn" onclick="event.stopPropagation(); clearCachedAuth()">Sign Out</a>
+        <div class="banner-primary-actions">
+            <div class="user-profile-badge" style="cursor:pointer;" onclick="window.location.href='/profile/${user.discordId}'" title="View My Stuff">
+                <img src="${avatarUrl}" class="user-avatar"><span class="user-name">${user.username}</span>
+                <a href="/auth/logout" class="sign-out-btn" onclick="event.stopPropagation(); clearCachedAuth()">Sign Out</a>
+            </div>
+            ${getMobileTrophyBtnHtml()}
+            ${getMobileHamburgerBtnHtml()}
         </div>
-        <button class="social-button mailbox-button" onclick="openMailboxModal()" style="border:none; cursor:pointer; font-family:inherit;">
-            ${mailboxSvg} <span class="sub-text">Mailbox <span id="unreadBadge" style="display:none; background:#ff5555; border-radius:10px; padding:2px 6px; margin-left:4px;">0</span></span>
-        </button>
-        <button class="social-button settings-button" onclick="openSettingsModal()" style="border:none; cursor:pointer; font-family:inherit;">
-            ${settingsSvg} <span class="sub-text">Settings</span>
-        </button>
-        ${nurtureDiscordButton}
-        <a href="https://ko-fi.com/sorakoi" target="_blank" rel="noopener noreferrer" class="social-button kofi-button">
-            <img src="/Assets/kofi_icon.webp" alt="Ko-fi"><span class="sub-text">Ko-fi</span>
-        </a>
-        ${getMobileTrophyBtnHtml()}
+        <div class="banner-secondary-actions" id="mobileDropdownMenu">
+            <button class="social-button mailbox-button" onclick="openMailboxModal()" style="border:none; cursor:pointer; font-family:inherit;">
+                ${mailboxSvg} <span class="sub-text">Mailbox <span id="unreadBadge" style="display:none; background:#ff5555; border-radius:10px; padding:2px 6px; margin-left:4px;">0</span></span>
+            </button>
+            <button class="social-button settings-button" onclick="openSettingsModal()" style="border:none; cursor:pointer; font-family:inherit;">
+                ${settingsSvg} <span class="sub-text">Settings</span>
+            </button>
+            ${nurtureDiscordButton}
+            <a href="https://ko-fi.com/sorakoi" target="_blank" rel="noopener noreferrer" class="social-button kofi-button">
+                <img src="/Assets/kofi_icon.webp" alt="Ko-fi"><span class="sub-text">Ko-fi</span>
+            </a>
+        </div>
     `;
     window.evaluateAdVisibility(user);
     fetchUnreadMailCount();
@@ -308,24 +344,20 @@ async function fetchUnreadMailCount() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    // 0. Inject Mobile Hamburger Button into .banner-row
-    const bannerRow = document.querySelector('.banner-row');
-    const authContainer = document.getElementById('authContainer');
-    if (bannerRow && authContainer && !document.getElementById('mobileMenuToggleBtn')) {
-        const hamBtn = document.createElement('button');
-        hamBtn.type = 'button';
-        hamBtn.id = 'mobileMenuToggleBtn';
-        hamBtn.className = 'mobile-menu-toggle';
-        hamBtn.setAttribute('aria-label', 'Toggle Navigation Menu');
-        hamBtn.setAttribute('aria-expanded', 'false');
-        hamBtn.innerHTML = '☰';
-        hamBtn.onclick = (e) => {
-            e.stopPropagation();
-            const isOpen = authContainer.classList.toggle('mobile-menu-open');
-            hamBtn.setAttribute('aria-expanded', String(isOpen));
-            hamBtn.innerHTML = isOpen ? '✕' : '☰';
-        };
-        bannerRow.appendChild(hamBtn);
+    // 1. Inject Mobile Leaderboard Close Button & Backdrop if page has a Leaderboard
+    const lbSidebar = document.getElementById('leaderboardSidebar');
+    if (lbSidebar && !lbSidebar.querySelector('.lb-mobile-close')) {
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'lb-mobile-close';
+        closeBtn.innerHTML = '×';
+        closeBtn.onclick = closeMobileLeaderboard;
+        lbSidebar.prepend(closeBtn);
+
+        const lbBackdrop = document.createElement('div');
+        lbBackdrop.id = 'mobileLbBackdrop';
+        lbBackdrop.className = 'mobile-lb-backdrop';
+        lbBackdrop.onclick = closeMobileLeaderboard;
+        document.body.appendChild(lbBackdrop);
     }
 
     // 2. Inject Upgraded Botanical Modals (Mailbox, Compose, Profile, Settings)

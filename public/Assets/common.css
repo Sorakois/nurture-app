@@ -912,15 +912,35 @@ body {
     color: #fff;
 }
 
-/* === MOBILE GRAPHICS === */
+/* === HEADER PRIMARY vs SECONDARY GROUPS === */
+.banner-primary-actions,
+.banner-secondary-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
 
 .mobile-menu-toggle {
     display: none;
 }
 
+/* === MOBILE GRAPHICS & CONTAINMENT === */
 @media (max-width: 768px) {
+    /* 1. Completely hide the desktop leaderboard, spacer, and sidebar ad on mobile */
+    .leaderboard-spacer,
+    .nurture-ad-sidebar,
+    .leaderboard-sidebar:not(.mobile-open) {
+        display: none !important;
+    }
+
+    /* Collapse the right-rail wrapper so it takes 0px in flex layouts on mobile */
+    .right-rail-column {
+        display: contents !important;
+    }
+
+    /* 2. Top Banner Row: Logo on Left, [Login + Rank + Hamburger] on Right */
     .banner {
-        padding: 10px 14px !important;
+        padding: 10px 12px !important;
         box-sizing: border-box;
         width: 100%;
     }
@@ -933,31 +953,30 @@ body {
         max-width: 100%;
         width: 100%;
         position: relative;
+        gap: 8px;
     }
 
     .banner-row img[alt="Nurture Banner"] {
-        height: 56px !important;
+        height: 44px !important;
         padding-left: 0 !important;
+        display: block;
     }
 
-    /* Hamburger Button on Mobile */
-    .mobile-menu-toggle {
-        display: inline-flex !important;
-        align-items: center;
-        justify-content: center;
-        width: 44px;
-        height: 44px;
-        border-radius: 14px 4px 14px 4px;
-        background: linear-gradient(135deg, #6b51ab 0%, #463278 100%);
-        border: 1.5px solid rgba(226, 214, 255, 0.65);
-        color: #ffffff;
-        font-size: 22px;
-        cursor: pointer;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
-    }
-
-    /* Collapsible Hamburger Dropdown Panel */
     .banner-actions {
+        display: flex !important;
+        align-items: center;
+        gap: 6px;
+        position: static;
+    }
+
+    .banner-primary-actions {
+        display: flex !important;
+        align-items: center;
+        gap: 6px;
+    }
+
+    /* Collapsible Hamburger Dropdown Panel (Only holds secondary buttons) */
+    .banner-secondary-actions {
         display: none !important;
         position: absolute;
         top: calc(100% + 10px);
@@ -976,7 +995,7 @@ body {
         z-index: 1000;
     }
 
-    .banner-actions.mobile-menu-open {
+    .banner-secondary-actions.mobile-menu-open {
         display: flex !important;
     }
 
@@ -989,12 +1008,12 @@ body {
         position: static;
         transform: none;
         margin-top: 2px;
-        font-size: 7.5px;
-        padding: 1px 5px;
+        font-size: 7px;
+        padding: 1px 4px;
     }
 
     .social-button, .user-profile-badge {
-        padding: 5px 9px;
+        padding: 6px 9px;
         border-radius: 14px 4px 14px 4px;
         gap: 5px;
     }
@@ -1011,7 +1030,7 @@ body {
 
     .sub-text, .user-name {
         font-size: 11px;
-        max-width: 85px;
+        max-width: 80px;
     }
 
     .sign-out-btn {
@@ -1019,33 +1038,53 @@ body {
         font-size: 10px;
     }
 
-    /* Inline Trophy button in the same row as Mailbox, Settings, and Ko-fi */
+    /* Rank (Trophy) Button sits directly to the left of the Hamburger Button */
     .mobile-trophy-btn {
         display: inline-flex !important;
         align-items: center;
         justify-content: center;
         position: static !important;
         margin: 0 !important;
-        padding: 5px 10px !important;
-        width: auto !important;
-        height: auto !important;
-        border-radius: 14px 4px 14px 4px;
+        padding: 0 !important;
+        width: 36px !important;
+        height: 36px !important;
+        border-radius: 12px 4px 12px 4px;
         background: linear-gradient(135deg, #f6c85f 0%, #c9881e 100%);
-        border: 1px solid #ffe6a3;
+        border: 1.5px solid #ffe6a3;
         box-shadow: 0 3px 10px rgba(246, 200, 95, 0.3);
         cursor: pointer;
+        flex-shrink: 0;
     }
 
     .mobile-trophy-btn svg {
-        width: 16px !important;
-        height: 16px !important;
-        margin-right: 0 !important;
+        width: 18px !important;
+        height: 18px !important;
+        margin: 0 !important;
         fill: #1a1228 !important;
     }
 
-    /* Strictly contained mobile leaderboard modal */
+    /* Hamburger Button on the far right */
+    .mobile-menu-toggle {
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border-radius: 12px 4px 12px 4px;
+        background: linear-gradient(135deg, #6b51ab 0%, #463278 100%);
+        border: 1.5px solid rgba(226, 214, 255, 0.65);
+        color: #ffffff;
+        font-size: 19px;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+        flex-shrink: 0;
+    }
+
+    /* 3. Popup Leaderboard Modal when Trophy is tapped */
     .leaderboard-sidebar.mobile-open {
         display: flex !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
         position: fixed !important;
         top: 50% !important;
         left: 50% !important;
@@ -1063,6 +1102,23 @@ body {
         z-index: 10001 !important;
         box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9) !important;
         border: 1px solid var(--border-bloom) !important;
+    }
+
+    .leaderboard-sidebar.mobile-open .lb-mobile-close {
+        display: flex !important;
+        position: absolute;
+        top: 10px;
+        right: 12px;
+        width: 30px;
+        height: 30px;
+        align-items: center;
+        justify-content: center;
+        background: rgba(157, 142, 199, 0.15);
+        border: 1px solid var(--border-vine);
+        border-radius: 10px 3px 10px 3px;
+        color: var(--petal-light);
+        font-size: 20px;
+        cursor: pointer;
     }
 
     .mobile-lb-backdrop.active {
