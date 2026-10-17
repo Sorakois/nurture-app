@@ -253,15 +253,18 @@
             display: inline-flex;
             justify-content: center;
             align-items: center;
-            width: 22px;
-            height: 22px;
-            background: linear-gradient(135deg, #4c3780, #2f2252);
-            color: #e5dcff;
-            border: 1px solid rgba(208, 194, 247, 0.4);
-            border-radius: 10px 3px 10px 3px;
-            font-size: 12px;
+            width: 1.6em;
+            height: 1.6em;
+            min-width: 1.6em;
+            min-height: 1.6em;
+            aspect-ratio: 1 / 1;
+            flex-shrink: 0;
+            background: linear-gradient(135deg, #6247a6, #3d2c6b);
+            color: #ffffff;
+            border: 1.5px solid rgba(226, 214, 255, 0.65);
+            border-radius: 8px 3px 8px 3px;
+            font-size: 13px;
             font-weight: bold;
-            font-family: monospace;
             cursor: pointer;
             transition: all 0.2s ease;
         }
@@ -416,9 +419,9 @@
         }
 
         .tag-pill {
-            background: rgba(18, 14, 28, 0.85);
-            color: #b8a6e8;
-            border: 1px solid rgba(157, 142, 199, 0.3);
+            background: rgba(28, 22, 44, 0.95);
+            color: #f4f0ff;
+            border: 1.5px solid rgba(190, 175, 235, 0.45);
             border-radius: 14px 4px 14px 4px;
             padding: 6px 12px;
             font-family: inherit;
@@ -851,16 +854,16 @@
 
     <div class="banner">
         <div class="banner-row">
-            <div style="cursor: default;">
-                <img src="/Assets/nurture_banner.png" alt="Nurture Banner" style="height:90px; vertical-align:left; padding-left: 10px;">
-            </div>
+            <a href="/" title="Nurture Home" style="cursor: pointer; display: inline-block;">
+                <img src="/Assets/nurture_banner.webp" alt="Nurture Banner" style="height:90px; vertical-align:left; padding-left: 10px;">
+            </a>
             <div class="banner-actions" id="authContainer">
                 <a href="/auth/discord" class="social-button discord-button">
                     <img src="https://cdn.simpleicons.org/discord/ffffff" alt="Discord Icon">
                     <span class="sub-text">Login</span>
                 </a>
                 <a href="https://ko-fi.com/sorakoi" class="social-button kofi-button">
-                    <img src="/Assets/kofi_icon.png" alt="Ko-fi Icon">
+                    <img src="/Assets/kofi_icon.webp" alt="Ko-fi Icon">
                     <span class="sub-text">Ko-fi</span>
                 </a>
             </div>
@@ -869,32 +872,33 @@
 
     <!-- Unified Main Row: Left Spacer, Center Column (Hero + Search + Grid), Right Rail (Ad + Leaderboard) -->
     <div class="main-wrapper" id="mainWrapper" style="justify-content: center; align-items: flex-start; gap: 30px; max-width: 1600px; padding: 18px 24px 40px 24px;">
-        <!-- Flexible spacer keeps the center column dead-center on wide monitors -->
         <div id="lbSpacer" class="leaderboard-spacer" style="flex: 0 999 290px; width: 290px; min-width: 0; display: block;"></div>
 
-        <!-- Center Column: Hero Showcase, Changelog, Search Bar, and Game Grid -->
         <div style="flex: 1 1 700px; max-width: 950px; min-width: 0;">
             <div class="about-us hero-showcase" style="margin-top: 0;">
-                <img src="/Assets/nurture_icon.png" alt="Nurture Emblem" class="hero-logo-img">
-                <h1 style="font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 2.6em; margin: 0 0 10px 0;">
+                <img src="/Assets/nurture_icon.webp" alt="Nurture Emblem" class="hero-logo-img">
+                <h1 style="font-size: 2.6em; margin: 0 0 10px 0;">
                     Nurture
                 </h1>
-                <p style="font-size: 1.15em; color: #d0c2f7; margin: 0; max-width: 620px; line-height: 1.4;">
-                    Guides, Raw Assets, Communities, Mods, and more!
+                <p style="font-size: 1.15em; color: #f4f0ff; margin: 0 0 6px 0; max-width: 680px; line-height: 1.45;">
+                    The Community Game Library for <b>Guides, Calculators & Tools, Active Redeem Codes, Datamined Assets, and Mods</b>.
+                </p>
+                <p style="font-size: 0.92em; color: #d0c2f7; margin: 0; max-width: 600px;">
+                    Select any game below to browse vetted resources or contribute your own links to earn leaderboard points!
                 </p>
             </div>
 
-            <!-- Iwara-Style Expandable Changelog Box -->
+            <!-- Iwara-Style Expandable Changelog Box (Collapsed by Default) -->
             <div class="changelog-panel" id="changelogPanel">
                 <div class="changelog-header-bar" onclick="toggleChangelogBox()">
                     <div class="changelog-header-left">
                         <span>Site Changelog</span>
                         <span class="changelog-latest-pill" id="clHeaderVersion">LATEST</span>
                     </div>
-                    <span class="changelog-toggle-btn" id="clToggleText">Hide ▲</span>
+                    <span class="changelog-toggle-btn" id="clToggleText">Expand ▼</span>
                 </div>
 
-                <div class="changelog-body" id="changelogBody">
+                <div class="changelog-body collapsed" id="changelogBody">
                     <div id="latestChangelogContainer"></div>
                     <div class="changelog-older-Archive" id="olderChangelogsContainer"></div>
                     <button type="button" class="changelog-history-btn" id="olderChangelogsBtn" onclick="toggleOlderChangelogs()" style="display:none;">
@@ -1154,7 +1158,7 @@
                 </div>
 
                 <div class="req-field-row">
-                    <input type="text" id="sgIcon" class="floral-input" placeholder="Game Icon URL (Auto-fills on Lookup)" oninput="document.getElementById('sgIconPreview').src = this.value || '/Assets/placeholder.png'; document.getElementById('sgIconPreview').style.display = 'block';">
+                    <input type="url" id="sgIcon" class="floral-input" placeholder="Game Icon URL (Auto-fills on Lookup)" onblur="previewSafeIconUrl(this.value)">
                     <span class="req-icon"></span>
                 </div>
 
@@ -1760,6 +1764,27 @@
         });
 
         let lookedUpPatchData = { latest_version: null, last_major_update_date: null };
+
+        // Only loads the image preview when the input box is unselected (onblur) and passes HTTPS URL validation
+        function previewSafeIconUrl(rawVal) {
+            const preview = document.getElementById('sgIconPreview');
+            if (!preview) return;
+            const trimmed = (rawVal || '').trim();
+            if (!trimmed) {
+                preview.src = '/Assets/placeholder.webp';
+                preview.style.display = 'none';
+                return;
+            }
+            try {
+                const parsed = new URL(trimmed, window.location.origin);
+                if (parsed.protocol === 'https:' || parsed.origin === window.location.origin) {
+                    preview.src = parsed.href;
+                    preview.style.display = 'block';
+                }
+            } catch (e) {
+                preview.style.display = 'none';
+            }
+        }
 
         async function lookupGame() {
             const term = document.getElementById('suggestSearch').value;

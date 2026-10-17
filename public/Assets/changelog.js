@@ -102,15 +102,16 @@ function initChangelogs() {
     const currentId = getLatestChangelogId();
     const collapsedId = localStorage.getItem(CHANGELOG_STORAGE_KEY);
 
+    // CHANGELOG VISIBILITY
     if (body && toggleBtn) {
         if (collapsedId === currentId) {
             body.classList.add('collapsed');
             toggleBtn.textContent = 'Expand ▼';
-        } else {
+        } //else {
             // New changelog detected (or never collapsed): expand by default
-            body.classList.remove('collapsed');
-            toggleBtn.textContent = 'Hide ▲';
-        }
+            //body.classList.remove('collapsed');
+            //toggleBtn.textContent = 'Hide ▲';
+       // }
     }
 
     const olderList = SITE_CHANGELOGS.slice(1);

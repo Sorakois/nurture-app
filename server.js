@@ -15,6 +15,41 @@ const fs = require('fs');
 const path = require('path');
 require('dotenv').config();
 
+// ============================================================================
+// 🏆 WEIGHTED CONTRIBUTION POINTS CONFIG — EDIT VALUES HERE ON THE FLY
+// ============================================================================
+const POINT_WEIGHTS = {
+    RATE_GAME: 1,              // Rating a game (awarded once per game per user)
+    CREATE_GAME: 5,            // Suggesting a brand new game
+    EDIT_GAME_INFO: 2,         // Updating trailer, age rating, overview, or redeem URL
+    CREATE_GUIDE: 4,           // Adding a new Guide or Tool
+    EDIT_GUIDE: 2,             // Editing an existing Guide or Tool
+    CREATE_MOD: 4,             // Adding a new Mod
+    EDIT_MOD: 2,               // Editing an existing Mod
+    CREATE_ASSET: 3,           // Adding Raw Assets
+    EDIT_ASSET: 2,             // Editing Raw Assets
+    CREATE_COMMUNITY: 2,       // Adding a Community link
+    EDIT_COMMUNITY: 1,         // Editing a Community link
+    CREATE_COUPON: 2,          // Adding a live Coupon Code
+    REPORT_EXPIRED_COUPON: 1,  // Flagging an expired Coupon Code
+    DEFAULT: 2                 // Fallback for any other approved action
+};
+
+const getContributionPoints = (contribution) => {
+    const action = (contribution.actionType || 'EDIT').toUpperCase();
+    const cat = (contribution.itemCategory || '').toUpperCase();
+    const hasCode = Boolean(contribution.data && contribution.data.code);
+
+    if (cat === 'COUPON' || hasCode) {
+        return action === 'DELETE' ? POINT_WEIGHTS.REPORT_EXPIRED_COUPON : POINT_WEIGHTS.CREATE_COUPON;
+    }
+    if (cat === 'GAME' || cat === 'OVERVIEW') {
+        return action === 'CREATE' ? POINT_WEIGHTS.CREATE_GAME : POINT_WEIGHTS.EDIT_GAME_INFO;
+    }
+    const key = `${action}_${cat}`;
+    return POINT_WEIGHTS[key] !== undefined ? POINT_WEIGHTS[key] : POINT_WEIGHTS.DEFAULT;
+};
+
 const app = express();
 
 // Serverless-optimized MongoDB connection (Middleware Pattern)
@@ -347,10 +382,25 @@ app.post('/api/games/:id/rate', async (req, res) => {
         const existingIdx = userRatings.findIndex(r => r.discordId === user.discordId);
         const newScore = { discordId: user.discordId, f2p: Number(f2p), afk: Number(afk), story: Number(story), gameplay: Number(gameplay) };
         
-        if (existingIdx !== -1) {
+        const isFirstTimeRating = existingIdx === -1;
+        if (!isFirstTimeRating) {
             userRatings[existingIdx] = newScore; // Overwrite their old rating
         } else {
             userRatings.push(newScore); // Log their first rating
+        }
+
+        // Award +1 point on the user's first rating for this game
+        if (isFirstTimeRating) {
+            const ratePts = POINT_WEIGHTS.RATE_GAME;
+            user.totalPoints = (user.totalPoints || 0) + ratePts;
+            if (!user.gamePoints) user.gamePoints = new Map();
+            if (typeof user.gamePoints.get === 'function') {
+                user.gamePoints.set(gameId, (user.gamePoints.get(gameId) || 0) + ratePts);
+            } else {
+                user.gamePoints[gameId] = (user.gamePoints[gameId] || 0) + ratePts;
+                user.markModified('gamePoints');
+            }
+            await user.save();
         }
 
         // 2. Mathematically recalculate the averages from scratch
@@ -827,7 +877,7 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
             res.send({ type: InteractionResponseType.UPDATE_MESSAGE, data: { content: `⏳ **Processing... (<@${interaction.member.user.id}>)**`, components: [] } });
 
             const user = await User.findOne({ discordId: contribution.submitterDiscordId });
-            const adminAvatar = interaction.member.user.avatar ? `https://cdn.discordapp.com/avatars/${interaction.member.user.id}/${interaction.member.user.avatar}.png` : 'https://cdn.discordapp.com/embed/avatars/0.png';
+            const adminAvatar = interaction.member.user.avatar ? `https://cdn.discordapp.com/avatars/${interaction.member.user.id}/${interaction.member.user.avatar}.webp` : 'https://cdn.discordapp.com/embed/avatars/0.webp';
 
             // REMEMBER ME 1
             if (action === 'approve') {
@@ -909,15 +959,20 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                 }
 
                 if (user) {
-                    user.totalPoints = (user.totalPoints || 0) + 1;
+                    const ptsEarned = getContributionPoints(contribution);
+                    user.totalPoints = (user.totalPoints || 0) + ptsEarned;
                     if (contribution.gameId) {
                         if (!user.gamePoints) user.gamePoints = new Map();
-                        const currentPts = user.gamePoints.get(contribution.gameId) || 0;
-                        user.gamePoints.set(contribution.gameId, currentPts + 1);
+                        if (typeof user.gamePoints.get === 'function') {
+                            user.gamePoints.set(contribution.gameId, (user.gamePoints.get(contribution.gameId) || 0) + ptsEarned);
+                        } else {
+                            user.gamePoints[contribution.gameId] = (user.gamePoints[contribution.gameId] || 0) + ptsEarned;
+                            user.markModified('gamePoints');
+                        }
                     }
                     user.mailbox.push({
                         direction: 'INBOUND',
-                        subject: 'Contribution Approved! (+1 pt)',
+                        subject: `Contribution Approved! (+${ptsEarned} pt${ptsEarned !== 1 ? 's' : ''})`,
                         content: `Your submission for ${contribution.itemCategory} was approved!`,
                         adminUsername: interaction.member.user.username,
                         adminAvatar: adminAvatar,
@@ -1073,13 +1128,25 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
 
                 const user = await User.findOne({ discordId: contribution.submitterDiscordId });
                 if (user) {
-                    user.totalPoints = (user.totalPoints || 0) + 1;
+                    const ptsEarned = getContributionPoints(contribution);
+                    user.totalPoints = (user.totalPoints || 0) + ptsEarned;
                     if (contribution.gameId) {
                         if (!user.gamePoints) user.gamePoints = new Map();
-                        const currentPts = user.gamePoints.get(contribution.gameId) || 0;
-                        user.gamePoints.set(contribution.gameId, currentPts + 1);
+                        if (typeof user.gamePoints.get === 'function') {
+                            user.gamePoints.set(contribution.gameId, (user.gamePoints.get(contribution.gameId) || 0) + ptsEarned);
+                        } else {
+                            user.gamePoints[contribution.gameId] = (user.gamePoints[contribution.gameId] || 0) + ptsEarned;
+                            user.markModified('gamePoints');
+                        }
                     }
-                    user.mailbox.push({ direction: 'INBOUND', subject: 'Contribution Approved! (+1 pt)', content: `Your submission for ${contribution.itemCategory} was tweaked and approved by an admin!`, adminUsername: interaction.member.user.username, adminAvatar: interaction.member.user.avatar ? `https://cdn.discordapp.com/avatars/${interaction.member.user.id}/${interaction.member.user.avatar}.png` : 'https://cdn.discordapp.com/embed/avatars/0.png', date: new Date() });
+                    user.mailbox.push({
+                        direction: 'INBOUND',
+                        subject: `Contribution Approved! (+${ptsEarned} pt${ptsEarned !== 1 ? 's' : ''})`,
+                        content: `Your submission for ${contribution.itemCategory} was approved!`,
+                        adminUsername: interaction.member.user.username,
+                        adminAvatar: adminAvatar,
+                        date: new Date()
+                    });
                     await user.save();
                 }
 
@@ -1207,7 +1274,7 @@ app.get('/games/:id', async (req, res) => {
             .replace(/<title>.*?<\/title>/i, `<title>${title}</title>`)
             .replace(/content="__OG_TITLE__"/g, `content="${title}"`)
             .replace(/content="__OG_DESC__"/g, `content="${escMeta(rawDesc)}"`)
-            .replace(/content="__OG_IMAGE__"/g, `content="${game?.banner_url || `https://${req.get('host')}/Assets/nurture_icon.png`}"`)
+            .replace(/content="__OG_IMAGE__"/g, `content="${game?.banner_url || `https://${req.get('host')}/Assets/nurture_icon.webp`}"`)
             .replace(/content="__OG_URL__"/g, `content="https://${req.get('host')}${req.originalUrl}"`);
         
         res.setHeader('Content-Type', 'text/html');
@@ -1231,7 +1298,7 @@ app.get('/profile/:id', async (req, res) => {
             .replace(/<title>.*?<\/title>/i, `<title>${title}</title>`)
             .replace(/content="__OG_TITLE__"/g, `content="${title}"`)
             .replace(/content="__OG_DESC__"/g, `content="View user contributions, favorite games, and tools on Nurture."`)
-            .replace(/content="__OG_IMAGE__"/g, `content="${user?.avatar ? `https://cdn.discordapp.com/avatars/${user.discordId}/${user.avatar}.png` : `https://${req.get('host')}/Assets/nurture_icon.png`}"`)
+            .replace(/content="__OG_IMAGE__"/g, `content="${user?.avatar ? `https://cdn.discordapp.com/avatars/${user.discordId}/${user.avatar}.webp` : `https://${req.get('host')}/Assets/nurture_icon.webp`}"`)
             .replace(/content="__OG_URL__"/g, `content="https://${req.get('host')}${req.originalUrl}"`);
         
         res.setHeader('Content-Type', 'text/html');

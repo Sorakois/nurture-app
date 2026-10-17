@@ -1,3 +1,47 @@
+// --- Global .webp Auto-Fallback (Loads .webp first, falls back to .png if missing) ---
+window.addEventListener('error', (e) => {
+    if (e.target && e.target.tagName === 'IMG' && e.target.src && e.target.src.endsWith('.webp')) {
+        e.target.src = e.target.src.replace(/\.webp$/, '.png');
+    }
+}, true);
+
+// --- Global Accessibility & Ease-of-Use Modal Manager (Click Outside + Escape Key) ---
+function closeOverlayModal(overlayEl) {
+    if (!overlayEl) return;
+    overlayEl.classList.remove('active');
+    // Stop YouTube iframe playback if closing the main game info modal
+    if (overlayEl.id === 'gameModal') {
+        const trailer = document.getElementById('modalTrailer');
+        if (trailer) setTimeout(() => { trailer.src = ''; }, 200);
+    }
+}
+
+document.addEventListener('click', (e) => {
+    // 1. Clicking directly on the dark .modal-overlay backdrop closes any modal
+    if (e.target && e.target.classList && e.target.classList.contains('modal-overlay') && e.target.classList.contains('active')) {
+        closeOverlayModal(e.target);
+    }
+
+    // 2. Clicking outside the mobile hamburger menu closes it
+    const authContainer = document.getElementById('authContainer');
+    const menuBtn = document.getElementById('mobileMenuToggleBtn');
+    if (authContainer && authContainer.classList.contains('mobile-menu-open')) {
+        if (!authContainer.contains(e.target) && (!menuBtn || !menuBtn.contains(e.target))) {
+            authContainer.classList.remove('mobile-menu-open');
+            if (menuBtn) menuBtn.setAttribute('aria-expanded', 'false');
+        }
+    }
+});
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        document.querySelectorAll('.modal-overlay.active').forEach(closeOverlayModal);
+        if (typeof closeMobileLeaderboard === 'function') closeMobileLeaderboard();
+        const authContainer = document.getElementById('authContainer');
+        if (authContainer) authContainer.classList.remove('mobile-menu-open');
+    }
+});
+
 // --- GPU-Optimized Botanical Background Engine (GSAP 3) ---
 document.addEventListener('DOMContentLoaded', () => {
     const bgContainer = document.querySelector('.background-container');
@@ -149,10 +193,10 @@ function renderLoggedOutUI(container) {
             <span class="no-ads-sub-label">Link Discord = No Ads FOREVER</span>
         </div>
         <a href="https://discord.gg/nurture" target="_blank" class="social-button nurture-discord-button">
-            <img src="/Assets/nurture_icon.png" alt="Nurture Discord"><span class="sub-text">Nurture Discord</span>
+            <img src="/Assets/nurture_icon.webp" alt="Nurture Discord"><span class="sub-text">Nurture Discord</span>
         </a>
         <a href="https://ko-fi.com/sorakoi" target="_blank" class="social-button kofi-button">
-            <img src="/Assets/kofi_icon.png" alt="Ko-fi Icon"><span class="sub-text">Ko-fi</span>
+            <img src="/Assets/kofi_icon.webp" alt="Ko-fi Icon"><span class="sub-text">Ko-fi</span>
         </a>
         ${getMobileTrophyBtnHtml()}
     `;
@@ -160,11 +204,11 @@ function renderLoggedOutUI(container) {
 }
 
 function renderLoggedInUI(container, user) {
-    const avatarUrl = user.avatar ? `https://cdn.discordapp.com/avatars/${user.discordId}/${user.avatar}.png` : 'https://cdn.discordapp.com/embed/avatars/0.png';
+    const avatarUrl = user.avatar ? `https://cdn.discordapp.com/avatars/${user.discordId}/${user.avatar}.webp` : 'https://cdn.discordapp.com/embed/avatars/0.webp';
     const nurtureDiscordButton = user.isNurtureMember ? '' : `
         <div class="no-ads-cta-wrap">
             <a href="https://discord.gg/nurture" target="_blank" class="social-button nurture-discord-button no-ads-pulse-btn">
-                <img src="/Assets/nurture_icon.png"><span class="sub-text">Nurture Discord</span>
+                <img src="/Assets/nurture_icon.webp"><span class="sub-text">Nurture Discord</span>
             </a>
             <span class="no-ads-sub-label">Join Server = No Ads FOREVER</span>
         </div>
@@ -186,7 +230,7 @@ function renderLoggedInUI(container, user) {
         </button>
         ${nurtureDiscordButton}
         <a href="https://ko-fi.com/sorakoi" target="_blank" rel="noopener noreferrer" class="social-button kofi-button">
-            <img src="/Assets/kofi_icon.png" alt="Ko-fi"><span class="sub-text">Ko-fi</span>
+            <img src="/Assets/kofi_icon.webp" alt="Ko-fi"><span class="sub-text">Ko-fi</span>
         </a>
         ${getMobileTrophyBtnHtml()}
     `;
@@ -264,20 +308,24 @@ async function fetchUnreadMailCount() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Inject Mobile Leaderboard Close Button & Backdrop if page has a Leaderboard
-    const lbSidebar = document.getElementById('leaderboardSidebar');
-    if (lbSidebar) {
-        const closeBtn = document.createElement('button');
-        closeBtn.className = 'lb-mobile-close';
-        closeBtn.innerHTML = '×';
-        closeBtn.onclick = closeMobileLeaderboard;
-        lbSidebar.prepend(closeBtn);
-
-        const lbBackdrop = document.createElement('div');
-        lbBackdrop.id = 'mobileLbBackdrop';
-        lbBackdrop.className = 'mobile-lb-backdrop';
-        lbBackdrop.onclick = closeMobileLeaderboard;
-        document.body.appendChild(lbBackdrop);
+    // 0. Inject Mobile Hamburger Button into .banner-row
+    const bannerRow = document.querySelector('.banner-row');
+    const authContainer = document.getElementById('authContainer');
+    if (bannerRow && authContainer && !document.getElementById('mobileMenuToggleBtn')) {
+        const hamBtn = document.createElement('button');
+        hamBtn.type = 'button';
+        hamBtn.id = 'mobileMenuToggleBtn';
+        hamBtn.className = 'mobile-menu-toggle';
+        hamBtn.setAttribute('aria-label', 'Toggle Navigation Menu');
+        hamBtn.setAttribute('aria-expanded', 'false');
+        hamBtn.innerHTML = '☰';
+        hamBtn.onclick = (e) => {
+            e.stopPropagation();
+            const isOpen = authContainer.classList.toggle('mobile-menu-open');
+            hamBtn.setAttribute('aria-expanded', String(isOpen));
+            hamBtn.innerHTML = isOpen ? '✕' : '☰';
+        };
+        bannerRow.appendChild(hamBtn);
     }
 
     // 2. Inject Upgraded Botanical Modals (Mailbox, Compose, Profile, Settings)
@@ -312,7 +360,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="modal-window" style="max-width: 500px;">
                 <button class="modal-close" onclick="closeUserProfileModal()">×</button>
                 <div style="display:flex; align-items:center; gap: 15px; margin-bottom: 16px;">
-                    <img id="upAvatar" src="/Assets/placeholder.png" style="width: 60px; height: 60px; border-radius: 50%; border: 2px solid #9d8ec7; object-fit: cover;">
+                    <img id="upAvatar" src="/Assets/placeholder.webp" style="width: 60px; height: 60px; border-radius: 50%; border: 2px solid #9d8ec7; object-fit: cover;">
                     <div>
                         <h2 class="modal-title" style="margin:0; border:none; padding:0 0 6px 0;" id="upUsername">Loading...</h2>
                         <div id="upPoints" style="display:flex; align-items:center; gap:8px;">...</div>
@@ -350,6 +398,14 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
     `;
     document.body.appendChild(modalWrapper);
+    // Enhance all modals and close buttons with ARIA accessibility attributes
+    document.querySelectorAll('.modal-overlay').forEach(modal => {
+        modal.setAttribute('role', 'dialog');
+        modal.setAttribute('aria-modal', 'true');
+    });
+    document.querySelectorAll('.modal-close').forEach(btn => {
+        btn.setAttribute('aria-label', 'Close modal');
+    });
     setTimeout(applySettings, 100);
 });
 
@@ -412,7 +468,7 @@ async function openUserProfileModal(discordId, username = null) {
         if (!res.ok) {
             container.innerHTML = '<p style="color:#d96b98;">User not found or is an external author.</p>';
             document.getElementById('upUsername').textContent = username || 'Unknown User';
-            document.getElementById('upAvatar').src = '/Assets/placeholder.png';
+            document.getElementById('upAvatar').src = '/Assets/placeholder.webp';
             document.getElementById('upPoints').innerHTML = '<span style="color:#7bc996; font-weight:bold;">0 pts</span>';
             return;
         }
@@ -421,7 +477,7 @@ async function openUserProfileModal(discordId, username = null) {
         const escapeTxt = (txt) => (txt || '').toString().replace(/[&<>"']/g, m => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[m]));
         
         document.getElementById('upUsername').textContent = data.username;
-        document.getElementById('upAvatar').src = data.avatar ? `https://cdn.discordapp.com/avatars/${data.discordId}/${data.avatar}.png` : 'https://cdn.discordapp.com/embed/avatars/0.png';
+        document.getElementById('upAvatar').src = data.avatar ? `https://cdn.discordapp.com/avatars/${data.discordId}/${data.avatar}.webp` : 'https://cdn.discordapp.com/embed/avatars/0.webp';
         
         // Show Leaderboard Rank Badge next to points if ranked: [#1] 6pts
         const rankClass = (data.rank && data.rank <= 3) ? `rank-${data.rank}` : '';
@@ -499,7 +555,7 @@ async function loadMailboxMessages() {
             let statusBadge = '';
             
             if (m.direction === 'INBOUND') {
-                const avatar = m.adminAvatar || 'https://cdn.discordapp.com/embed/avatars/0.png';
+                const avatar = m.adminAvatar || 'https://cdn.discordapp.com/embed/avatars/0.webp';
                 const name = m.adminUsername || 'Admin';
                 senderInfo = `<img src="${avatar}" style="width:22px;height:22px;border-radius:50%;vertical-align:middle;margin-right:6px; border: 1.5px solid #9d8ec7;"><b>${name}</b>`;
             } else if (m.direction === 'OUTBOUND_CONTRIBUTION') {

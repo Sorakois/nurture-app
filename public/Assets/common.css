@@ -143,7 +143,7 @@ body {
     white-space: nowrap;
 }
 
-/* === PETAL & FLORAL BUTTONS (GLOBAL) === */
+/* === PETAL & FLORAL BUTTONS (HIGH-CONTRAST & ACCESSIBLE) === */
 .social-button, .btn-floral {
     display: inline-flex;
     align-items: center;
@@ -154,10 +154,11 @@ body {
     font-size: 15px;
     font-family: inherit;
     font-weight: bold;
-    color: white;
-    border: 1px solid rgba(208, 194, 247, 0.35);
-    background: linear-gradient(135deg, var(--petal-deep) 0%, var(--petal-dark) 100%);
-    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.25), 0 4px 10px rgba(17, 13, 25, 0.45);
+    color: #ffffff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+    border: 1.5px solid rgba(226, 214, 255, 0.6);
+    background: linear-gradient(135deg, #6b51ab 0%, #463278 100%);
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.3), 0 4px 12px rgba(10, 7, 16, 0.6);
     cursor: pointer;
     transition: transform 0.2s ease, border-radius 0.2s ease, border-color 0.2s ease, background 0.2s ease;
     position: relative;
@@ -167,47 +168,62 @@ body {
 .social-button:hover, .btn-floral:hover {
     transform: translateY(-2px);
     border-radius: 6px 20px 6px 20px;
-    border-color: var(--petal-light);
-    background: linear-gradient(135deg, #7359b5 0%, #4c3780 100%);
+    border-color: #ffffff;
+    background: linear-gradient(135deg, #8267c7 0%, #584094 100%);
+}
+
+/* Accessibility Focus Ring for Keyboard Navigation */
+.social-button:focus-visible,
+.btn-floral:focus-visible,
+.modal-close:focus-visible,
+.tag-pill:focus-visible,
+.filter-btn:focus-visible,
+.sub-nav a:focus-visible,
+.user-profile-badge:focus-visible {
+    outline: 2.5px solid #f6c85f !important;
+    outline-offset: 2px !important;
 }
 
 .kofi-button, .btn-floral.blossom {
-    background: linear-gradient(135deg, #c95988 0%, #8f3460 100%);
-    border-color: rgba(245, 176, 203, 0.45);
+    background: linear-gradient(135deg, #d95d90 0%, #9e3668 100%);
+    border-color: rgba(255, 204, 224, 0.7);
 }
 
 .kofi-button:hover, .btn-floral.blossom:hover {
-    background: linear-gradient(135deg, #de6b9b 0%, #a84273 100%);
-    border-color: #ffd1e3;
+    background: linear-gradient(135deg, #eb6ea1 0%, #b54279 100%);
+    border-color: #ffffff;
 }
 
 .btn-floral.pollen {
-    background: linear-gradient(135deg, #f6c85f 0%, #d99b26 100%);
-    color: #1a1228;
-    border-color: #ffe6a3;
+    background: linear-gradient(135deg, #ffd269 0%, #e09f24 100%);
+    color: #140e21;
+    text-shadow: none;
+    border-color: #fff0bd;
 }
 
 .btn-floral.pollen:hover {
-    background: linear-gradient(135deg, #ffd678 0%, #e8ab35 100%);
+    background: linear-gradient(135deg, #ffde8a 0%, #f0b035 100%);
+    border-color: #ffffff;
 }
 
 .discord-button {
-    background: linear-gradient(135deg, #6b73ff 0%, #4a4ebd 100%);
-    border-color: rgba(180, 186, 255, 0.4);
+    background: linear-gradient(135deg, #5865F2 0%, #404EED 100%);
+    border-color: rgba(210, 216, 255, 0.75);
 }
 
 .nurture-discord-button, .mailbox-button {
-    background: linear-gradient(135deg, #684ea8 0%, #433075 100%);
-    border: 1px solid var(--petal-main);
+    background: linear-gradient(135deg, #7458b8 0%, #4d3785 100%);
+    border: 1.5px solid rgba(226, 214, 255, 0.65);
 }
 
 .settings-button {
-    background: linear-gradient(135deg, #322947 0%, #201a30 100%);
-    border: 1px solid var(--border-vine);
+    background: linear-gradient(135deg, #4b3d6b 0%, #312747 100%);
+    border: 1.5px solid rgba(214, 200, 250, 0.55);
 }
 
 .settings-button:hover {
-    background: linear-gradient(135deg, #43375e 0%, #2b2340 100%);
+    background: linear-gradient(135deg, #5f4e87 0%, #40335c 100%);
+    border-color: #ffffff;
 }
 
 .social-button img, .social-button svg {
@@ -220,7 +236,7 @@ body {
 
 .sub-text {
     font-size: 0.85em;
-    color: white;
+    color: #ffffff;
     font-weight: bold;
     white-space: nowrap;
 }
@@ -230,33 +246,33 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 10px;
-    background: linear-gradient(135deg, #2a223d 0%, #1b1629 100%);
-    border: 1px solid var(--border-vine);
+    background: linear-gradient(135deg, #3a2e54 0%, #241c36 100%);
+    border: 1.5px solid rgba(214, 200, 250, 0.55);
     padding: 5px 8px 5px 12px;
     border-radius: 20px 6px 20px 6px;
-    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.2), 0 4px 10px rgba(17, 13, 25, 0.45);
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.25), 0 4px 10px rgba(17, 13, 25, 0.45);
     transition: transform 0.2s ease, border-radius 0.2s ease, border-color 0.2s ease, background 0.2s ease;
 }
 
 .user-profile-badge:hover {
     transform: translateY(-2px);
     border-radius: 6px 20px 6px 20px;
-    border-color: var(--petal-light);
-    background: linear-gradient(135deg, #433363 0%, #29203d 100%);
+    border-color: #ffffff;
+    background: linear-gradient(135deg, #4f3e73 0%, #32274a 100%);
 }
 
 .user-avatar {
     width: 28px;
     height: 28px;
     border-radius: 50%;
-    border: 1.5px solid var(--petal-main);
+    border: 1.5px solid #d0c2f7;
     object-fit: cover;
 }
 
 .user-name {
     font-size: 0.85em;
     font-weight: bold;
-    color: #f4f0ff;
+    color: #ffffff;
     max-width: 140px;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -264,9 +280,9 @@ body {
 }
 
 .sign-out-btn {
-    background: rgba(217, 107, 152, 0.18);
-    color: #f7a1c4;
-    border: 1px solid rgba(217, 107, 152, 0.4);
+    background: rgba(217, 107, 152, 0.32);
+    color: #ffd6e6;
+    border: 1px solid rgba(255, 179, 209, 0.65);
     padding: 4px 10px;
     border-radius: 12px 4px 12px 4px;
     font-size: 0.75em;
@@ -278,6 +294,7 @@ body {
 .sign-out-btn:hover {
     background: var(--blossom-pink);
     color: #ffffff;
+    border-color: #ffffff;
 }
 
 /* --- Collapsible Game Groups for Profiles --- */
@@ -897,52 +914,70 @@ body {
 
 /* === MOBILE GRAPHICS === */
 
+.mobile-menu-toggle {
+    display: none;
+}
+
 @media (max-width: 768px) {
-    .leaderboard-spacer {
-        display: none !important;
-    }
-
-    .right-rail-column {
-        width: 0;
-        min-width: 0;
-        position: static;
-    }
-
-    .nurture-ad-sidebar {
-        display: none !important;
-    }
-
-    /* Taller mobile banner: Logo centered on top, all buttons in a horizontal row from left to right */
     .banner {
-        padding: 12px 8px 14px 8px !important;
+        padding: 10px 14px !important;
         box-sizing: border-box;
         width: 100%;
     }
 
     .banner-row {
         display: flex;
-        flex-direction: column;
+        flex-direction: row !important;
         align-items: center;
-        justify-content: center;
-        gap: 10px;
+        justify-content: space-between;
         max-width: 100%;
         width: 100%;
+        position: relative;
     }
 
     .banner-row img[alt="Nurture Banner"] {
-        height: 64px !important;
+        height: 56px !important;
         padding-left: 0 !important;
     }
 
-    .banner-actions {
-        display: flex;
-        flex-direction: row !important;
-        flex-wrap: wrap;
+    /* Hamburger Button on Mobile */
+    .mobile-menu-toggle {
+        display: inline-flex !important;
         align-items: center;
         justify-content: center;
-        gap: 6px;
-        width: 100%;
-        box-sizing: border-box;
+        width: 44px;
+        height: 44px;
+        border-radius: 14px 4px 14px 4px;
+        background: linear-gradient(135deg, #6b51ab 0%, #463278 100%);
+        border: 1.5px solid rgba(226, 214, 255, 0.65);
+        color: #ffffff;
+        font-size: 22px;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+    }
+
+    /* Collapsible Hamburger Dropdown Panel */
+    .banner-actions {
+        display: none !important;
+        position: absolute;
+        top: calc(100% + 10px);
+        right: 0;
+        left: 0;
+        background: linear-gradient(165deg, #251e36 0%, #171222 100%);
+        border: 1.5px solid var(--border-bloom);
+        border-radius: 20px 6px 20px 6px;
+        padding: 14px;
+        flex-direction: row !important;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.85);
+        z-index: 1000;
+    }
+
+    .banner-actions.mobile-menu-open {
+        display: flex !important;
     }
 
     .no-ads-cta-wrap {
