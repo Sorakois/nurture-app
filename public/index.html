@@ -869,7 +869,7 @@
             <div class="banner-actions" id="authContainer">
                 <a href="/auth/discord" class="social-button discord-button">
                     <img src="https://cdn.simpleicons.org/discord/ffffff" alt="Discord Icon">
-                    <span class="sub-text">Login</span>
+                    <span class="sub-text">Sign In</span>
                 </a>
                 <a href="https://ko-fi.com/sorakoi" class="social-button kofi-button">
                     <img src="/Assets/kofi_icon.webp" alt="Ko-fi Icon">
@@ -1670,7 +1670,7 @@
                     const starBtn = gridItem.querySelector('.star-btn');
                     starBtn.addEventListener('click', async (e) => {
                         e.stopPropagation();
-                        if (!cachedSession.discordId) return alert('Must be signed in to star games!');
+                        if (!window.requireAuth('favorite games')) return;
                         if (userStarredGames.includes(gameId)) {
                             userStarredGames = userStarredGames.filter(id => id !== gameId);
                         } else {
@@ -1710,7 +1710,7 @@
                 <div class="grid-item-dev">Don't see your game?</div>
             `;
             suggestCard.addEventListener('click', () => {
-                if (!cachedSession.discordId) return alert('Must be logged in to suggest games!');
+                if (!window.requireAuth('suggest a new game')) return;
                 document.getElementById('suggestModal').classList.add('active');
             });
             gameGrid.appendChild(suggestCard);
@@ -1863,7 +1863,7 @@
         });
 
 function openRateGameModal() {
-            if (!cachedSession.discordId) return alert('Must be logged in to rate!');
+            if (!window.requireAuth('rate games')) return;
             if (!currentGameForModal) return;
             
             document.getElementById('gameModal').classList.remove('active');
@@ -1929,7 +1929,7 @@ function openRateGameModal() {
         }
 
         function openEditInfoModal() {
-            if (!cachedSession.discordId) return alert('Must be logged in to suggest edits!');
+            if (!window.requireAuth('suggest data updates')) return;
             if (!currentGameForModal) return;
             
             document.getElementById('gameModal').classList.remove('active');

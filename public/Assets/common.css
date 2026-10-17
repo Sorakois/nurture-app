@@ -969,8 +969,35 @@ body {
     display: none;
 }
 
+.mobile-only-signout {
+    display: none !important;
+}
+
+.mobile-unread-dot {
+    position: absolute;
+    top: -3px;
+    right: -3px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #ff4d5e;
+    border: 1.5px solid #181324;
+    pointer-events: none;
+}
+
 /* === MOBILE GRAPHICS & CONTAINMENT === */
 @media (max-width: 768px) {
+    .desktop-only-signout {
+        display: none !important;
+    }
+
+    .mobile-only-signout {
+        display: inline-flex !important;
+    }
+
+    .mobile-menu-toggle {
+        position: relative;
+    }
     /* 1. Completely hide the desktop leaderboard, spacer, and sidebar ad on mobile */
     .leaderboard-spacer,
     .nurture-ad-sidebar,

@@ -667,7 +667,7 @@
         .status-badge.badge-edited {
             background: linear-gradient(135deg, #b87b14 0%, #6e4405 100%);
             border: 1px solid #ffe082;
-        }order: 1px solid rgba(255, 230, 163, 0.75);
+            order: 1px solid rgba(255, 230, 163, 0.75);
         }
 
         /* === TWO-OPTION REDEEM CHOICE CARDS === */
@@ -862,7 +862,7 @@
             <div class="banner-actions" id="authContainer">
                 <a href="/auth/discord" class="social-button discord-button">
                     <img src="https://cdn.simpleicons.org/discord/ffffff" alt="Discord Icon">
-                    <span class="sub-text">Login</span>
+                    <span class="sub-text">Sign In</span>
                 </a>
                 <a href="https://ko-fi.com/sorakoi" class="social-button kofi-button">
                     <img src="/Assets/kofi_icon.webp" alt="Ko-fi Icon">
@@ -1283,7 +1283,7 @@
         async function reportCouponExpired(codeStr) {
             if (!codeStr) return;
             const cachedUser = JSON.parse(localStorage.getItem('nurture_user_session') || '{}');
-            if (!cachedUser.discordId) return alert("Must be signed in with Discord to report expired codes!");
+            if (!window.requireAuth('report expired codes')) return;
             if (!confirm(`Report code "${codeStr}" as expired to the admins?`)) return;
 
             try {
@@ -1747,6 +1747,7 @@
         let currentDisplayedItems = []; 
 
         function openGameSuggestModal(category, itemIndex = null) {
+            if (!window.requireAuth('suggest updates or new items')) return;
             currentSuggestCategory = category;
             document.getElementById('gsCommit').value = '';
             
