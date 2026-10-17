@@ -258,10 +258,10 @@ function renderLoggedInUI(container, user) {
             ${getMobileHamburgerBtnHtml()}
         </div>
         <div class="banner-secondary-actions" id="mobileDropdownMenu">
-            <button class="social-button mailbox-button" onclick="openMailboxModal()" style="border:none; cursor:pointer; font-family:inherit;">
+            <button type="button" class="social-button mailbox-button" onclick="openMailboxModal()">
                 ${mailboxSvg} <span class="sub-text">Mailbox <span id="unreadBadge" style="display:none; background:#ff5555; border-radius:10px; padding:2px 6px; margin-left:4px;">0</span></span>
             </button>
-            <button class="social-button settings-button" onclick="openSettingsModal()" style="border:none; cursor:pointer; font-family:inherit;">
+            <button type="button" class="social-button settings-button" onclick="openSettingsModal()">
                 ${settingsSvg} <span class="sub-text">Settings</span>
             </button>
             ${nurtureDiscordButton}

@@ -143,24 +143,29 @@ body {
     white-space: nowrap;
 }
 
-/* === PETAL & FLORAL BUTTONS (HIGH-CONTRAST & ACCESSIBLE) === */
+/* === PETAL & FLORAL BUTTONS (UNIFORM OUTLINES, HEIGHT & HIGHLIGHTING) === */
 .social-button, .btn-floral {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 9px 18px;
+    box-sizing: border-box;
+    height: 40px;
+    padding: 0 18px;
+    margin: 0;
     border-radius: 20px 6px 20px 6px;
     text-decoration: none;
     font-size: 15px;
+    line-height: 1;
     font-family: inherit;
     font-weight: bold;
     color: #ffffff;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
-    border: 1.5px solid rgba(226, 214, 255, 0.6);
+    border: 1.5px solid rgba(226, 214, 255, 0.65);
     background: linear-gradient(135deg, #6b51ab 0%, #463278 100%);
     box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.3), 0 4px 12px rgba(10, 7, 16, 0.6);
     cursor: pointer;
-    transition: transform 0.2s ease, border-radius 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+    vertical-align: middle;
+    transition: transform 0.2s ease, border-radius 0.2s ease, border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
     position: relative;
     overflow: hidden;
 }
@@ -168,8 +173,9 @@ body {
 .social-button:hover, .btn-floral:hover {
     transform: translateY(-2px);
     border-radius: 6px 20px 6px 20px;
-    border-color: #ffffff;
+    border-color: #ffffff !important;
     background: linear-gradient(135deg, #8267c7 0%, #584094 100%);
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.45), 0 6px 16px rgba(157, 142, 199, 0.4);
 }
 
 /* Accessibility Focus Ring for Keyboard Navigation */
@@ -186,29 +192,36 @@ body {
 
 .kofi-button, .btn-floral.blossom {
     background: linear-gradient(135deg, #d95d90 0%, #9e3668 100%);
-    border-color: rgba(255, 204, 224, 0.7);
+    border: 1.5px solid rgba(255, 204, 224, 0.75);
 }
 
 .kofi-button:hover, .btn-floral.blossom:hover {
     background: linear-gradient(135deg, #eb6ea1 0%, #b54279 100%);
-    border-color: #ffffff;
+    border-color: #ffffff !important;
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.45), 0 6px 16px rgba(217, 107, 152, 0.45);
 }
 
 .btn-floral.pollen {
     background: linear-gradient(135deg, #ffd269 0%, #e09f24 100%);
     color: #140e21;
     text-shadow: none;
-    border-color: #fff0bd;
+    border: 1.5px solid #fff0bd;
 }
 
 .btn-floral.pollen:hover {
     background: linear-gradient(135deg, #ffde8a 0%, #f0b035 100%);
-    border-color: #ffffff;
+    border-color: #ffffff !important;
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.6), 0 6px 16px rgba(246, 200, 95, 0.45);
 }
 
 .discord-button {
     background: linear-gradient(135deg, #5865F2 0%, #404EED 100%);
-    border-color: rgba(210, 216, 255, 0.75);
+    border: 1.5px solid rgba(210, 216, 255, 0.8);
+}
+
+.discord-button:hover {
+    background: linear-gradient(135deg, #6d78ff 0%, #4e5cf2 100%);
+    border-color: #ffffff !important;
 }
 
 .nurture-discord-button, .mailbox-button {
@@ -216,22 +229,28 @@ body {
     border: 1.5px solid rgba(226, 214, 255, 0.65);
 }
 
+.nurture-discord-button:hover, .mailbox-button:hover {
+    background: linear-gradient(135deg, #886bd1 0%, #5e44a1 100%);
+    border-color: #ffffff !important;
+}
+
 .settings-button {
     background: linear-gradient(135deg, #4b3d6b 0%, #312747 100%);
-    border: 1.5px solid rgba(214, 200, 250, 0.55);
+    border: 1.5px solid rgba(226, 214, 255, 0.65);
 }
 
 .settings-button:hover {
-    background: linear-gradient(135deg, #5f4e87 0%, #40335c 100%);
-    border-color: #ffffff;
+    background: linear-gradient(135deg, #62508a 0%, #42355e 100%);
+    border-color: #ffffff !important;
 }
 
 .social-button img, .social-button svg {
-    height: 22px;
-    width: 22px;
+    height: 20px;
+    width: 20px;
     object-fit: contain;
     margin-right: 8px;
     fill: white;
+    flex-shrink: 0;
 }
 
 .sub-text {
@@ -239,26 +258,30 @@ body {
     color: #ffffff;
     font-weight: bold;
     white-space: nowrap;
+    line-height: 1;
 }
 
-/* User Account Badge */
+/* User Account Badge (Matches exact 40px height & hover highlight) */
 .user-profile-badge {
     display: inline-flex;
     align-items: center;
+    box-sizing: border-box;
+    height: 40px;
     gap: 10px;
     background: linear-gradient(135deg, #3a2e54 0%, #241c36 100%);
-    border: 1.5px solid rgba(214, 200, 250, 0.55);
-    padding: 5px 8px 5px 12px;
+    border: 1.5px solid rgba(226, 214, 255, 0.65);
+    padding: 0 10px 0 12px;
     border-radius: 20px 6px 20px 6px;
     box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.25), 0 4px 10px rgba(17, 13, 25, 0.45);
-    transition: transform 0.2s ease, border-radius 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+    transition: transform 0.2s ease, border-radius 0.2s ease, border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
 }
 
 .user-profile-badge:hover {
     transform: translateY(-2px);
     border-radius: 6px 20px 6px 20px;
-    border-color: #ffffff;
+    border-color: #ffffff !important;
     background: linear-gradient(135deg, #4f3e73 0%, #32274a 100%);
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.45), 0 6px 16px rgba(157, 142, 199, 0.4);
 }
 
 .user-avatar {
@@ -761,9 +784,9 @@ body {
     margin-bottom: 10px;
 }
 
-/* === ANIMATED "LINK DISCORD = NO ADS FOREVER" CTA (LEVEL ALIGNMENT) === */
+/* === ANIMATED "LINK DISCORD = NO ADS FOREVER" CTA (100% LEVEL ALIGNMENT) === */
 .banner {
-    padding: 12px 16px 20px 16px;
+    padding: 14px 16px 22px 16px;
 }
 
 .banner-actions {
@@ -779,6 +802,9 @@ body {
     align-items: center;
     justify-content: center;
     position: relative;
+    height: 40px;
+    box-sizing: border-box;
+    vertical-align: middle;
 }
 
 .no-ads-pulse-btn {
@@ -786,24 +812,24 @@ body {
     border-color: #f6c85f !important;
 }
 
+/* Pulses glow only (no translateY shift so it stays dead-level with other buttons) */
 @keyframes floralPulseGlow {
     0%, 100% {
-        box-shadow: 0 0 6px rgba(246, 200, 95, 0.35), 0 0 14px rgba(157, 142, 199, 0.25);
-        transform: translateY(0);
+        box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.3), 0 0 6px rgba(246, 200, 95, 0.35), 0 0 14px rgba(157, 142, 199, 0.25);
     }
     50% {
-        box-shadow: 0 0 14px rgba(246, 200, 95, 0.8), 0 0 24px rgba(217, 107, 152, 0.45);
-        transform: translateY(-1px);
+        box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.5), 0 0 14px rgba(246, 200, 95, 0.85), 0 0 24px rgba(217, 107, 152, 0.45);
     }
 }
 
-/* Positioned absolutely beneath the button so it never pushes the button up */
 .no-ads-sub-label {
-    position: absolute;
-    top: calc(100% + 4px);
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 9.5px;
+    position: absolute !important;
+    top: calc(100% + 3px) !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    margin: 0 !important;
+    font-size: 9px;
+    line-height: 1.2;
     font-weight: 900;
     letter-spacing: 0.4px;
     color: #f6c85f;

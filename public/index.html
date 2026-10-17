@@ -162,13 +162,13 @@
             transition: font-size 0.2s ease;
         }
 
-        /* === 3D STATUS BADGES (NEW! / UPDATE! / EDITED!) === */
+        /* === TWILIGHT BOTANICAL STATUS BADGES (NEW / GAME UPDATE / EDITED) === */
         .card-badges-row {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 5px;
+            gap: 6px;
             margin-top: 10px;
             width: 100%;
         }
@@ -176,76 +176,84 @@
         .status-badge {
             display: inline-flex;
             flex-direction: column;
-            align-items: center;
+            align-items: stretch;
             justify-content: center;
-            padding: 2px 6px;
-            border-radius: 4px;
+            min-width: 108px;
+            padding: 0;
+            border-radius: 12px 3px 12px 3px;
             text-transform: uppercase;
             line-height: 1.1;
             user-select: none;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.35);
             position: relative;
             overflow: hidden;
-            border: none;
             cursor: pointer;
-            transition: transform 0.15s ease, filter 0.15s ease;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 3px 10px rgba(10, 7, 16, 0.55);
+            transition: transform 0.2s ease, border-radius 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
         }
 
         .status-badge:hover {
             transform: translateY(-2px);
-            filter: brightness(1.15);
+            border-radius: 3px 12px 3px 12px;
+            filter: brightness(1.1);
         }
 
         .status-badge .badge-title {
-            font-size: 8.5px;
+            font-size: 9px;
             font-weight: 900;
-            letter-spacing: 0.3px;
+            letter-spacing: 0.5px;
+            padding: 4px 10px 3px 10px;
+            text-align: center;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
         }
 
         .status-badge .badge-date {
-            font-size: 7px;
-            font-family: monospace;
-            opacity: 0.9;
-            margin-top: 1px;
+            font-size: 7.5px;
+            letter-spacing: 0.3px;
+            padding: 2px 8px;
+            background: rgba(14, 10, 22, 0.55);
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            color: rgba(244, 240, 255, 0.92);
+            text-align: center;
         }
 
-        /* Red NEW! badge with dark crimson bottom lip */
+        /* Blossom Rose — NEW GAME! */
         .status-badge.badge-new {
-            background-color: #ef2b2d;
+            background: linear-gradient(135deg, #d95d90 0%, #8f2d56 100%);
             color: #ffffff;
-            border-bottom: 2.5px solid #7a0b0c;
+            border: 1px solid rgba(255, 194, 218, 0.7);
         }
 
-        /* Orange UPDATE! badge with dark sienna bottom lip */
+        /* Canopy Sage — GAME UPDATE! */
         .status-badge.badge-update {
-            background-color: #ff851b;
-            color: #1a1228;
-            border-bottom: 2.5px solid #9c470b;
+            background: linear-gradient(135deg, #3ca374 0%, #205c3f 100%);
+            color: #ffffff;
+            border: 1px solid rgba(163, 245, 204, 0.7);
         }
 
-        /* Gold EDITED! badge with dark olive-gold bottom lip */
+        /* Pollen Gold & Twilight Plum — EDITED! */
         .status-badge.badge-edited {
-            background-color: #ffd014;
-            color: #1a1228;
-            border-bottom: 2.5px solid #7d6708;
+            background: linear-gradient(135deg, #d99b26 0%, #87580d 100%);
+            color: #ffffff;
+            border: 1px solid rgba(255, 230, 163, 0.75);
         }
 
-        /* Glint Animation applied to all status badges */
+        /* Soft Botanical Shimmer Sweep */
         .status-badge::after {
             content: '';
             position: absolute;
             top: -50%;
-            left: -100%;
-            width: 40%;
+            left: -120%;
+            width: 45%;
             height: 200%;
-            background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.7) 50%, rgba(255,255,255,0) 100%);
-            transform: rotate(30deg);
-            animation: badgeGlint 3.5s infinite linear;
+            background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.45) 50%, rgba(255,255,255,0) 100%);
+            transform: rotate(28deg);
+            animation: badgeGlint 4s infinite ease-in-out;
+            pointer-events: none;
         }
 
         @keyframes badgeGlint {
-            0% { left: -100%; }
-            20%, 100% { left: 250%; }
+            0% { left: -120%; }
+            25%, 100% { left: 240%; }
         }
 
         /* Petal-shaped info button */
