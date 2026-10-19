@@ -1820,32 +1820,51 @@
                     const preview = document.getElementById('sgIconPreview');
                     preview.src = data.icon_url;
                     preview.style.display = 'block';
-                } else alert("Game not found in Apple Database. Please fill manually.");
-            } catch (e) { alert("Lookup failed."); }
+                } else {
+                    window.showCustomAlert("Game not found in the App Store database. Please fill in the details manually.", "Lookup Result");
+                }
+            } catch (e) {
+                window.showCustomAlert("Lookup failed. Please try again or fill in the fields manually.", "Lookup Error");
+            }
         }
 
         async function submitSuggestion() {
+            const nameVal = document.getElementById('sgName').value.trim();
+            const devVal = document.getElementById('sgDev').value.trim();
+            const descVal = document.getElementById('sgDesc').value.trim();
+            const iconVal = document.getElementById('sgIcon').value.trim();
+
+            if (!nameVal || !devVal || !descVal || !iconVal) {
+                return window.showCustomAlert("Please fill in all required fields (Game Name, Developer, Description, and Icon URL).", "Missing Fields");
+            }
+
             const payload = {
-                gameId: document.getElementById('sgName').value.toLowerCase().replace(/[^a-z0-9]/g, '-'),
+                gameId: nameVal.toLowerCase().replace(/[^a-z0-9]/g, '-'),
                 itemCategory: 'Game',
                 actionType: 'CREATE',
                 data: {
-                    id: document.getElementById('sgName').value.toLowerCase().replace(/[^a-z0-9]/g, '-'),
-                    name: document.getElementById('sgName').value,
-                    developer: document.getElementById('sgDev').value,
-                    tags: document.getElementById('sgTags').value.split(',').map(s=>s.trim()),
-                    overview_text: document.getElementById('sgDesc').value,
-                    banner_url: document.getElementById('sgIcon').value,
+                    id: nameVal.toLowerCase().replace(/[^a-z0-9]/g, '-'),
+                    name: nameVal,
+                    developer: devVal,
+                    tags: document.getElementById('sgTags').value.split(',').map(s=>s.trim()).filter(Boolean),
+                    overview_text: descVal,
+                    banner_url: iconVal,
                     latest_version: lookedUpPatchData.latest_version,
                     last_major_update_date: lookedUpPatchData.last_major_update_date,
                     commitMessage: document.getElementById('sgCommit').value
                 }
             };
             try {
-                await fetch('/api/contribute', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
-                alert("Game suggested successfully! Awaiting Admin Approval.");
+                const res = await fetch('/api/contribute', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.error || 'Failed to submit');
+                }
                 document.getElementById('suggestModal').classList.remove('active');
-            } catch (e) { alert("Failed to submit."); }
+                window.showCustomAlert("Game suggested! It is now awaiting Admin Approval on Discord.", "Suggestion Submitted");
+            } catch (e) {
+                window.showCustomAlert(e.message || "Failed to submit game suggestion.", "Submission Error");
+            }
         }
 
         function setStarRating(containerId, value) {
@@ -1857,20 +1876,18 @@
             });
         }
 
-        // Initialize click logic for the star raters
         document.querySelectorAll('.star-rating-input').forEach(container => {
             container.querySelectorAll('.star').forEach(star => {
                 star.addEventListener('click', () => setStarRating(container.id, star.getAttribute('data-rating')));
             });
         });
 
-function openRateGameModal() {
+        function openRateGameModal() {
             if (!window.requireAuth('rate games')) return;
             if (!currentGameForModal) return;
             
             document.getElementById('gameModal').classList.remove('active');
             
-            // Try to pre-fill if the user has already rated this game in the past
             let userExisting = { f2p: 0, afk: 0, story: 0, gameplay: 0 };
             if (currentGameForModal.user_ratings) {
                 const existing = currentGameForModal.user_ratings.find(r => r.discordId === cachedSession.discordId);
@@ -1907,12 +1924,10 @@ function openRateGameModal() {
 
                 const updatedData = await res.json();
                 
-                // Instantly update the local state to match the new server averages
                 currentGameForModal.ratings = updatedData.ratings;
                 currentGameForModal.rating_counts = updatedData.rating_counts;
                 currentGameForModal.user_ratings = updatedData.user_ratings;
 
-                // Sync the main array so changes persist if you close and reopen
                 const gIdx = allGames.findIndex(g => g.id === currentGameForModal.id);
                 if (gIdx !== -1) {
                     allGames[gIdx].ratings = updatedData.ratings;
@@ -1920,13 +1935,11 @@ function openRateGameModal() {
                     allGames[gIdx].user_ratings = updatedData.user_ratings;
                 }
 
-                alert("Rating saved! Averages have been updated live.");
                 document.getElementById('rateGameModal').classList.remove('active');
-                
-                // Re-open the Info Modal instantly to show off the new numbers
                 openGameModal(currentGameForModal, { getBoundingClientRect: () => ({ left: window.innerWidth/2, top: window.innerHeight/2, width: 0, height: 0 }) });
+                window.showCustomAlert("Your rating has been saved and live averages are updated!", "Rating Saved");
             } catch (e) {
-                alert("Error: " + e.message);
+                window.showCustomAlert(e.message || "Failed to save rating.", "Rating Error");
             }
         }
 
@@ -1936,7 +1949,6 @@ function openRateGameModal() {
             
             document.getElementById('gameModal').classList.remove('active');
             
-            // Only pull the trailer ID
             document.getElementById('editTrailer').value = currentGameForModal.trailer_id || '';
             document.getElementById('editAge').value = currentGameForModal.ratings?.age || '';
             document.getElementById('editCommit').value = '';
@@ -1945,7 +1957,10 @@ function openRateGameModal() {
         }
 
         async function submitInfoEdit() {
-            if (!currentGameForModal) return alert("Error: No game selected.");
+            if (!currentGameForModal) return window.showCustomAlert("No game selected.", "Error");
+            const commitMsg = document.getElementById('editCommit').value.trim();
+            if (!commitMsg) return window.showCustomAlert("Please enter a brief note describing what was updated.", "Missing Commit Note");
+
             const gName = typeof currentGameForModal === 'string' ? currentGameForModal : (currentGameForModal.name || 'Unknown Game');
             const gId = (currentGameForModal && currentGameForModal.id) ? currentGameForModal.id : gName.toLowerCase().replace(/[^a-z0-9]/g, '-');
 
@@ -1962,7 +1977,7 @@ function openRateGameModal() {
                 data: {
                     trailer_id: parsedTrailerId,
                     age: document.getElementById('editAge').value,
-                    commitMessage: document.getElementById('editCommit').value.trim()
+                    commitMessage: commitMsg
                 }
             };
 
@@ -1972,10 +1987,10 @@ function openRateGameModal() {
                     const err = await response.json();
                     throw new Error(err.error || 'Server rejected submission');
                 }
-                alert("Data update suggested successfully! Awaiting Admin Approval.");
                 document.getElementById('editInfoModal').classList.remove('active');
+                window.showCustomAlert("Data update suggested! It is now awaiting Admin Approval on Discord.", "Update Submitted");
             } catch (e) { 
-                alert("Failed to submit: " + e.message); 
+                window.showCustomAlert("Failed to submit: " + e.message, "Submission Error"); 
             }
         }
 

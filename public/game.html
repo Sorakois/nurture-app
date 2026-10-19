@@ -1282,9 +1282,13 @@
 
         async function reportCouponExpired(codeStr) {
             if (!codeStr) return;
-            const cachedUser = JSON.parse(localStorage.getItem('nurture_user_session') || '{}');
             if (!window.requireAuth('report expired codes')) return;
-            if (!confirm(`Report code "${codeStr}" as expired to the admins?`)) return;
+
+            const confirmed = await window.showCustomConfirm(
+                `Report coupon code "${codeStr}" as expired to the admins?`,
+                'Report Expired Code'
+            );
+            if (!confirmed) return;
 
             try {
                 const payload = {
@@ -1306,9 +1310,12 @@
                     const err = await res.json();
                     throw new Error(err.error || 'Failed to submit report');
                 }
-                alert(`Reported "${codeStr}" as expired! Once approved by an admin, it will be marked in red for 30 days and then removed.`);
+                window.showCustomAlert(
+                    `Reported "${codeStr}" as expired! Once approved by an admin, it will be highlighted in red for 30 days and then removed.`,
+                    'Report Submitted'
+                );
             } catch (e) {
-                alert("Error: " + e.message);
+                window.showCustomAlert(e.message || 'Failed to submit report.', 'Error');
             }
         }
 
@@ -1870,7 +1877,7 @@
 
         async function submitGameSuggestion() {
             const commitMessage = document.getElementById('gsCommit').value.trim();
-            if (!commitMessage) return alert("Please enter a brief note describing what was added or changed.");
+            if (!commitMessage) return window.showCustomAlert("Please enter a brief note describing what was added or changed.", "Missing Commit Note");
             let dataPayload = {};
 
             if (currentSuggestCategory === 'Overview') {
@@ -1881,18 +1888,18 @@
                 };
             } else if (currentSuggestCategory === 'RedeemPortal') {
                 const portalUrl = document.getElementById('gsUrl').value.trim();
-                if (!portalUrl) return alert("Redemption Page URL is required.");
+                if (!portalUrl) return window.showCustomAlert("Redemption Page URL is required.", "Missing URL");
                 dataPayload = { redeem_portal_url: portalUrl, commitMessage };
             } else if (currentSuggestCategory === 'RedeemCodes') {
                 const code = document.getElementById('gsTitle').value.trim().toUpperCase();
                 const rewards = document.getElementById('gsUrl').value.trim();
-                if (!code || !rewards) return alert("Both the Coupon Code and what it gives are required.");
+                if (!code || !rewards) return window.showCustomAlert("Both the Coupon Code and what it gives are required.", "Missing Fields");
                 dataPayload = { code, rewards, title: code, commitMessage };
             } else {
                 const title = document.getElementById('gsTitle').value.trim();
                 const author = document.getElementById('gsAuthor').value.trim();
                 const url = document.getElementById('gsUrl').value.trim();
-                if (!title || !url) return alert("Title and URL are required.");
+                if (!title || !url) return window.showCustomAlert("Title and URL are required.", "Missing Fields");
                 dataPayload = { title, url, author, platform: author, type: author, version: author, commitMessage };
             }
 
@@ -1912,9 +1919,11 @@
                     const err = await response.json();
                     throw new Error(err.error || 'Server rejected submission');
                 }
-                alert("Suggestion submitted successfully! Awaiting Admin Approval.");
                 document.getElementById('gameSuggestModal').classList.remove('active');
-            } catch (e) { alert("Failed to submit: " + e.message); }
+                window.showCustomAlert("Suggestion submitted! It is now awaiting Admin Approval on Discord.", "Suggestion Submitted");
+            } catch (e) {
+                window.showCustomAlert("Failed to submit: " + e.message, "Submission Error");
+            }
         }
 
         initPage();

@@ -9,10 +9,14 @@ window.addEventListener('error', (e) => {
 function closeOverlayModal(overlayEl) {
     if (!overlayEl) return;
     overlayEl.classList.remove('active');
-    // Stop YouTube iframe playback if closing the main game info modal
     if (overlayEl.id === 'gameModal') {
         const trailer = document.getElementById('modalTrailer');
         if (trailer) setTimeout(() => { trailer.src = ''; }, 200);
+    }
+    if (overlayEl.id === 'customConfirmModal' && pendingConfirmResolve) {
+        const res = pendingConfirmResolve;
+        pendingConfirmResolve = null;
+        res(false);
     }
 }
 
@@ -227,6 +231,50 @@ window.requireAuth = function(actionText = 'continue') {
     } catch (e) {}
     window.openAuthPromptModal(actionText);
     return false;
+};
+
+// --- GLOBAL CUSTOM ALERT & CONFIRM MODAL ENGINE (ZERO BROWSER ALERTS) ---
+let pendingConfirmResolve = null;
+
+window.showCustomAlert = function(message, title = 'Notice') {
+    const modal = document.getElementById('customNoticeModal');
+    const titleEl = document.getElementById('customNoticeTitle');
+    const msgEl = document.getElementById('customNoticeMessage');
+    if (titleEl) titleEl.textContent = title;
+    if (msgEl) msgEl.textContent = message || '';
+    if (modal) modal.classList.add('active');
+};
+
+window.closeCustomAlert = function() {
+    const modal = document.getElementById('customNoticeModal');
+    if (modal) modal.classList.remove('active');
+};
+
+window.showCustomConfirm = function(message, title = 'Confirm Action') {
+    return new Promise((resolve) => {
+        pendingConfirmResolve = resolve;
+        const modal = document.getElementById('customConfirmModal');
+        const titleEl = document.getElementById('customConfirmTitle');
+        const msgEl = document.getElementById('customConfirmMessage');
+        if (titleEl) titleEl.textContent = title;
+        if (msgEl) msgEl.textContent = message || '';
+        if (modal) modal.classList.add('active');
+    });
+};
+
+window.resolveCustomConfirm = function(choice) {
+    const modal = document.getElementById('customConfirmModal');
+    if (modal) modal.classList.remove('active');
+    if (pendingConfirmResolve) {
+        const res = pendingConfirmResolve;
+        pendingConfirmResolve = null;
+        res(Boolean(choice));
+    }
+};
+
+// Override native window.alert so no browser alert box can ever appear
+window.alert = function(message) {
+    window.showCustomAlert(String(message || ''), 'Nurture');
 };
 
 // --- UI Render Helpers ---
@@ -481,6 +529,31 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             </div>
         </div>
+        <div id="customNoticeModal" class="modal-overlay">
+            <div class="modal-window" style="max-width: 420px; text-align: center;">
+                <button class="modal-close" onclick="closeCustomAlert()">×</button>
+                <h2 class="modal-title" id="customNoticeTitle">Notice</h2>
+                <p id="customNoticeMessage" style="color: #e5dcff; font-size: 0.98em; line-height: 1.5; margin: 14px 0 22px 0; white-space: pre-wrap;"></p>
+                <button type="button" class="btn-floral pollen" style="width: 100%; padding: 11px;" onclick="closeCustomAlert()">
+                    OK
+                </button>
+            </div>
+        </div>
+        <div id="customConfirmModal" class="modal-overlay">
+            <div class="modal-window" style="max-width: 440px; text-align: center;">
+                <button class="modal-close" onclick="resolveCustomConfirm(false)">×</button>
+                <h2 class="modal-title" id="customConfirmTitle">Confirm Action</h2>
+                <p id="customConfirmMessage" style="color: #e5dcff; font-size: 0.98em; line-height: 1.5; margin: 14px 0 22px 0; white-space: pre-wrap;"></p>
+                <div style="display: flex; gap: 12px; justify-content: center;">
+                    <button type="button" class="btn-floral pollen" style="flex: 1; padding: 11px;" onclick="resolveCustomConfirm(true)">
+                        Yes, Continue
+                    </button>
+                    <button type="button" class="btn-floral" style="flex: 1; padding: 11px;" onclick="resolveCustomConfirm(false)">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
     `;
     document.body.appendChild(modalWrapper);
     // Enhance all modals and close buttons with ARIA accessibility attributes
@@ -530,7 +603,11 @@ async function markAllRead() {
         await fetch('/api/mailbox/mark-read', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messageIds: [] }) });
         loadMailboxMessages(); 
         document.getElementById('unreadBadge').style.display = 'none';
-    } catch (e) { alert("Failed to mark messages as read."); }
+        const mobileDot = document.getElementById('mobileMenuUnreadDot');
+        if (mobileDot) mobileDot.style.display = 'none';
+    } catch (e) {
+        window.showCustomAlert("Failed to mark messages as read.", "Mailbox Error");
+    }
 }
 function closeMailboxModal() { document.getElementById('mailboxModal').classList.remove('active'); }
 function openComposeModal() { document.getElementById('composeModal').classList.add('active'); }
@@ -673,11 +750,21 @@ async function loadMailboxMessages() {
 async function sendMail() {
     const subject = document.getElementById('mailSubject').value;
     const content = document.getElementById('mailContent').value;
-    if (!content) return alert('Message content cannot be blank.');
+    if (!content) return window.showCustomAlert('Message content cannot be blank.', 'Missing Message');
     try {
         const res = await fetch('/api/mailbox/send', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ subject, content }) });
-        if (res.ok) { alert('Message sent to Discord!'); closeComposeModal(); document.getElementById('mailSubject').value = ''; document.getElementById('mailContent').value = ''; }
-    } catch (e) { alert('Failed to send message.'); }
+        if (res.ok) {
+            closeComposeModal();
+            document.getElementById('mailSubject').value = '';
+            document.getElementById('mailContent').value = '';
+            window.showCustomAlert('Your message has been sent to the staff on Discord!', 'Message Sent');
+        } else {
+            const err = await res.json().catch(() => ({}));
+            window.showCustomAlert(err.error || 'Failed to send message.', 'Error');
+        }
+    } catch (e) {
+        window.showCustomAlert('Failed to send message.', 'Error');
+    }
 }
 
 function saveSettings() {
