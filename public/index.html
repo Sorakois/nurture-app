@@ -1159,23 +1159,22 @@
                     <input type="text" id="sgTags" class="floral-input" placeholder="Tags (comma separated, or click below)">
                     <button class="btn-floral pollen" onclick="lookupGame()" style="padding:10px 20px; white-space:nowrap;">Auto-Fill</button>
                 </div>
+            </div>
 
-
+            <div style="display:flex; flex-wrap:wrap; gap:5px; margin-top:2px;">
+                <button type="button" class="tag-pill" style="padding:3px 8px; font-size:0.72em;" onclick="toggleSuggestTag('Gacha')">+ Gacha</button>
+                <button type="button" class="tag-pill" style="padding:3px 8px; font-size:0.72em;" onclick="toggleSuggestTag('PC / Sandbox')">+ PC / Sandbox</button>
+                <button type="button" class="tag-pill" style="padding:3px 8px; font-size:0.72em;" onclick="toggleSuggestTag('Moddable')">+ Moddable</button>
+                <button type="button" class="tag-pill" style="padding:3px 8px; font-size:0.72em;" onclick="toggleSuggestTag('Co-op / Multiplayer')">+ Co-op</button>
+                <button type="button" class="tag-pill" style="padding:3px 8px; font-size:0.72em;" onclick="toggleSuggestTag('RPG')">+ RPG</button>
+                <button type="button" class="tag-pill" style="padding:3px 8px; font-size:0.72em;" onclick="toggleSuggestTag('Survival & Crafting')">+ Survival & Crafting</button>
+                <button type="button" class="tag-pill" style="padding:3px 8px; font-size:0.72em;" onclick="toggleSuggestTag('Simulation')">+ Simulation</button>
             </div>
 
             <div class="modal-form-stack">
                 <div style="display:flex; gap: 12px; align-items: stretch;">
                     <img id="sgIconPreview" src="/Assets/placeholder.webp" style="width: 108px; height: 108px; border-radius: 16px 5px 16px 5px; object-fit: cover; border: 1.5px solid #9d8ec7; display: none; flex-shrink: 0; align-self: center;">
                     <div class="modal-form-stack">
-                        <div style="display:flex; flex-wrap:wrap; gap:5px; margin-top:2px;">
-                            <button type="button" class="tag-pill" style="padding:3px 8px; font-size:0.72em;" onclick="toggleSuggestTag('Gacha')">+ Gacha</button>
-                            <button type="button" class="tag-pill" style="padding:3px 8px; font-size:0.72em;" onclick="toggleSuggestTag('PC / Sandbox')">+ PC / Sandbox</button>
-                            <button type="button" class="tag-pill" style="padding:3px 8px; font-size:0.72em;" onclick="toggleSuggestTag('Moddable')">+ Moddable</button>
-                            <button type="button" class="tag-pill" style="padding:3px 8px; font-size:0.72em;" onclick="toggleSuggestTag('Co-op / Multiplayer')">+ Co-op</button>
-                            <button type="button" class="tag-pill" style="padding:3px 8px; font-size:0.72em;" onclick="toggleSuggestTag('RPG')">+ RPG</button>
-                            <button type="button" class="tag-pill" style="padding:3px 8px; font-size:0.72em;" onclick="toggleSuggestTag('Survival & Crafting')">+ Survival & Crafting</button>
-                            <button type="button" class="tag-pill" style="padding:3px 8px; font-size:0.72em;" onclick="toggleSuggestTag('Simulation')">+ Simulation</button>
-                        </div>
                         <div class="req-field-row">
                             <input type="text" id="sgName" class="floral-input" placeholder="Game Name">
                             <span class="req-icon"></span>
