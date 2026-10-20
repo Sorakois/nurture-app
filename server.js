@@ -20,18 +20,18 @@ require('dotenv').config();
 // ============================================================================
 const POINT_WEIGHTS = {
     RATE_GAME: 1,              // Rating a game (awarded once per game per user)
-    CREATE_GAME: 5,            // Suggesting a brand new game
+    CREATE_GAME: 2,            // Suggesting a brand new game
     EDIT_GAME_INFO: 2,         // Updating trailer, age rating, overview, or redeem URL
-    CREATE_GUIDE: 4,           // Adding a new Guide or Tool
+    CREATE_GUIDE: 2,           // Adding a new Guide or Tool
     EDIT_GUIDE: 2,             // Editing an existing Guide or Tool
-    CREATE_MOD: 4,             // Adding a new Mod
+    CREATE_MOD: 2,             // Adding a new Mod
     EDIT_MOD: 2,               // Editing an existing Mod
-    CREATE_ASSET: 3,           // Adding Raw Assets
+    CREATE_ASSET: 2,           // Adding Raw Assets
     EDIT_ASSET: 2,             // Editing Raw Assets
     CREATE_COMMUNITY: 2,       // Adding a Community link
-    EDIT_COMMUNITY: 1,         // Editing a Community link
+    EDIT_COMMUNITY: 2,         // Editing a Community link
     CREATE_COUPON: 2,          // Adding a live Coupon Code
-    REPORT_EXPIRED_COUPON: 1,  // Flagging an expired Coupon Code
+    REPORT_EXPIRED_COUPON: 2,  // Flagging an expired Coupon Code
     DEFAULT: 2                 // Fallback for any other approved action
 };
 
