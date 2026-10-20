@@ -272,6 +272,30 @@ app.get('/api/games', async (req, res) => {
     }
 });
 
+// Helper to tally public favorite counts for all subnav items in a game
+const getGameItemFavoriteCounts = async (gameId) => {
+    const cleanGameId = validateInput.sanitizeString(gameId).replace(/[.$]/g, '');
+    if (!cleanGameId) return {};
+
+    const fieldPath = `starredSubItems.${cleanGameId}`;
+    const usersWithFavs = await User.collection.find(
+        { [fieldPath]: { $exists: true, $not: { $size: 0 } } },
+        { projection: { [fieldPath]: 1 } }
+    ).toArray();
+
+    const counts = {};
+    usersWithFavs.forEach(u => {
+        const list = u.starredSubItems && u.starredSubItems[cleanGameId];
+        if (Array.isArray(list)) {
+            // Use Set per user so duplicate IDs in a single user document only count once
+            [...new Set(list)].forEach(itemId => {
+                counts[itemId] = (counts[itemId] || 0) + 1;
+            });
+        }
+    });
+    return counts;
+};
+
 app.get('/api/games/:id', async (req, res) => {
     try {
         const game = await Game.collection.findOne({ id: req.params.id });
@@ -281,7 +305,7 @@ app.get('/api/games/:id', async (req, res) => {
         const approvedCouponContribs = await Contribution.collection.find({
             gameId: req.params.id,
             status: 'approved',
-            'data.code': { $exists: true, $ne: '' },
+            'data.code': { $exists: true,$ne: '' },
             actionType: 'CREATE'
         }).toArray();
 
@@ -317,6 +341,9 @@ app.get('/api/games/:id', async (req, res) => {
             await Game.collection.updateOne({ id: req.params.id }, { $set: { coupons } });
             game.coupons = coupons;
         }
+
+        // 3. Attach public favorite counts for all subnav items in this game
+        game.favoriteCounts = await getGameItemFavoriteCounts(req.params.id);
 
         res.json(game);
     } catch (err) {
@@ -687,19 +714,21 @@ app.post('/api/user/sync', async (req, res) => {
             updates.collapsedChangelogId = validateInput.sanitizeString(String(req.body.collapsedChangelogId || ''));
         }
 
-        // 3. Per-Game Favorited Subnav Items
+       // 3. Per-Game Favorited Subnav Items
+        const updatedFavGameIds = [];
         if (req.body.starredSubItems && typeof req.body.starredSubItems === 'object') {
             for (const [gId, items] of Object.entries(req.body.starredSubItems)) {
                 const cleanGameId = validateInput.sanitizeString(gId).replace(/[.$]/g, '');
                 if (cleanGameId && Array.isArray(items)) {
-                    updates[`starredSubItems.${cleanGameId}`] = items
-                        .slice(0, 200)
-                        .map(id => validateInput.sanitizeString(String(id)));
+                    updates[`starredSubItems.${cleanGameId}`] = [...new Set(
+                        items.slice(0, 200).map(id => validateInput.sanitizeString(String(id)))
+                    )];
+                    updatedFavGameIds.push(cleanGameId);
                 }
             }
         }
 
-        //  4. Copied Coupon Codes [historical]
+        // 4. Copied Coupon Codes [historical]
         if (req.body.copiedCoupons && typeof req.body.copiedCoupons === 'object') {
             for (const [gId, codes] of Object.entries(req.body.copiedCoupons)) {
                 const cleanGameId = validateInput.sanitizeString(gId).replace(/[.$]/g, '');
@@ -716,6 +745,9 @@ app.post('/api/user/sync', async (req, res) => {
                 { _id: new mongoose.Types.ObjectId(decoded.userId) },
                 { $set: updates }
             );
+            updatedFavGameIds.forEach(gId => {
+                broadcastLiveEvent('game_updated', { gameId: gId });
+            });
         }
 
         res.json({ success: true });

@@ -491,19 +491,72 @@
             box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4);
         }
         
-        /* === PETAL FILTER BAR STYLES === */
+        /* === PETAL FILTER & SORT CONTROLS BAR === */
+        .subnav-controls-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
         .filter-bar {
             display: flex;
-            gap: 10px;
-            margin-bottom: 25px;
+            gap: 8px;
             flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .sort-control-group {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(18, 14, 28, 0.92);
+            border: 1.5px solid rgba(190, 175, 235, 0.38);
+            border-radius: 16px 5px 16px 5px;
+            padding: 4px 6px 4px 12px;
+            margin-left: auto;
+        }
+
+        .sort-control-label {
+            font-size: 0.76em;
+            color: #a99ec7;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            font-weight: bold;
+            margin-right: 2px;
+        }
+
+        .sort-opt-btn {
+            background: transparent;
+            border: 1px solid transparent;
+            color: #d0c2f7;
+            padding: 5px 11px;
+            border-radius: 11px 3px 11px 3px;
+            font-size: 0.78em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .sort-opt-btn:hover {
+            color: #ffffff;
+            background: rgba(157, 142, 199, 0.16);
+        }
+
+        .sort-opt-btn.active {
+            background: linear-gradient(135deg, #684ea8 0%, #433075 100%);
+            color: #ffffff;
+            border-color: #f6c85f;
+            box-shadow: 0 2px 8px rgba(104, 78, 168, 0.4);
         }
 
         .filter-btn {
             background: rgba(28, 22, 44, 0.92);
             color: #f4f0ff;
             border: 1.5px solid rgba(190, 175, 235, 0.45);
-            padding: 8px 18px;
+            padding: 8px 16px;
             border-radius: 16px 5px 16px 5px;
             font-size: 0.85em;
             font-family: inherit;
@@ -526,14 +579,14 @@
             box-shadow: 0 4px 12px rgba(122, 107, 181, 0.35);
         }
 
-        /* === BOTANICAL CARD ITEM STYLES WITH DIVIDED EDIT HITBOX === */
+        /* === BOTANICAL CARD ITEM STYLES WITH PUBLIC FAVORITE PILL & DIVIDED EDIT HITBOX === */
         .item-card {
             display: flex;
             align-items: center;
             gap: 14px;
             background: rgba(20, 16, 30, 0.85);
             border: 1px solid rgba(157, 142, 199, 0.24);
-            padding: 0 0 0 20px;
+            padding: 0 0 0 14px;
             border-radius: 18px 6px 18px 6px;
             margin-bottom: 12px;
             text-decoration: none;
@@ -553,16 +606,50 @@
             background: linear-gradient(90deg, rgba(246, 200, 95, 0.07) 0%, rgba(20, 16, 30, 0.9) 45%);
         }
 
-        .item-star-btn {
-            width: 22px;
-            height: 22px;
+        /* Public Favorite Button + Counter Pill */
+        .item-fav-pill {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-width: 38px;
+            padding: 6px 6px;
+            border-radius: 12px 4px 12px 4px;
+            background: rgba(157, 142, 199, 0.08);
+            border: 1px solid rgba(157, 142, 199, 0.24);
             cursor: pointer;
+            flex-shrink: 0;
+            gap: 2px;
+            transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+        }
+
+        .item-fav-pill:hover {
+            transform: scale(1.08);
+            border-color: #d0c2f7;
+            background: rgba(157, 142, 199, 0.18);
+        }
+
+        .item-fav-pill.favorited {
+            background: rgba(246, 200, 95, 0.14);
+            border-color: rgba(246, 200, 95, 0.55);
+        }
+
+        .item-star-btn {
+            width: 18px;
+            height: 18px;
             flex-shrink: 0;
             transition: transform 0.15s ease, fill 0.15s ease;
         }
 
-        .item-star-btn:hover {
-            transform: scale(1.2);
+        .item-fav-count {
+            font-size: 0.72em;
+            font-weight: bold;
+            color: #d0c2f7;
+            line-height: 1;
+        }
+
+        .item-fav-pill.favorited .item-fav-count {
+            color: #f6c85f;
         }
 
         .item-icon {
@@ -1054,11 +1141,17 @@
             e.preventDefault();
             e.stopPropagation();
             if (!itemId) return;
+            if (!window.requireAuth('favorite items')) return;
+
+            if (!gameData.favoriteCounts) gameData.favoriteCounts = {};
+            const currentCount = gameData.favoriteCounts[itemId] || 0;
 
             if (favoritedSubItems.includes(itemId)) {
                 favoritedSubItems = favoritedSubItems.filter(id => id !== itemId);
+                gameData.favoriteCounts[itemId] = Math.max(0, currentCount - 1);
             } else {
                 favoritedSubItems.push(itemId);
+                gameData.favoriteCounts[itemId] = currentCount + 1;
             }
             localStorage.setItem(favStorageKey, JSON.stringify(favoritedSubItems));
             renderContent();
@@ -1078,7 +1171,34 @@
 
         const tabMenu = document.getElementById('tabMenu');
         const contentArea = document.getElementById('dynamicContent');
+        
         let activeFilter = 'All';
+        let activeSort = 'default'; // 'default' | 'recent' | 'favorites'
+
+        function setItemSortMode(mode) {
+            if (activeSort === mode) return;
+            activeSort = mode;
+            renderContent();
+        }
+
+        function getItemTimestampMs(item) {
+            if (!item) return 0;
+            const raw = item.updatedAt || item.lastUpdated || item.createdAt || item.date;
+            if (raw) {
+                const parsed = new Date(raw).getTime();
+                if (!isNaN(parsed)) return parsed;
+            }
+            if (typeof item._id === 'string' && /^[a-f\d]{24}$/i.test(item._id)) {
+                return parseInt(item._id.substring(0, 8), 16) * 1000;
+            }
+            return 0;
+        }
+
+        function getItemFavCount(item) {
+            const id = getSubItemId(item);
+            if (!id || !gameData || !gameData.favoriteCounts) return 0;
+            return Number(gameData.favoriteCounts[id] || 0);
+        }
         
         function renderTabs() {
             tabMenu.innerHTML = '';
@@ -1460,7 +1580,7 @@
             return defaultIcons[section] || '/Assets/placeholder.webp';
         }
 
-        function buildFilterBar(items, categoryKey) {
+        function buildControlsBar(items, categoryKey) {
             if (!items || items.length === 0) return '';
 
             const ignoredTags = ['nurture', 'google sheets'];
@@ -1477,8 +1597,6 @@
             
             categories = categories.filter(cat => cat === 'All' || !ignoredTags.map(t => t.toLowerCase()).includes(cat.toLowerCase()));
 
-            if (categories.length <= 1) return ''; 
-
             setTimeout(() => {
                 document.querySelectorAll('.filter-btn').forEach(btn => {
                     btn.addEventListener('click', (e) => {
@@ -1488,13 +1606,25 @@
                 });
             }, 0);
 
-            return `
+            const filterButtonsHtml = categories.length > 1 ? `
                 <div class="filter-bar">
                     ${categories.map(cat => `
-                        <button class="filter-btn ${activeFilter === cat ? 'active' : ''}" data-category="${cat}">
+                        <button type="button" class="filter-btn ${activeFilter === cat ? 'active' : ''}" data-category="${cat}">
                             ${cat}
                         </button>
                     `).join('')}
+                </div>
+            ` : '<div></div>';
+
+            return `
+                <div class="subnav-controls-row">
+                    ${filterButtonsHtml}
+                    <div class="sort-control-group" role="group" aria-label="Sort items">
+                        <span class="sort-control-label">Sort:</span>
+                        <button type="button" class="sort-opt-btn ${activeSort === 'default' ? 'active' : ''}" onclick="setItemSortMode('default')">Default</button>
+                        <button type="button" class="sort-opt-btn ${activeSort === 'recent' ? 'active' : ''}" onclick="setItemSortMode('recent')">Recent</button>
+                        <button type="button" class="sort-opt-btn ${activeSort === 'favorites' ? 'active' : ''}" onclick="setItemSortMode('favorites')">Most Favorited</button>
+                    </div>
                 </div>
             `;
         }
@@ -1622,8 +1752,21 @@
                     return val === activeFilter;
                 });
 
-            // Sort items: 1) Favorited items & 2-day NEW!/EDITED! items pushed to the top
+            // Apply Sort Mode:
+            // - 'default': User's own favorites & 2-day NEW!/EDITED! items pinned to top
+            // - 'recent': Strictly newest/most recently edited first (ignores personal favorite priority)
+            // - 'favorites': Strictly most favorited by the community first (ignores personal favorite priority)
             filteredData.sort((a, b) => {
+                if (activeSort === 'recent') {
+                    return getItemTimestampMs(b) - getItemTimestampMs(a);
+                }
+                if (activeSort === 'favorites') {
+                    const favDiff = getItemFavCount(b) - getItemFavCount(a);
+                    if (favDiff !== 0) return favDiff;
+                    return getItemTimestampMs(b) - getItemTimestampMs(a);
+                }
+
+                // Default Sort
                 const aFav = favoritedSubItems.includes(getSubItemId(a)) ? 1 : 0;
                 const bFav = favoritedSubItems.includes(getSubItemId(b)) ? 1 : 0;
                 if (aFav !== bFav) return bFav - aFav;
@@ -1632,10 +1775,10 @@
                 const bMod = getItemRecentModifier(b) ? 1 : 0;
                 if (aMod !== bMod) return bMod - aMod;
 
-                return 0;
+                return getItemFavCount(b) - getItemFavCount(a);
             });
 
-            const filterHtml = buildFilterBar(config.data, config.catKey);
+            const controlsHtml = buildControlsBar(config.data, config.catKey);
             const safeStr = (text) => (text || '').toString().replace(/[&<>"']/g, m => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[m]));
 
             // Store sorted list so clicking the Edit pencil maps to the exact displayed item
@@ -1644,7 +1787,8 @@
             const cardsHtml = filteredData.map((item, index) => {
                 const itemId = getSubItemId(item);
                 const isFav = favoritedSubItems.includes(itemId);
-                const starColor = isFav ? '#f6c85f' : 'rgba(157, 142, 199, 0.35)';
+                const starColor = isFav ? '#f6c85f' : 'rgba(157, 142, 199, 0.45)';
+                const publicFavCount = getItemFavCount(item);
 
                 const recentMod = getItemRecentModifier(item);
                 let modBadgeHtml = '';
@@ -1676,11 +1820,16 @@
                     </div>
                 `;
 
+                const isHighlightedCard = activeSort === 'default' ? (isFav || recentMod) : Boolean(recentMod);
+
                 return `
-                    <a href="${safeStr(item.url || item.download_url || '#')}" target="_blank" class="item-card ${(isFav || recentMod) ? 'item-featured' : ''}">
-                        <svg class="item-star-btn" onclick="toggleFavoriteSubItem('${safeStr(itemId)}', event)" style="fill:${starColor};" title="${isFav ? 'Remove from Favorites' : 'Favorite Item'}" viewBox="0 0 24 24">
-                            <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
-                        </svg>
+                    <a href="${safeStr(item.url || item.download_url || '#')}" target="_blank" class="item-card ${isHighlightedCard ? 'item-featured' : ''}">
+                        <div class="item-fav-pill ${isFav ? 'favorited' : ''}" onclick="toggleFavoriteSubItem('${safeStr(itemId)}', event)" title="${isFav ? 'Remove from Favorites' : 'Favorite Item'} (${publicFavCount} favorite${publicFavCount !== 1 ? 's' : ''})">
+                            <svg class="item-star-btn" style="fill:${starColor};" viewBox="0 0 24 24">
+                                <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                            </svg>
+                            <span class="item-fav-count">${publicFavCount}</span>
+                        </div>
                         <img src="${getItemIcon(item, currentSection)}" class="item-icon" alt="icon" onerror="this.src='/Assets/placeholder.webp'">
                         <div class="item-details">
                             <div class="item-title-row">
@@ -1697,7 +1846,7 @@
 
             contentArea.innerHTML = `
                 ${headerHtml}
-                ${filterHtml}
+                ${controlsHtml}
                 <div class="items-list">
                     ${cardsHtml || '<p style="color: #888;">No items match this filter.</p>'}
                 </div>
