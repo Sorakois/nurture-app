@@ -939,30 +939,33 @@
                             <div class="logic-toggle-group">
                                 <button type="button" id="logicOrBtn" class="logic-btn active" onclick="setFilterLogic('OR')">OR</button>
                                 <button type="button" id="logicAndBtn" class="logic-btn" onclick="setFilterLogic('AND')">AND</button>
+                                <button type="button" id="logicNotBtn" class="logic-btn" onclick="setFilterLogic('NOT')">NOT</button>
                             </div>
                             <button type="button" class="clear-filters-btn" onclick="clearAllFilters()">Reset</button>
                         </div>
 
-                        <div class="tags-section-title">🎮 Game Style & Platform</div>
-                        <div class="tags-pills-grid" id="styleTagsGrid">
-                            <button type="button" class="tag-pill" data-tag="Gacha" onclick="toggleGenreTag('Gacha', this)">Gacha</button>
-                            <button type="button" class="tag-pill" data-tag="PC / Sandbox" onclick="toggleGenreTag('PC / Sandbox', this)">PC / Sandbox</button>
-                            <button type="button" class="tag-pill" data-tag="Moddable" onclick="toggleGenreTag('Moddable', this)">Moddable</button>
-                            <button type="button" class="tag-pill" data-tag="Co-op / Multiplayer" onclick="toggleGenreTag('Co-op / Multiplayer', this)">Co-op / Multiplayer</button>
+                        <div class="tags-section-title">🖥️ Game Platform</div>
+                        <div class="tags-pills-grid" id="platformTagsGrid">
+                            <button type="button" class="tag-pill" data-tag="PC" onclick="toggleGenreTag('PC', this)">PC</button>
+                            <button type="button" class="tag-pill" data-tag="Mobile" onclick="toggleGenreTag('Mobile', this)">Mobile</button>
+                            <button type="button" class="tag-pill" data-tag="PC+Mobile" onclick="toggleGenreTag('PC+Mobile', this)">PC+Mobile</button>
                         </div>
 
                         <div class="tags-divider"></div>
 
                         <div class="tags-section-title">📚 Genre Tags</div>
                         <div class="tags-pills-grid" id="genreTagsGrid">
+                            <button type="button" class="tag-pill" data-tag="Gacha" onclick="toggleGenreTag('Gacha', this)">Gacha</button>
                             <button type="button" class="tag-pill" data-tag="RPG" onclick="toggleGenreTag('RPG', this)">RPG</button>
-                            <button type="button" class="tag-pill" data-tag="Survival & Crafting" onclick="toggleGenreTag('Survival & Crafting', this)">Survival & Crafting</button>
-                            <button type="button" class="tag-pill" data-tag="Simulation" onclick="toggleGenreTag('Simulation', this)">Simulation</button>
                             <button type="button" class="tag-pill" data-tag="Action" onclick="toggleGenreTag('Action', this)">Action</button>
                             <button type="button" class="tag-pill" data-tag="Turn-Based" onclick="toggleGenreTag('Turn-Based', this)">Turn-Based</button>
                             <button type="button" class="tag-pill" data-tag="Tower Defense" onclick="toggleGenreTag('Tower Defense', this)">Tower Defense</button>
                             <button type="button" class="tag-pill" data-tag="Rhythm" onclick="toggleGenreTag('Rhythm', this)">Rhythm</button>
                             <button type="button" class="tag-pill" data-tag="City Builder" onclick="toggleGenreTag('City Builder', this)">City Builder</button>
+                            <button type="button" class="tag-pill" data-tag="Survival & Crafting" onclick="toggleGenreTag('Survival & Crafting', this)">Survival & Crafting</button>
+                            <button type="button" class="tag-pill" data-tag="Simulation" onclick="toggleGenreTag('Simulation', this)">Simulation</button>
+                            <button type="button" class="tag-pill" data-tag="Moddable" onclick="toggleGenreTag('Moddable', this)">Moddable</button>
+                            <button type="button" class="tag-pill" data-tag="Co-op / Multiplayer" onclick="toggleGenreTag('Co-op / Multiplayer', this)">Co-op / Multiplayer</button>
                         </div>
 
                         <div class="tags-divider"></div>
@@ -1008,18 +1011,20 @@
         </div>
     </div>
 
-    <!-- Game Update Patch Notes Modal -->
+    <!-- Game Update Patch Notes Modal (With Update Banner / Screenshots) -->
     <div id="appUpdateModal" class="modal-overlay">
-        <div class="modal-window" style="max-width: 600px;">
+        <div class="modal-window" style="max-width: 640px;">
             <button class="modal-close" onclick="document.getElementById('appUpdateModal').classList.remove('active')">×</button>
             <h2 class="modal-title" style="border:none; padding-bottom:0; margin-bottom: 5px;">
                 <span id="auGameName">Game</span>
             </h2>
-            <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 18px; border-bottom: 1px solid rgba(157, 142, 199, 0.28); padding-bottom: 15px;">
+            <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 14px; border-bottom: 1px solid rgba(157, 142, 199, 0.28); padding-bottom: 12px;">
                 <span class="status-badge badge-update" style="padding: 3px 10px; border-bottom: none;"><span class="badge-title" id="auVersion">Version 0.0.0</span></span>
                 <span style="font-family: monospace; color: #a99ec7; font-size: 0.85em;" id="auDate">Date</span>
             </div>
-            <div id="auNotes" style="max-height: 400px; overflow-y: auto; color: #e5dcff; font-size: 0.95em; line-height: 1.6; white-space: pre-wrap; padding-right: 10px;"></div>
+            <!-- Update Banner / App Store Promotional Screenshots -->
+            <div id="auBannerContainer" style="display: none; margin-bottom: 16px;"></div>
+            <div id="auNotes" style="max-height: 360px; overflow-y: auto; color: #e5dcff; font-size: 0.95em; line-height: 1.6; white-space: pre-wrap; padding-right: 10px;"></div>
         </div>
     </div>
 
@@ -1162,7 +1167,7 @@
 
             <div class="modal-form-stack">
                 <div style="display:flex; gap: 12px; align-items: stretch;">
-                    <img id="sgIconPreview" src="/Assets/placeholder.webp" style="width: 108px; height: 108px; border-radius: 16px 5px 16px 5px; object-fit: cover; border: 1.5px solid #9d8ec7; display: none; flex-shrink: 0; align-self: center;">
+                    <img id="sgIconPreview" src="/Assets/placeholder.webp" style="width: 96px; height: 96px; border-radius: 16px 5px 16px 5px; object-fit: cover; border: 1.5px solid #9d8ec7; display: none; flex-shrink: 0; align-self: center;">
                     <div class="modal-form-stack">
                         <div class="req-field-row">
                             <input type="text" id="sgName" class="floral-input" placeholder="Game Name">
@@ -1172,16 +1177,30 @@
                             <input type="text" id="sgDev" class="floral-input" placeholder="Developer">
                             <span class="req-icon"></span>
                         </div>
-                        <input type="text" id="sgTags" class="floral-input" placeholder="Tags (comma separated, or click below)">
-                        <div style="display:flex; flex-wrap:wrap; gap:5px; margin-top:2px;">
-                            <button type="button" class="tag-pill" style="padding:3px 8px; font-size:0.72em;" onclick="toggleSuggestTag('Gacha')">+ Gacha</button>
-                            <button type="button" class="tag-pill" style="padding:3px 8px; font-size:0.72em;" onclick="toggleSuggestTag('PC / Sandbox')">+ PC / Sandbox</button>
-                            <button type="button" class="tag-pill" style="padding:3px 8px; font-size:0.72em;" onclick="toggleSuggestTag('Moddable')">+ Moddable</button>
-                            <button type="button" class="tag-pill" style="padding:3px 8px; font-size:0.72em;" onclick="toggleSuggestTag('Co-op / Multiplayer')">+ Co-op</button>
-                            <button type="button" class="tag-pill" style="padding:3px 8px; font-size:0.72em;" onclick="toggleSuggestTag('RPG')">+ RPG</button>
-                            <button type="button" class="tag-pill" style="padding:3px 8px; font-size:0.72em;" onclick="toggleSuggestTag('Survival & Crafting')">+ Survival & Crafting</button>
-                            <button type="button" class="tag-pill" style="padding:3px 8px; font-size:0.72em;" onclick="toggleSuggestTag('Simulation')">+ Simulation</button>
-                        </div>
+                    </div>
+                </div>
+
+                <!-- Select All That Apply Tag Picker (Replaces CSV Input) -->
+                <div id="sgTagsSelector" style="background: rgba(17, 13, 25, 0.85); border: 1px solid rgba(157, 142, 199, 0.28); border-radius: 16px 5px 16px 5px; padding: 12px 14px; text-align: left;">
+                    <div class="tags-section-title" style="margin-bottom: 8px;">🖥️ Platform (Select 1)</div>
+                    <div class="tags-pills-grid" style="margin-bottom: 12px;">
+                        <button type="button" class="tag-pill sg-platform-pill" data-tag="PC" onclick="toggleSuggestPlatformPill(this)">PC</button>
+                        <button type="button" class="tag-pill sg-platform-pill" data-tag="Mobile" onclick="toggleSuggestPlatformPill(this)">Mobile</button>
+                        <button type="button" class="tag-pill sg-platform-pill" data-tag="PC+Mobile" onclick="toggleSuggestPlatformPill(this)">PC+Mobile</button>
+                    </div>
+                    <div class="tags-section-title" style="margin-bottom: 8px;">📚 Genre Tags (Select all that apply)</div>
+                    <div class="tags-pills-grid">
+                        <button type="button" class="tag-pill sg-genre-pill" data-tag="Gacha" onclick="this.classList.toggle('selected')">Gacha</button>
+                        <button type="button" class="tag-pill sg-genre-pill" data-tag="RPG" onclick="this.classList.toggle('selected')">RPG</button>
+                        <button type="button" class="tag-pill sg-genre-pill" data-tag="Action" onclick="this.classList.toggle('selected')">Action</button>
+                        <button type="button" class="tag-pill sg-genre-pill" data-tag="Turn-Based" onclick="this.classList.toggle('selected')">Turn-Based</button>
+                        <button type="button" class="tag-pill sg-genre-pill" data-tag="Tower Defense" onclick="this.classList.toggle('selected')">Tower Defense</button>
+                        <button type="button" class="tag-pill sg-genre-pill" data-tag="Rhythm" onclick="this.classList.toggle('selected')">Rhythm</button>
+                        <button type="button" class="tag-pill sg-genre-pill" data-tag="City Builder" onclick="this.classList.toggle('selected')">City Builder</button>
+                        <button type="button" class="tag-pill sg-genre-pill" data-tag="Survival & Crafting" onclick="this.classList.toggle('selected')">Survival & Crafting</button>
+                        <button type="button" class="tag-pill sg-genre-pill" data-tag="Simulation" onclick="this.classList.toggle('selected')">Simulation</button>
+                        <button type="button" class="tag-pill sg-genre-pill" data-tag="Moddable" onclick="this.classList.toggle('selected')">Moddable</button>
+                        <button type="button" class="tag-pill sg-genre-pill" data-tag="Co-op / Multiplayer" onclick="this.classList.toggle('selected')">Co-op / Multiplayer</button>
                     </div>
                 </div>
 
@@ -1289,8 +1308,45 @@
             document.getElementById('auGameName').textContent = game.name;
             document.getElementById('auVersion').textContent = game.latest_version ? `v${game.latest_version}` : 'Update';
             const d = new Date(game.last_major_update_date);
-            document.getElementById('auDate').textContent = !isNaN(d.getTime()) ? d.toLocaleDateString() : '';
-            document.getElementById('auNotes').textContent = game.latest_patch_notes || 'No patch notes provided by developer.';
+            document.getElementById('auDate').textContent = !isNaN(d.getTime()) ? formatBadgeDate(d.getTime()) : '';
+
+            // 1. Render Update Banner / App Store Screenshots if available
+            const bannerBox = document.getElementById('auBannerContainer');
+            const images = Array.isArray(game.latest_update_images) ? game.latest_update_images.filter(Boolean) : [];
+            if (bannerBox) {
+                if (images.length > 0) {
+                    bannerBox.style.display = 'block';
+                    bannerBox.innerHTML = `
+                        <div style="display:flex; gap:10px; overflow-x:auto; padding-bottom:6px;">
+                            ${images.map(imgUrl => `
+                                <img src="${escapeHtml(imgUrl)}" alt="Update Banner" style="max-height:190px; width:auto; border-radius:14px 4px 14px 4px; border:1px solid rgba(208, 194, 247, 0.4); object-fit:cover; flex-shrink:0;" onerror="this.style.display='none'">
+                            `).join('')}
+                        </div>
+                    `;
+                } else if (game.banner_url) {
+                    bannerBox.style.display = 'block';
+                    bannerBox.innerHTML = `
+                        <div style="display:flex; align-items:center; gap:14px; background:rgba(18, 14, 28, 0.75); border:1px solid rgba(157, 142, 199, 0.25); padding:10px 14px; border-radius:16px 5px 16px 5px;">
+                            <img src="${escapeHtml(game.banner_url)}" alt="${escapeHtml(game.name)}" style="width:58px; height:58px; border-radius:14px 4px 14px 4px; object-fit:cover; border:1px solid rgba(208, 194, 247, 0.4);">
+                            <div>
+                                <div style="font-weight:bold; color:#f4f0ff;">${escapeHtml(game.name)} — ${game.latest_version ? `v${escapeHtml(game.latest_version)}` : 'Latest Patch'}</div>
+                                <div style="font-size:0.8em; color:#a99ec7;">Official App Store Release Notes</div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    bannerBox.style.display = 'none';
+                    bannerBox.innerHTML = '';
+                }
+            }
+
+            // 2. Render patch notes text & convert any direct image URLs inside the notes into <img> banners
+            const rawNotes = game.latest_patch_notes || 'No patch notes provided by developer.';
+            const safeNotes = escapeHtml(rawNotes).replace(
+                /(https?:\/\/[^\s<>"']+\.(?:png|jpe?g|webp|gif)(?:\?[^\s<>"']*)?)/gi,
+                '<img src="$1" alt="Patch Image" style="max-width:100%; border-radius:12px 4px 12px 4px; margin:10px 0; display:block; border:1px solid rgba(208, 194, 247, 0.35);">'
+            );
+            document.getElementById('auNotes').innerHTML = safeNotes;
             document.getElementById('appUpdateModal').classList.add('active');
         }
 
@@ -1526,6 +1582,8 @@
             filterLogicMode = mode;
             document.getElementById('logicOrBtn').classList.toggle('active', mode === 'OR');
             document.getElementById('logicAndBtn').classList.toggle('active', mode === 'AND');
+            const notBtn = document.getElementById('logicNotBtn');
+            if (notBtn) notBtn.classList.toggle('active', mode === 'NOT');
             updateGrid(allGames);
         }
 
@@ -1585,12 +1643,23 @@
                     const gTags = Array.isArray(g.tags) ? g.tags : [];
                     const gAge = g.ratings?.age || '';
 
-                    if (filterLogicMode === 'AND') {
-                        const genreMatch = selectedGenreTags.length === 0 || selectedGenreTags.every(t => gTags.includes(t));
+                    // If filtering by 'PC' or 'Mobile', also match 'PC+Mobile' when in OR mode
+                    const matchesTag = (tag) => {
+                        if (gTags.includes(tag)) return true;
+                        if ((tag === 'PC' || tag === 'Mobile') && gTags.includes('PC+Mobile')) return true;
+                        return false;
+                    };
+
+                    if (filterLogicMode === 'NOT') {
+                        const hasExcludedGenre = selectedGenreTags.some(t => matchesTag(t));
+                        const hasExcludedAge = selectedAgeTags.includes(gAge);
+                        return !hasExcludedGenre && !hasExcludedAge;
+                    } else if (filterLogicMode === 'AND') {
+                        const genreMatch = selectedGenreTags.length === 0 || selectedGenreTags.every(t => matchesTag(t));
                         const ageMatch = selectedAgeTags.length === 0 || (selectedAgeTags.length === 1 && selectedAgeTags[0] === gAge);
                         return genreMatch && ageMatch;
                     } else {
-                        const genreMatch = selectedGenreTags.some(t => gTags.includes(t));
+                        const genreMatch = selectedGenreTags.some(t => matchesTag(t));
                         const ageMatch = selectedAgeTags.includes(gAge);
                         return genreMatch || ageMatch;
                     }
@@ -1798,8 +1867,6 @@
             }
         });
 
-        let lookedUpPatchData = { latest_version: null, last_major_update_date: null };
-
         // Only loads the image preview when the input box is unselected (onblur) and passes HTTPS URL validation
         function previewSafeIconUrl(rawVal) {
             const preview = document.getElementById('sgIconPreview');
@@ -1833,6 +1900,14 @@
             input.value = current.join(', ');
         }
 
+        let lookedUpPatchData = { latest_version: null, last_major_update_date: null, latest_update_images: [] };
+
+        function toggleSuggestPlatformPill(btnEl) {
+            const wasSelected = btnEl.classList.contains('selected');
+            document.querySelectorAll('#sgTagsSelector .sg-platform-pill').forEach(el => el.classList.remove('selected'));
+            if (!wasSelected) btnEl.classList.add('selected');
+        }
+
         async function lookupGame() {
             const term = document.getElementById('suggestSearch').value;
             if (!term) return;
@@ -1842,20 +1917,33 @@
                 if (data.found) {
                     document.getElementById('sgName').value = data.name;
                     document.getElementById('sgDev').value = data.developer;
-                    document.getElementById('sgTags').value = data.tags.join(', ');
                     document.getElementById('sgDesc').value = data.overview_text;
                     document.getElementById('sgIcon').value = data.icon_url;
                     
+                    // Auto-select matching pills in the "Select All That Apply" box
+                    document.querySelectorAll('#sgTagsSelector .tag-pill').forEach(el => el.classList.remove('selected'));
+                    const mobilePill = document.querySelector('#sgTagsSelector .sg-platform-pill[data-tag="Mobile"]');
+                    if (mobilePill) mobilePill.classList.add('selected');
+
+                    const returnedTags = (data.tags || []).map(t => t.toLowerCase());
+                    document.querySelectorAll('#sgTagsSelector .sg-genre-pill').forEach(pill => {
+                        const pillTag = (pill.getAttribute('data-tag') || '').toLowerCase();
+                        if (returnedTags.some(rt => rt.includes(pillTag) || pillTag.includes(rt))) {
+                            pill.classList.add('selected');
+                        }
+                    });
+                    
                     lookedUpPatchData = {
                         latest_version: data.latest_version || null,
-                        last_major_update_date: data.last_major_update_date || null
+                        last_major_update_date: data.last_major_update_date || null,
+                        latest_update_images: data.latest_update_images || []
                     };
                     
                     const preview = document.getElementById('sgIconPreview');
                     preview.src = data.icon_url;
                     preview.style.display = 'block';
                 } else {
-                    window.showCustomAlert("Game not found in the App Store database. Please fill in the details manually.", "Lookup Result");
+                    window.showCustomAlert("Game not found in the App Store database. If this is a PC game, select 'PC' below and fill in the fields manually.", "Lookup Result");
                 }
             } catch (e) {
                 window.showCustomAlert("Lookup failed. Please try again or fill in the fields manually.", "Lookup Error");
@@ -1872,6 +1960,10 @@
                 return window.showCustomAlert("Please fill in all required fields (Game Name, Developer, Description, and Icon URL).", "Missing Fields");
             }
 
+            const selectedTags = Array.from(document.querySelectorAll('#sgTagsSelector .tag-pill.selected'))
+                .map(el => el.getAttribute('data-tag'))
+                .filter(Boolean);
+
             const payload = {
                 gameId: nameVal.toLowerCase().replace(/[^a-z0-9]/g, '-'),
                 itemCategory: 'Game',
@@ -1880,11 +1972,12 @@
                     id: nameVal.toLowerCase().replace(/[^a-z0-9]/g, '-'),
                     name: nameVal,
                     developer: devVal,
-                    tags: document.getElementById('sgTags').value.split(',').map(s=>s.trim()).filter(Boolean),
+                    tags: selectedTags,
                     overview_text: descVal,
                     banner_url: iconVal,
                     latest_version: lookedUpPatchData.latest_version,
                     last_major_update_date: lookedUpPatchData.last_major_update_date,
+                    latest_update_images: lookedUpPatchData.latest_update_images,
                     commitMessage: document.getElementById('sgCommit').value
                 }
             };

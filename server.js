@@ -218,8 +218,13 @@ const syncAppStoreUpdatesBackground = async (games) => {
 
         const staleGames = games.filter(g => {
             if (!g.name) return false;
+            // Skip PC-only games since they do not use the Apple App Store API
+            const gTags = Array.isArray(g.tags) ? g.tags : [];
+            if (gTags.includes('PC') && !gTags.includes('Mobile') && !gTags.includes('PC+Mobile')) {
+                return false;
+            }
             const hasDuplicateIcon = g.banner_url && bannerCounts[g.banner_url] > 1;
-            if (hasDuplicateIcon) return true; // Force immediate re-check to fix duplicate icons
+            if (hasDuplicateIcon) return true;
             const lastChecked = g.app_store_checked_at ? new Date(g.app_store_checked_at).getTime() : 0;
             return (now - lastChecked) > SIX_HOURS;
         }).slice(0, 4);
@@ -255,6 +260,10 @@ const syncAppStoreUpdatesBackground = async (games) => {
                             updates.last_major_update_date = appData.currentVersionReleaseDate;
                             updates.latest_version = appData.version;
                             updates.latest_patch_notes = appData.releaseNotes || 'No specific patch notes provided.';
+                            const shots = (Array.isArray(appData.screenshotUrls) && appData.screenshotUrls.length > 0)
+                                ? appData.screenshotUrls.slice(0, 4)
+                                : (Array.isArray(appData.ipadScreenshotUrls) ? appData.ipadScreenshotUrls.slice(0, 4) : []);
+                            if (shots.length > 0) updates.latest_update_images = shots;
                         }
                     }
                 }
@@ -1377,6 +1386,10 @@ app.get('/api/suggest/lookup', async (req, res) => {
         const cleanGenres = appData.genres.filter(g => g !== 'Games' && g !== 'Entertainment');
         const majorUpdate = isMajorAppStoreUpdate(appData);
 
+        const shots = (Array.isArray(appData.screenshotUrls) && appData.screenshotUrls.length > 0)
+            ? appData.screenshotUrls.slice(0, 4)
+            : (Array.isArray(appData.ipadScreenshotUrls) ? appData.ipadScreenshotUrls.slice(0, 4) : []);
+
         res.json({
             found: true,
             name: appData.trackName,
@@ -1385,7 +1398,8 @@ app.get('/api/suggest/lookup', async (req, res) => {
             tags: cleanGenres,
             overview_text: appData.description,
             latest_version: appData.version || null,
-            last_major_update_date: majorUpdate ? appData.currentVersionReleaseDate : null
+            last_major_update_date: majorUpdate ? appData.currentVersionReleaseDate : null,
+            latest_update_images: shots
         });
     } catch (err) {
         console.error("External lookup error:", err);

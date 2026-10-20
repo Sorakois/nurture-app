@@ -499,7 +499,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 <a id="upViewProfileBtn" href="#" class="btn-floral pollen" style="width: 100%; box-sizing: border-box; margin-bottom: 16px; padding: 10px; display: none;">
                     View My Profile
                 </a>
-                <h3 style="border-bottom: 1px solid rgba(157, 142, 199, 0.28); padding-bottom: 8px; margin-top: 0; color: #d0c2f7;">✿ Approved Contributions</h3>
+                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid rgba(157, 142, 199, 0.28); padding-bottom: 8px; margin-bottom: 10px; gap: 8px; flex-wrap: wrap;">
+                    <h3 style="margin: 0; color: #d0c2f7; font-size: 1.05em;">✿ Approved Contributions</h3>
+                    <div style="display:inline-flex; background:#120e1c; border:1px solid rgba(157,142,199,0.3); border-radius:10px 3px 10px 3px; padding:2px; gap:2px;">
+                        <button type="button" id="upSortRecentBtn" class="logic-btn active" style="padding:3px 8px; font-size:0.72em;" onclick="renderModalContributions('recent')">Recent</button>
+                        <button type="button" id="upSortMostBtn" class="logic-btn" style="padding:3px 8px; font-size:0.72em;" onclick="renderModalContributions('most')">Most</button>
+                    </div>
+                </div>
                 <div id="upContributions" style="max-height: 300px; overflow-y: auto; padding-right: 5px;"></div>
             </div>
         </div>
@@ -507,15 +513,12 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="modal-window" style="max-width: 420px;">
                 <button class="modal-close" onclick="closeSettingsModal()">×</button>
                 <h2 class="modal-title">🌿 Display Settings</h2>
-                <label class="floral-setting-card">
+                <label class="floral-setting-card" style="margin-bottom:0;">
                     <div>
-                        <div style="font-weight:bold; color:#f4f0ff;">Leaderboard Position</div>
-                        <div style="font-size:0.75em; color:#a99ec7;">Choose which side the panel blooms</div>
+                        <div style="font-weight:bold; color:#f4f0ff;">Pause Background Animations</div>
+                        <div style="font-size:0.75em; color:#a99ec7;">Disables floating petals & fireflies for lower-end devices</div>
                     </div>
-                    <select id="selectLbSide" class="floral-select" style="width: auto; padding: 8px 14px;" onchange="saveSettings()">
-                        <option value="right">Right Side</option>
-                        <option value="left">Left Side</option>
-                    </select>
+                    <input type="checkbox" id="toggleLowSpec" class="floral-checkbox" onchange="saveSettings()">
                 </label>
                 <label class="floral-setting-card" style="margin-bottom:0;">
                     <div>
@@ -690,6 +693,83 @@ async function openPointWeightsModal() {
     }).join('');
 }
 
+let cachedModalContributions = [];
+let currentModalContribSort = 'recent'; // 'recent' | 'most'
+
+function renderModalContributions(sortMode = 'recent') {
+    currentModalContribSort = sortMode;
+    const recentBtn = document.getElementById('upSortRecentBtn');
+    const mostBtn = document.getElementById('upSortMostBtn');
+    if (recentBtn) recentBtn.classList.toggle('active', sortMode === 'recent');
+    if (mostBtn) mostBtn.classList.toggle('active', sortMode === 'most');
+
+    const container = document.getElementById('upContributions');
+    if (!container) return;
+
+    if (!cachedModalContributions || cachedModalContributions.length === 0) {
+        container.innerHTML = '<p style="color:#a99ec7;">No approved contributions yet.</p>';
+        return;
+    }
+
+    const escapeTxt = (txt) => (txt || '').toString().replace(/[&<>"']/g, m => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[m]));
+
+    const grouped = {};
+    cachedModalContributions.forEach(c => {
+        const gKey = c.gameId || 'general';
+        if (!grouped[gKey]) grouped[gKey] = { name: c.gameName || gKey, icon: c.gameIcon || '/Assets/placeholder.webp', items: [], latestMs: 0 };
+        grouped[gKey].items.push(c);
+        const itemMs = new Date(c.date).getTime() || 0;
+        if (itemMs > grouped[gKey].latestMs) grouped[gKey].latestMs = itemMs;
+    });
+
+    // Always sort items inside each game category from most recent to oldest
+    const groupsArray = Object.values(grouped);
+    groupsArray.forEach(g => {
+        g.items.sort((a, b) => (new Date(b.date).getTime() || 0) - (new Date(a.date).getTime() || 0));
+    });
+
+    // Sort categories by Recently Contributed (default) or Most Contributed
+    groupsArray.sort((a, b) => {
+        if (sortMode === 'most') {
+            const countDiff = b.items.length - a.items.length;
+            if (countDiff !== 0) return countDiff;
+        }
+        return b.latestMs - a.latestMs;
+    });
+
+    container.innerHTML = groupsArray.map(group => `
+        <div class="profile-game-group open">
+            <div class="profile-game-header" onclick="this.parentElement.classList.toggle('open')">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <img src="${group.icon}" style="width:24px; height:24px; border-radius:6px; object-fit:cover; border: 1px solid rgba(157, 142, 199, 0.4);">
+                    <strong style="color: #f4f0ff;">${escapeTxt(group.name)} <span style="color: #7bc996;">(+${group.items.length})</span></strong>
+                </div>
+                <span class="toggle-arrow" style="font-size:0.8em; color:#a99ec7;">▼</span>
+            </div>
+            <div class="profile-game-items">
+                ${group.items.map(c => {
+                    const tabMap = { 'Guide': 'guides', 'Asset': 'assets', 'Community': 'communities', 'Mod': 'mods', 'Coupon': 'overview', 'Game': 'overview' };
+                    const tab = tabMap[c.category] || 'overview';
+                    const link = c.gameId ? `/games/${c.gameId}?tab=${tab}` : '/';
+                    return `
+                        <a href="${link}" class="floral-mail-card" style="display:block; text-decoration:none; color:white; padding: 10px 14px; margin-bottom: 8px;">
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
+                                <div style="font-weight:bold; color:#d0c2f7; font-size:1.05em;">${escapeTxt(c.target)}</div>
+                                <span style="font-size:0.75em; color:#a99ec7;">${new Date(c.date).toLocaleDateString()}</span>
+                            </div>
+                            <div style="font-size:0.8em; color:#a99ec7; display:flex; align-items:center; gap:6px;">
+                                <strong style="color:#f6c85f; background:rgba(246, 200, 95, 0.12); padding:2px 8px; border-radius:8px 2px 8px 2px; border:1px solid rgba(246, 200, 95, 0.35);">${c.action ? c.action.toUpperCase() : 'EDIT'}</strong> 
+                                <span>in ${c.category}</span>
+                            </div>
+                            ${c.commitMessage ? `<div style="font-size:0.85em; color:#e5dcff; border-left:2px solid #9d8ec7; padding-left:8px; margin-top:8px; font-style: italic;">${escapeTxt(c.commitMessage)}</div>` : ''}
+                        </a>
+                    `;
+                }).join('')}
+            </div>
+        </div>
+    `).join('');
+}
+
 async function openUserProfileModal(discordId, username = null) {
     const query = discordId || username;
     if (!query) return;
@@ -703,6 +783,7 @@ async function openUserProfileModal(discordId, username = null) {
     try {
         const res = await fetch(`/api/profile/${encodeURIComponent(query)}`);
         if (!res.ok) {
+            cachedModalContributions = [];
             container.innerHTML = '<p style="color:#d96b98;">User not found or is an external author.</p>';
             document.getElementById('upUsername').textContent = username || 'Unknown User';
             document.getElementById('upAvatar').src = '/Assets/placeholder.webp';
@@ -711,12 +792,9 @@ async function openUserProfileModal(discordId, username = null) {
         }
         
         const data = await res.json();
-        const escapeTxt = (txt) => (txt || '').toString().replace(/[&<>"']/g, m => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[m]));
-        
         document.getElementById('upUsername').textContent = data.username;
         document.getElementById('upAvatar').src = data.avatar ? `https://cdn.discordapp.com/avatars/${data.discordId}/${data.avatar}.webp` : 'https://cdn.discordapp.com/embed/avatars/0.webp';
         
-        // Show Leaderboard Rank Badge next to points if ranked: [#1] 6pts
         const rankClass = (data.rank && data.rank <= 3) ? `rank-${data.rank}` : '';
         const rankBadgeHtml = data.rank ? `<span class="lb-rank-badge">#${data.rank}</span>` : '';
         document.getElementById('upPoints').innerHTML = `
@@ -731,50 +809,13 @@ async function openUserProfileModal(discordId, username = null) {
             viewProfileBtn.style.display = 'inline-flex';
         }
         
-        if (!data.contributions || data.contributions.length === 0) {
-            container.innerHTML = '<p style="color:#a99ec7;">No approved contributions yet.</p>';
-            return;
-        }
-        
-        const grouped = {};
-        data.contributions.forEach(c => {
-            if (!grouped[c.gameId]) grouped[c.gameId] = { name: c.gameName, icon: c.gameIcon, items: [] };
-            grouped[c.gameId].items.push(c);
-        });
-
-        container.innerHTML = Object.values(grouped).map(group => `
-            <div class="profile-game-group open">
-                <div class="profile-game-header" onclick="this.parentElement.classList.toggle('open')">
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <img src="${group.icon}" style="width:24px; height:24px; border-radius:6px; object-fit:cover; border: 1px solid rgba(157, 142, 199, 0.4);">
-                        <strong style="color: #f4f0ff;">${escapeTxt(group.name)} <span style="color: #7bc996;">(+${group.items.length})</span></strong>
-                    </div>
-                    <span class="toggle-arrow" style="font-size:0.8em; color:#a99ec7;">▼</span>
-                </div>
-                <div class="profile-game-items">
-                    ${group.items.map(c => {
-                        const tabMap = { 'Guide': 'guides', 'Asset': 'assets', 'Community': 'communities', 'Mod': 'mods', 'Coupon': 'overview', 'Game': 'overview' };
-                        const tab = tabMap[c.category] || 'overview';
-                        const link = c.gameId ? `/games/${c.gameId}?tab=${tab}` : '/';
-                        return `
-                            <a href="${link}" class="floral-mail-card" style="display:block; text-decoration:none; color:white; padding: 10px 14px; margin-bottom: 8px;">
-                                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
-                                    <div style="font-weight:bold; color:#d0c2f7; font-size:1.05em;">${escapeTxt(c.target)}</div>
-                                    <span style="font-size:0.75em; color:#a99ec7;">${new Date(c.date).toLocaleDateString()}</span>
-                                </div>
-                                <div style="font-size:0.8em; color:#a99ec7; display:flex; align-items:center; gap:6px;">
-                                    <strong style="color:#f6c85f; background:rgba(246, 200, 95, 0.12); padding:2px 8px; border-radius:8px 2px 8px 2px; border:1px solid rgba(246, 200, 95, 0.35);">${c.action ? c.action.toUpperCase() : 'EDIT'}</strong> 
-                                    <span>in ${c.category}</span>
-                                </div>
-                                ${c.commitMessage ? `<div style="font-size:0.85em; color:#e5dcff; border-left:2px solid #9d8ec7; padding-left:8px; margin-top:8px; font-style: italic;">${escapeTxt(c.commitMessage)}</div>` : ''}
-                            </a>
-                        `;
-                    }).join('')}
-                </div>
-            </div>
-        `).join('');
-    } catch (e) { container.innerHTML = '<p style="color:#d96b98;">Failed to load profile.</p>'; }
+        cachedModalContributions = data.contributions || [];
+        renderModalContributions('recent'); // Always default to Recently Contributed
+    } catch (e) {
+        container.innerHTML = '<p style="color:#d96b98;">Failed to load profile.</p>';
+    }
 }
+
 function closeUserProfileModal() { document.getElementById('userProfileModal').classList.remove('active'); }
 
 async function loadMailboxMessages() {

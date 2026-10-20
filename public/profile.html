@@ -351,10 +351,14 @@
             </section>
         </div>
 
-        <!-- Bottom Module: Approved Contributions (Below Favorited Modules) -->
+       <!-- Bottom Module: Approved Contributions (Below Favorited Modules) -->
         <section class="profile-module-card">
             <div class="module-header">
                 <h2 class="module-title">✿ Approved Contributions</h2>
+                <div class="view-mode-toggle">
+                    <button type="button" class="view-mode-btn active" id="contribRecentBtn" onclick="setContribSortMode('recent')">Recently Contributed</button>
+                    <button type="button" class="view-mode-btn" id="contribMostBtn" onclick="setContribSortMode('most')">Most Contributed</button>
+                </div>
             </div>
             <div id="contributionsContainer" style="display: flex; flex-direction: column; gap: 12px;"></div>
         </section>
@@ -532,6 +536,15 @@
             }).join('');
         }
 
+        let currentContribSort = 'recent'; // Defaults to 'recent'
+
+        function setContribSortMode(mode) {
+            currentContribSort = mode;
+            document.getElementById('contribRecentBtn').classList.toggle('active', mode === 'recent');
+            document.getElementById('contribMostBtn').classList.toggle('active', mode === 'most');
+            renderContributions();
+        }
+
         function renderContributions() {
             const container = document.getElementById('contributionsContainer');
             if (!profileData.contributions || profileData.contributions.length === 0) {
@@ -541,11 +554,29 @@
 
             const grouped = {};
             profileData.contributions.forEach(c => {
-                if (!grouped[c.gameId]) grouped[c.gameId] = { name: c.gameName, icon: c.gameIcon, items: [] };
-                grouped[c.gameId].items.push(c);
+                const gKey = c.gameId || 'general';
+                if (!grouped[gKey]) grouped[gKey] = { name: c.gameName || gKey, icon: c.gameIcon || '/Assets/placeholder.webp', items: [], latestMs: 0 };
+                grouped[gKey].items.push(c);
+                const itemMs = new Date(c.date).getTime() || 0;
+                if (itemMs > grouped[gKey].latestMs) grouped[gKey].latestMs = itemMs;
             });
 
-            container.innerHTML = Object.values(grouped).map(group => `
+            // Always sort contributions inside each category newest first
+            const groupsArray = Object.values(grouped);
+            groupsArray.forEach(g => {
+                g.items.sort((a, b) => (new Date(b.date).getTime() || 0) - (new Date(a.date).getTime() || 0));
+            });
+
+            // Sort game categories by Recently Contributed (default) or Most Contributed
+            groupsArray.sort((a, b) => {
+                if (currentContribSort === 'most') {
+                    const diff = b.items.length - a.items.length;
+                    if (diff !== 0) return diff;
+                }
+                return b.latestMs - a.latestMs;
+            });
+
+            container.innerHTML = groupsArray.map(group => `
                 <div class="profile-game-group open">
                     <div class="profile-game-header" onclick="this.parentElement.classList.toggle('open')">
                         <div style="display:flex; align-items:center; gap:10px;">

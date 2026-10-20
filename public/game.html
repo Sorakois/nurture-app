@@ -1212,7 +1212,7 @@
         const urlTabParam = new URLSearchParams(window.location.search).get('tab');
         const savedSettings = JSON.parse(localStorage.getItem('nurture_settings') || '{}');
         const defaultTab = savedSettings.lowSpecMode ? 'all' : 'overview';
-        let currentSection = urlTabParam || pathParts[2] || defaultTab;
+        let currentSection = urlTabParam || pathParts[2] || 'overview';
         let activeModGuideFilter = 'All'; // Filters Guides by a specific Mod (US2)
         let onePageSearchQuery = '';      // Instant filter inside All-in-One View (US3)
 
