@@ -1040,6 +1040,16 @@ body {
     pointer-events: none;
 }
 
+/* Low-Spec / Lite Mode: Disables background particles and GPU-heavy shadows */
+body.low-spec-mode .floral-bg-layer {
+    display: none !important;
+}
+
+body.low-spec-mode * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+}
+
 /* === MOBILE GRAPHICS & CONTAINMENT === */
 @media (max-width: 768px) {
     .desktop-only-signout {

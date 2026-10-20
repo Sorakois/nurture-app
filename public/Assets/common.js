@@ -509,13 +509,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 <h2 class="modal-title">🌿 Display Settings</h2>
                 <label class="floral-setting-card">
                     <div>
-                        <div style="font-weight:bold; color:#f4f0ff;">Show Leaderboard Panel</div>
-                        <div style="font-size:0.75em; color:#a99ec7;">Display contributor rankings on desktop</div>
-                    </div>
-                    <input type="checkbox" id="toggleLeaderboard" class="floral-checkbox" checked onchange="saveSettings()">
-                </label>
-                <label class="floral-setting-card" style="margin-bottom:0;">
-                    <div>
                         <div style="font-weight:bold; color:#f4f0ff;">Leaderboard Position</div>
                         <div style="font-size:0.75em; color:#a99ec7;">Choose which side the panel blooms</div>
                     </div>
@@ -523,6 +516,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         <option value="right">Right Side</option>
                         <option value="left">Left Side</option>
                     </select>
+                </label>
+                <label class="floral-setting-card" style="margin-bottom:0;">
+                    <div>
+                        <div style="font-weight:bold; color:#f6c85f;">Low-Spec / All-in-One Mode</div>
+                        <div style="font-size:0.75em; color:#a99ec7;">Pauses background animations & opens all game resources on 1 page</div>
+                    </div>
+                    <input type="checkbox" id="toggleLowSpec" class="floral-checkbox" onchange="saveSettings()">
                 </label>
             </div>
         </div>
@@ -845,7 +845,9 @@ async function sendMail() {
 function saveSettings() {
     const showLb = document.getElementById('toggleLeaderboard').checked;
     const lbSide = document.getElementById('selectLbSide').value;
-    const settingsObj = { showLb, lbSide };
+    const lowSpecEl = document.getElementById('toggleLowSpec');
+    const lowSpecMode = lowSpecEl ? lowSpecEl.checked : false;
+    const settingsObj = { showLb, lbSide, lowSpecMode };
     localStorage.setItem('nurture_settings', JSON.stringify(settingsObj));
     applySettings();
     window.syncUserPreferences({ settings: settingsObj });
@@ -854,7 +856,7 @@ function saveSettings() {
 function applySettings() {
     const raw = localStorage.getItem('nurture_settings');
     if (!raw) return;
-    const { showLb, lbSide } = JSON.parse(raw);
+    const { showLb = true, lbSide = 'right', lowSpecMode = false } = JSON.parse(raw);
     
     const lbEl = document.getElementById('leaderboardSidebar');
     const railEl = document.getElementById('rightRailColumn') || lbEl;
@@ -862,7 +864,6 @@ function applySettings() {
     const subNavEl = document.getElementById('subNavSidebar');
     
     if (lbEl) {
-        // Reserves the physical layout space so the center column doesn't break alignment
         railEl.style.opacity = showLb ? '1' : '0';
         railEl.style.pointerEvents = showLb ? 'auto' : 'none';
         
@@ -882,10 +883,21 @@ function applySettings() {
         }
     }
 
+    // Apply Low-Spec Mode globally
+    document.body.classList.toggle('low-spec-mode', Boolean(lowSpecMode));
+    if (typeof gsap !== 'undefined') {
+        if (lowSpecMode) gsap.globalTimeline.pause();
+        else if (document.querySelectorAll('.modal-overlay.active').length === 0) gsap.globalTimeline.play();
+    }
+
     const toggle = document.getElementById('toggleLeaderboard');
     const select = document.getElementById('selectLbSide');
+    const lowSpecToggle = document.getElementById('toggleLowSpec');
     if (toggle) toggle.checked = showLb;
     if (select) select.value = lbSide;
+    if (lowSpecToggle) lowSpecToggle.checked = Boolean(lowSpecMode);
+
+    window.dispatchEvent(new CustomEvent('nurtureSettingsChanged', { detail: { showLb, lbSide, lowSpecMode } }));
 }
 
 // --- Real-Time Live Stream Client (No 15s Polling or Micro-Refreshes) ---
