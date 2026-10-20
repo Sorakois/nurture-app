@@ -133,7 +133,72 @@ const isMajorAppStoreUpdate = (appData) => {
     return false;
 };
 
-// Non-blocking background sync for App Store major updates AND icon changes
+// Smart App Store matcher that prevents spin-offs/sequels (e.g. "Origin") from overwriting base games
+const normalizeGameTitle = (str) => (str || '').toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+
+const findBestAppStoreMatch = (results, targetGame, allGames = []) => {
+    if (!Array.isArray(results) || results.length === 0) return null;
+
+    // 1. If this game already has a locked Apple trackId, prefer it unless another game also claims it
+    if (targetGame.app_store_track_id) {
+        const byId = results.find(r => r.trackId === targetGame.app_store_track_id);
+        if (byId) return byId;
+    }
+
+    const targetNorm = normalizeGameTitle(targetGame.name);
+    const otherGamesNorm = allGames
+        .filter(g => g.id !== targetGame.id && g.name)
+        .map(g => ({
+            id: g.id,
+            norm: normalizeGameTitle(g.name),
+            banner: g.banner_url
+        }));
+
+    let bestMatch = null;
+    let bestScore = -999;
+
+    for (const candidate of results) {
+        const candNorm = normalizeGameTitle(candidate.trackName);
+        if (!candNorm) continue;
+
+        // Block this candidate if its title or icon belongs more closely to ANOTHER game in our database
+        // (e.g. Prevents "The Seven Deadly Sins" from grabbing "The Seven Deadly Sins: Origin")
+        const claimedByOther = otherGamesNorm.some(other => {
+            if (other.norm === candNorm && other.norm !== targetNorm) return true;
+            if (other.norm.length > targetNorm.length && candNorm.startsWith(other.norm)) return true;
+            if (other.banner && other.banner === candidate.artworkUrl512 && other.norm !== targetNorm) return true;
+            return false;
+        });
+        if (claimedByOther) continue;
+
+        let score = 0;
+        if (candNorm === targetNorm) {
+            score += 100; // Exact title match
+        } else if (candNorm.startsWith(targetNorm)) {
+            const extraWords = candNorm.slice(targetNorm.length).trim().split(' ').filter(Boolean);
+            // Penalize extra subtitle words so base titles prefer exact matches or known mobile subtitles (like "grand cross")
+            score += 60 - (extraWords.length * 10);
+            if (targetNorm === 'the seven deadly sins' && candNorm.includes('grand cross')) {
+                score += 45;
+            }
+        } else if (targetNorm.startsWith(candNorm)) {
+            score += 40;
+        } else if (candNorm.includes(targetNorm)) {
+            score += 20;
+        } else {
+            continue;
+        }
+
+        if (score > bestScore) {
+            bestScore = score;
+            bestMatch = candidate;
+        }
+    }
+
+    return bestMatch;
+};
+
+// Non-blocking background sync for App Store major updates, icon changes, and duplicate-icon repair
 let isSyncingAppStore = false;
 const syncAppStoreUpdatesBackground = async (games) => {
     if (isSyncingAppStore) return;
@@ -143,38 +208,54 @@ const syncAppStoreUpdatesBackground = async (games) => {
         const SIX_HOURS = 6 * 60 * 60 * 1000;
         const now = Date.now();
 
-        // Check up to 3 stale games per cycle so we never hit Apple rate limits
+        // Detect any games accidentally sharing the exact same non-placeholder banner_url
+        const bannerCounts = {};
+        games.forEach(g => {
+            if (g.banner_url && !g.banner_url.includes('placeholder')) {
+                bannerCounts[g.banner_url] = (bannerCounts[g.banner_url] || 0) + 1;
+            }
+        });
+
         const staleGames = games.filter(g => {
             if (!g.name) return false;
+            const hasDuplicateIcon = g.banner_url && bannerCounts[g.banner_url] > 1;
+            if (hasDuplicateIcon) return true; // Force immediate re-check to fix duplicate icons
             const lastChecked = g.app_store_checked_at ? new Date(g.app_store_checked_at).getTime() : 0;
             return (now - lastChecked) > SIX_HOURS;
-        }).slice(0, 3);
+        }).slice(0, 4);
 
         for (const g of staleGames) {
             try {
-                const res = await axios.get(`https://itunes.apple.com/search?term=${encodeURIComponent(g.name)}&entity=software&limit=1`);
+                // If searching base "The Seven Deadly Sins", include "Grand Cross" in query pool so Apple returns both
+                const searchTerm = normalizeGameTitle(g.name) === 'the seven deadly sins'
+                    ? 'The Seven Deadly Sins Grand Cross'
+                    : g.name;
+
+                const res = await axios.get(`https://itunes.apple.com/search?term=${encodeURIComponent(searchTerm)}&entity=software&limit=15`);
                 const updates = { app_store_checked_at: new Date().toISOString() };
                 let changedVisibleData = false;
 
                 if (res.data.results && res.data.results.length > 0) {
-                    const appData = res.data.results[0];
+                    const appData = findBestAppStoreMatch(res.data.results, g, games);
+                    if (appData) {
+                        updates.app_store_track_id = appData.trackId;
 
-                    // 1. Check if the developer updated the App Store icon
-                    const newIconUrl = (appData.artworkUrl512 || '').trim();
-                    const isCustomLocalBanner = g.banner_url && g.banner_url.startsWith('/Assets/') && !g.banner_url.includes('placeholder');
-                    if (newIconUrl && !isCustomLocalBanner && newIconUrl !== g.banner_url) {
-                        updates.banner_url = newIconUrl;
-                        changedVisibleData = true;
-                    }
-
-                    // 2. Check if the update is a major/content update (excludes bug fixes)
-                    if (isMajorAppStoreUpdate(appData)) {
-                        if (g.last_major_update_date !== appData.currentVersionReleaseDate || g.latest_version !== appData.version) {
+                        const newIconUrl = (appData.artworkUrl512 || '').trim();
+                        const isCustomLocalBanner = g.banner_url && g.banner_url.startsWith('/Assets/') && !g.banner_url.includes('placeholder');
+                        if (newIconUrl && !isCustomLocalBanner && newIconUrl !== g.banner_url) {
+                            updates.banner_url = newIconUrl;
+                            g.banner_url = newIconUrl;
                             changedVisibleData = true;
                         }
-                        updates.last_major_update_date = appData.currentVersionReleaseDate;
-                        updates.latest_version = appData.version;
-                        updates.latest_patch_notes = appData.releaseNotes || 'No specific patch notes provided.';
+
+                        if (isMajorAppStoreUpdate(appData)) {
+                            if (g.last_major_update_date !== appData.currentVersionReleaseDate || g.latest_version !== appData.version) {
+                                changedVisibleData = true;
+                            }
+                            updates.last_major_update_date = appData.currentVersionReleaseDate;
+                            updates.latest_version = appData.version;
+                            updates.latest_patch_notes = appData.releaseNotes || 'No specific patch notes provided.';
+                        }
                     }
                 }
 
@@ -701,11 +782,12 @@ app.post('/api/user/sync', async (req, res) => {
         const decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
         const updates = {};
 
-        // 1. Display Settings (showLb, lbSide)
+        // 1. Display Settings (showLb, lbSide, lowSpecMode)
         if (req.body.settings && typeof req.body.settings === 'object') {
             updates.settings = {
                 showLb: Boolean(req.body.settings.showLb),
-                lbSide: req.body.settings.lbSide === 'left' ? 'left' : 'right'
+                lbSide: req.body.settings.lbSide === 'left' ? 'left' : 'right',
+                lowSpecMode: Boolean(req.body.settings.lowSpecMode)
             };
         }
 
@@ -1284,14 +1366,14 @@ app.get('/api/suggest/lookup', async (req, res) => {
     if (!term) return res.status(400).json({ error: "No search term provided" });
 
     try {
-        // Query the public Apple App Store API
-        const response = await axios.get(`https://itunes.apple.com/search?term=${encodeURIComponent(term)}&entity=software&limit=1`);
+        const allGames = await Game.collection.find({}, { projection: { id: 1, name: 1, banner_url: 1 } }).toArray();
+        const response = await axios.get(`https://itunes.apple.com/search?term=${encodeURIComponent(term)}&entity=software&limit=10`);
         
         if (!response.data.results || response.data.results.length === 0) {
             return res.json({ found: false });
         }
 
-        const appData = response.data.results[0];
+        const appData = findBestAppStoreMatch(response.data.results, { id: '__lookup__', name: term }, allGames) || response.data.results[0];
         const cleanGenres = appData.genres.filter(g => g !== 'Games' && g !== 'Entertainment');
         const majorUpdate = isMajorAppStoreUpdate(appData);
 
