@@ -1156,11 +1156,11 @@
 
                 <div style="display:flex; gap:10px;">
                     <input type="text" id="suggestSearch" class="floral-input" placeholder="Type a game name (e.g. Wuthering Waves)..." onkeydown="if(event.key==='Enter'){event.preventDefault(); lookupGame();}">
-                    <input type="text" id="sgTags" class="floral-input" placeholder="Tags (comma separated, or click below)">
                     <button class="btn-floral pollen" onclick="lookupGame()" style="padding:10px 20px; white-space:nowrap;">Auto-Fill</button>
                 </div>
             </div>
-
+            
+            <input type="text" id="sgTags" class="floral-input" placeholder="Tags (comma separated, or click below)">
             <div style="display:flex; flex-wrap:wrap; gap:5px; margin-top:2px;">
                 <button type="button" class="tag-pill" style="padding:3px 8px; font-size:0.72em;" onclick="toggleSuggestTag('Gacha')">+ Gacha</button>
                 <button type="button" class="tag-pill" style="padding:3px 8px; font-size:0.72em;" onclick="toggleSuggestTag('PC / Sandbox')">+ PC / Sandbox</button>
