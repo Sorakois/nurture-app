@@ -933,7 +933,7 @@
                         <span style="font-size: 0.75em; color: #d0c2f7;">▼</span>
                     </button>
 
-                    <div class="tags-dropdown-panel" id="tagsDropdownPanel" onclick="event.stopPropagation()">
+                    <div class="tags-dropdown-panel" id="tagsDropdownPanel" onclick="event.stopPropagation()" style="width: 340px;">
                         <div class="tags-panel-header">
                             <span style="font-size: 0.78em; color: #a99ec7; font-weight: bold;">Match Logic:</span>
                             <div class="logic-toggle-group">
@@ -943,9 +943,21 @@
                             <button type="button" class="clear-filters-btn" onclick="clearAllFilters()">Reset</button>
                         </div>
 
+                        <div class="tags-section-title">🎮 Game Style & Platform</div>
+                        <div class="tags-pills-grid" id="styleTagsGrid">
+                            <button type="button" class="tag-pill" data-tag="Gacha" onclick="toggleGenreTag('Gacha', this)">Gacha</button>
+                            <button type="button" class="tag-pill" data-tag="PC / Sandbox" onclick="toggleGenreTag('PC / Sandbox', this)">PC / Sandbox</button>
+                            <button type="button" class="tag-pill" data-tag="Moddable" onclick="toggleGenreTag('Moddable', this)">Moddable</button>
+                            <button type="button" class="tag-pill" data-tag="Co-op / Multiplayer" onclick="toggleGenreTag('Co-op / Multiplayer', this)">Co-op / Multiplayer</button>
+                        </div>
+
+                        <div class="tags-divider"></div>
+
                         <div class="tags-section-title">📚 Genre Tags</div>
                         <div class="tags-pills-grid" id="genreTagsGrid">
                             <button type="button" class="tag-pill" data-tag="RPG" onclick="toggleGenreTag('RPG', this)">RPG</button>
+                            <button type="button" class="tag-pill" data-tag="Survival & Crafting" onclick="toggleGenreTag('Survival & Crafting', this)">Survival & Crafting</button>
+                            <button type="button" class="tag-pill" data-tag="Simulation" onclick="toggleGenreTag('Simulation', this)">Simulation</button>
                             <button type="button" class="tag-pill" data-tag="Action" onclick="toggleGenreTag('Action', this)">Action</button>
                             <button type="button" class="tag-pill" data-tag="Turn-Based" onclick="toggleGenreTag('Turn-Based', this)">Turn-Based</button>
                             <button type="button" class="tag-pill" data-tag="Tower Defense" onclick="toggleGenreTag('Tower Defense', this)">Tower Defense</button>
@@ -1143,6 +1155,16 @@
                 </div>
                 <div style="display:flex; gap:10px;">
                     <input type="text" id="suggestSearch" class="floral-input" placeholder="Type a game name (e.g. Wuthering Waves)..." onkeydown="if(event.key==='Enter'){event.preventDefault(); lookupGame();}">
+                    <input type="text" id="sgTags" class="floral-input" placeholder="Tags (comma separated, or click below)">
+                        <div style="display:flex; flex-wrap:wrap; gap:5px; margin-top:2px;">
+                            <button type="button" class="tag-pill" style="padding:3px 8px; font-size:0.72em;" onclick="toggleSuggestTag('Gacha')">+ Gacha</button>
+                            <button type="button" class="tag-pill" style="padding:3px 8px; font-size:0.72em;" onclick="toggleSuggestTag('PC / Sandbox')">+ PC / Sandbox</button>
+                            <button type="button" class="tag-pill" style="padding:3px 8px; font-size:0.72em;" onclick="toggleSuggestTag('Moddable')">+ Moddable</button>
+                            <button type="button" class="tag-pill" style="padding:3px 8px; font-size:0.72em;" onclick="toggleSuggestTag('Co-op / Multiplayer')">+ Co-op</button>
+                            <button type="button" class="tag-pill" style="padding:3px 8px; font-size:0.72em;" onclick="toggleSuggestTag('RPG')">+ RPG</button>
+                            <button type="button" class="tag-pill" style="padding:3px 8px; font-size:0.72em;" onclick="toggleSuggestTag('Survival & Crafting')">+ Survival & Crafting</button>
+                            <button type="button" class="tag-pill" style="padding:3px 8px; font-size:0.72em;" onclick="toggleSuggestTag('Simulation')">+ Simulation</button>
+                        </div>
                     <button class="btn-floral pollen" onclick="lookupGame()" style="padding:10px 20px; white-space:nowrap;">Auto-Fill</button>
                 </div>
             </div>
@@ -1797,6 +1819,18 @@
             } catch (e) {
                 preview.style.display = 'none';
             }
+        }
+
+        function toggleSuggestTag(tag) {
+            const input = document.getElementById('sgTags');
+            if (!input) return;
+            let current = input.value.split(',').map(s => s.trim()).filter(Boolean);
+            if (current.includes(tag)) {
+                current = current.filter(t => t !== tag);
+            } else {
+                current.push(tag);
+            }
+            input.value = current.join(', ');
         }
 
         async function lookupGame() {

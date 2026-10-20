@@ -442,6 +442,21 @@ document.addEventListener('DOMContentLoaded', () => {
         lbBackdrop.onclick = closeMobileLeaderboard;
         document.body.appendChild(lbBackdrop);
     }
+    // 1.5 Inject (?) Point Weights Help Button next to "Top Contributors" / "Game Leaderboard"
+    const lbHeader = document.querySelector('.lb-header');
+    if (lbHeader && !lbHeader.querySelector('.lb-help-btn')) {
+        const helpBtn = document.createElement('button');
+        helpBtn.type = 'button';
+        helpBtn.className = 'lb-help-btn';
+        helpBtn.title = 'How Contribution Points Work';
+        helpBtn.setAttribute('aria-label', 'View Contribution Point Weights');
+        helpBtn.textContent = '?';
+        helpBtn.onclick = (e) => {
+            e.stopPropagation();
+            openPointWeightsModal();
+        };
+        lbHeader.appendChild(helpBtn);
+    }
 
     // 2. Inject Upgraded Botanical Modals (Mailbox, Compose, Profile, Settings)
     const modalWrapper = document.createElement('div');
@@ -554,6 +569,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             </div>
         </div>
+        <div id="pointWeightsModal" class="modal-overlay">
+            <div class="modal-window" style="max-width: 460px;">
+                <button class="modal-close" onclick="document.getElementById('pointWeightsModal').classList.remove('active')">×</button>
+                <h2 class="modal-title">🏆 Contribution Point Weights</h2>
+                <p style="color: #d0c2f7; font-size: 0.88em; margin: 0 0 12px 0; line-height: 1.45;">
+                    Earn points automatically whenever your suggested links, guides, or updates are approved by staff:
+                </p>
+                <div id="pointWeightsContainer" class="weights-list">Loading point weights...</div>
+            </div>
+        </div>
     `;
     document.body.appendChild(modalWrapper);
     // Enhance all modals and close buttons with ARIA accessibility attributes
@@ -614,6 +639,56 @@ function openComposeModal() { document.getElementById('composeModal').classList.
 function closeComposeModal() { document.getElementById('composeModal').classList.remove('active'); }
 function openSettingsModal() { document.getElementById('settingsModal').classList.add('active'); }
 function closeSettingsModal() { document.getElementById('settingsModal').classList.remove('active'); }
+async function openPointWeightsModal() {
+    const modal = document.getElementById('pointWeightsModal');
+    const container = document.getElementById('pointWeightsContainer');
+    if (!modal || !container) return;
+    modal.classList.add('active');
+
+    let weights = {
+        CREATE_GAME: 5,
+        CREATE_GUIDE: 4,
+        CREATE_MOD: 4,
+        CREATE_ASSET: 3,
+        EDIT_GAME_INFO: 2,
+        EDIT_GUIDE: 2,
+        EDIT_MOD: 2,
+        EDIT_ASSET: 2,
+        CREATE_COMMUNITY: 2,
+        CREATE_COUPON: 2,
+        EDIT_COMMUNITY: 1,
+        REPORT_EXPIRED_COUPON: 1,
+        RATE_GAME: 1
+    };
+
+    try {
+        const res = await fetch('/api/point-weights');
+        if (res.ok) weights = await res.json();
+    } catch (e) {}
+
+    const labels = [
+        { key: 'CREATE_GAME', label: 'Suggest a New Game' },
+        { key: 'CREATE_GUIDE', label: 'Add a Guide or Tool' },
+        { key: 'CREATE_MOD', label: 'Add a New Mod' },
+        { key: 'CREATE_ASSET', label: 'Add Raw Assets' },
+        { key: 'CREATE_COMMUNITY', label: 'Add a Community Link' },
+        { key: 'CREATE_COUPON', label: 'Add a Live Coupon Code' },
+        { key: 'EDIT_GAME_INFO', label: 'Edit Game Overview / Info / Links' },
+        { key: 'EDIT_GUIDE', label: 'Update an Existing Guide / Mod / Asset' },
+        { key: 'REPORT_EXPIRED_COUPON', label: 'Report an Expired Coupon Code' },
+        { key: 'RATE_GAME', label: 'Rate a Game (First Vote per Game)' }
+    ];
+
+    container.innerHTML = labels.map(item => {
+        const pts = weights[item.key] !== undefined ? weights[item.key] : (weights.DEFAULT || 1);
+        return `
+            <div class="weight-row">
+                <span style="color: #f4f0ff; font-weight: bold;">${item.label}</span>
+                <span class="weight-pts-badge">+${pts} pt${pts !== 1 ? 's' : ''}</span>
+            </div>
+        `;
+    }).join('');
+}
 
 async function openUserProfileModal(discordId, username = null) {
     const query = discordId || username;

@@ -133,7 +133,7 @@ const isMajorAppStoreUpdate = (appData) => {
     return false;
 };
 
-// Non-blocking background sync so existing games automatically stay updated with Apple App Store data
+// Non-blocking background sync for App Store major updates AND icon changes
 let isSyncingAppStore = false;
 const syncAppStoreUpdatesBackground = async (games) => {
     if (isSyncingAppStore) return;
@@ -154,16 +154,34 @@ const syncAppStoreUpdatesBackground = async (games) => {
             try {
                 const res = await axios.get(`https://itunes.apple.com/search?term=${encodeURIComponent(g.name)}&entity=software&limit=1`);
                 const updates = { app_store_checked_at: new Date().toISOString() };
+                let changedVisibleData = false;
 
                 if (res.data.results && res.data.results.length > 0) {
                     const appData = res.data.results[0];
+
+                    // 1. Check if the developer updated the App Store icon
+                    const newIconUrl = (appData.artworkUrl512 || '').trim();
+                    const isCustomLocalBanner = g.banner_url && g.banner_url.startsWith('/Assets/') && !g.banner_url.includes('placeholder');
+                    if (newIconUrl && !isCustomLocalBanner && newIconUrl !== g.banner_url) {
+                        updates.banner_url = newIconUrl;
+                        changedVisibleData = true;
+                    }
+
+                    // 2. Check if the update is a major/content update (excludes bug fixes)
                     if (isMajorAppStoreUpdate(appData)) {
+                        if (g.last_major_update_date !== appData.currentVersionReleaseDate || g.latest_version !== appData.version) {
+                            changedVisibleData = true;
+                        }
                         updates.last_major_update_date = appData.currentVersionReleaseDate;
                         updates.latest_version = appData.version;
                         updates.latest_patch_notes = appData.releaseNotes || 'No specific patch notes provided.';
                     }
                 }
+
                 await Game.collection.updateOne({ id: g.id }, { $set: updates });
+                if (changedVisibleData && typeof broadcastLiveEvent === 'function') {
+                    broadcastLiveEvent('game_updated', { gameId: g.id });
+                }
             } catch (e) {}
         }
     } finally {
@@ -542,6 +560,11 @@ app.post('/api/contribute', async (req, res) => {
         // Expose the raw error message to the frontend alert
         res.status(500).json({ error: err.message || "Failed to process contribution." });
     }
+});
+
+// Expose live POINT_WEIGHTS so editing them at the top of server.js updates the UI automatically
+app.get('/api/point-weights', (req, res) => {
+    res.json(POINT_WEIGHTS);
 });
 
 // --- LEADERBOARD & MAILBOX API ROUTES ---
