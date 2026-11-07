@@ -39,60 +39,97 @@
             color: white;
         }
 
-        .about-us h1 {
-            background: linear-gradient(135deg, #ffffff 0%, #d0c2f7 60%, #9d8ec7 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-shadow: 0 4px 20px rgba(157, 142, 199, 0.35);
+        .about-us {
+            text-align: center;
+            padding: 35px 40px;
+            color: white;
         }
 
-        .search-container {
-            text-align: center;
-            margin: 20px auto;
-            width: 80%;
-            max-width: 600px;
+        .about-us h1 {
+            background: linear-gradient(135deg, #ffffff 0%, #ffe89e 42%, #c4afff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 4px 24px rgba(255, 209, 71, 0.25);
+        }
+
+        /* === REWORKED UNIFIED SEARCH & FILTER COMMAND BAR === */
+        .search-filter-bar {
+            display: flex;
+            align-items: stretch;
+            justify-content: center;
+            gap: 12px;
+            max-width: 780px;
+            width: 100%;
+            margin: 18px auto 26px auto;
+            box-sizing: border-box;
+        }
+
+        .search-field-shell {
+            position: relative;
+            display: flex;
+            align-items: center;
+            flex: 1 1 auto;
+            background: linear-gradient(145deg, rgba(28, 19, 48, 0.95) 0%, rgba(17, 11, 31, 0.98) 100%);
+            border: 1.5px solid rgba(168, 139, 250, 0.38);
+            border-radius: 20px 6px 20px 6px;
+            padding: 0 14px;
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.55), 0 6px 20px rgba(0, 0, 0, 0.35);
+            transition: border-color 0.22s ease, box-shadow 0.22s ease, border-radius 0.22s ease;
+        }
+
+        .search-field-shell:focus-within {
+            border-color: #ffd147;
+            border-radius: 6px 20px 6px 20px;
+            box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.5), 0 0 18px rgba(255, 209, 71, 0.28), 0 6px 20px rgba(104, 70, 198, 0.3);
+        }
+
+        .search-icon-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: none;
+            border: none;
+            padding: 0;
+            margin-right: 10px;
+            cursor: pointer;
+            color: #ffd147;
+            flex-shrink: 0;
+        }
+
+        .search-icon-btn svg {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+            transition: transform 0.2s ease;
+        }
+
+        .search-field-shell:focus-within .search-icon-btn svg {
+            transform: scale(1.12);
         }
 
         .search-input {
             width: 100%;
-            padding: 12px 20px;
-            font-size: 16px;
-            border: 1px solid rgba(157, 142, 199, 0.35);
-            border-radius: 22px 8px 22px 8px;
-            background-color: rgba(30, 25, 43, 0.9);
-            color: white;
+            padding: 13px 4px;
+            font-size: 15px;
+            border: none;
+            background: transparent;
+            color: #f4f0ff;
             box-sizing: border-box;
-            box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.4), 0 4px 15px rgba(0, 0, 0, 0.2);
-            transition: all 0.25s ease;
+        }
+
+        .search-input::placeholder {
+            color: #9685bd;
         }
 
         .search-input:focus {
             outline: none;
-            border-color: #d0c2f7;
-            box-shadow: 0 0 15px rgba(157, 142, 199, 0.35);
         }
 
-        #tagFilter {
-            padding: 12px 16px !important;
-            border-radius: 20px 6px 20px 6px !important;
-            background: linear-gradient(135deg, #2a223d 0%, #1c162b 100%) !important;
-            color: #f4f0ff !important;
-            border: 1px solid rgba(157, 142, 199, 0.35) !important;
-            font-family: inherit;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        #tagFilter:hover {
-            border-color: #d0c2f7 !important;
-        }
-
+        /* === CLEANER GAME CARDS WITH INTERNAL SEPARATORS & MIDDLE-CLICK === */
         .grid-container {
             display: grid;
-            /* GAME WIDTH */
             grid-template-columns: repeat(5, minmax(0, 1fr));
-            gap: 20px;
+            gap: 18px;
             padding: 0;
             width: 100%;
             max-width: 950px;
@@ -101,32 +138,39 @@
         }
 
         .grid-item {
-            background-color: #1e192b;
-            border: 1px solid rgba(157, 142, 199, 0.24);
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(165deg, rgba(34, 24, 58, 0.94) 0%, rgba(20, 14, 36, 0.98) 100%);
+            border: 1px solid rgba(168, 139, 250, 0.28);
             border-radius: 20px 6px 20px 6px;
-            padding: 15px;
+            padding: 12px;
             text-align: center;
+            text-decoration: none;
+            color: inherit;
             cursor: pointer;
+            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.08);
             transform: translateZ(0);
-            transition: transform 0.16s ease-out, border-color 0.16s ease-out, background-color 0.16s ease-out;
+            transition: transform 0.18s ease-out, border-color 0.18s ease-out, box-shadow 0.18s ease-out, background 0.18s ease-out;
         }
 
         .grid-item:hover {
             transform: translate3d(0, -5px, 0);
-            border-color: #d0c2f7;
-            background-color: #27203a;
+            border-color: rgba(255, 209, 71, 0.75);
+            background: linear-gradient(165deg, rgba(46, 32, 78, 0.96) 0%, rgba(26, 18, 46, 0.98) 100%);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.6), 0 0 16px rgba(255, 209, 71, 0.18);
         }
 
         .grid-item img {
             width: 100%;
-            height: auto;
+            aspect-ratio: 1 / 1;
+            object-fit: cover;
             border-radius: 14px 4px 14px 4px;
+            border: 1px solid rgba(226, 212, 255, 0.2);
             display: block;
         }
 
-        /* Keep filter strictly on img with static opacity on card to avoid scroll repaint lag */
         .grid-item.no-data {
-            opacity: 0.5;
+            opacity: 0.52;
         }
 
         .grid-item.no-data img {
@@ -142,104 +186,126 @@
             filter: none;
         }
 
+        /* Subtle internal separator lines inside each card */
+        .card-divider {
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent 0%, rgba(168, 139, 250, 0.32) 50%, transparent 100%);
+            margin: 9px 0 8px 0;
+            flex-shrink: 0;
+        }
+
         .title-wrapper {
             display: flex;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
-            margin-top: 10px;
-            gap: 8px; 
+            gap: 6px;
+            width: 100%;
+            min-height: 34px;
         }
 
         .grid-item-title {
-            color: #f4f0ff;
-            font-size: 14px;
-            margin: 0; 
+            color: #f7f4ff;
+            font-size: 13.5px;
+            line-height: 1.25;
+            margin: 0;
+            flex: 1;
+            word-break: break-word;
         }
 
         .grid-item-dev {
-            color: #a99ec7;
-            margin-top: 5px;
-            font-size: 12px; 
-            transition: font-size 0.2s ease;
+            color: #b4a3dc;
+            margin-top: 4px;
+            font-size: 11px;
+            line-height: 1.2;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
-        /* === TWILIGHT BOTANICAL STATUS BADGES (HIGH-CONTRAST DROP SHADOW) === */
+        /* === HORIZONTAL 1/3-WIDTH STATUS BADGES === */
         .card-badges-row {
             display: flex;
-            flex-direction: column;
-            align-items: center;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            align-items: stretch;
             justify-content: center;
-            gap: 6px;
-            margin-top: 10px;
+            gap: 4px;
             width: 100%;
+            margin-top: 0;
         }
 
         .status-badge {
+            flex: 0 1 calc(33.333% - 3px);
+            max-width: calc(33.333% - 3px);
+            min-width: 0;
+            box-sizing: border-box;
             display: inline-flex;
             flex-direction: column;
             align-items: stretch;
-            justify-content: center;
-            min-width: 116px;
+            justify-content: space-between;
             padding: 0;
-            border-radius: 12px 4px 12px 4px;
-            line-height: 1.15;
+            border-radius: 7px 2px 7px 2px;
+            line-height: 1.05;
             user-select: none;
             position: relative;
             overflow: hidden;
             cursor: pointer;
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 4px 10px rgba(0, 0, 0, 0.65);
-            transition: transform 0.2s ease, border-radius 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 2px 6px rgba(0, 0, 0, 0.6);
+            transition: transform 0.18s ease, filter 0.18s ease;
         }
 
         .status-badge:hover {
             transform: translateY(-2px);
-            border-radius: 4px 12px 4px 12px;
-            filter: brightness(1.12);
+            filter: brightness(1.14);
         }
 
         .status-badge .badge-title {
-            font-size: 10.5px;
+            font-size: 7px;
             font-weight: bold;
-            letter-spacing: 0.6px;
+            letter-spacing: 0.2px;
             text-transform: uppercase;
-            padding: 5px 10px 4px 10px;
+            padding: 3px 2px 2px 2px;
             text-align: center;
             color: #ffffff;
-            /* Crisp dark drop-shadow halo for maximum legibility */
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.95), 0 0 4px rgba(0, 0, 0, 0.85);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.95);
         }
 
         .status-badge .badge-date {
-            font-size: 9px;
-            letter-spacing: 0.3px;
-            padding: 3px 10px;
-            background: rgba(12, 9, 20, 0.78);
+            font-size: 6px;
+            letter-spacing: 0px;
+            padding: 2px 1px;
+            background: rgba(10, 7, 18, 0.82);
             border-top: 1px solid rgba(255, 255, 255, 0.18);
             color: #f4f0ff;
             text-align: center;
-            text-transform: none;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
-        /* Blossom Rose — NEW GAME! */
+        /* Blossom Rose — NEW! */
         .status-badge.badge-new {
-            background: linear-gradient(135deg, #c93b72 0%, #7d1941 100%);
-            border: 1.5px solid #ff9ec2;
+            background: linear-gradient(135deg, #d94682 0%, #851c48 100%);
+            border: 1px solid #ff9ec2;
         }
 
-        /* Canopy Emerald — GAME UPDATE! */
+        /* Canopy Emerald — UPDATE! */
         .status-badge.badge-update {
-            background: linear-gradient(135deg, #2b8a5e 0%, #164f34 100%);
-            border: 1.5px solid #88ebb9;
+            background: linear-gradient(135deg, #2ea36e 0%, #165437 100%);
+            border: 1px solid #88ebb9;
         }
 
-        /* Deep Amber Gold — EDITED! */
+        /* Solar Amber Gold — EDITED! */
         .status-badge.badge-edited {
-            background: linear-gradient(135deg, #b87b14 0%, #6e4405 100%);
-            border: 1.5px solid #ffe082;
+            background: linear-gradient(135deg, #d48e15 0%, #784b06 100%);
+            border: 1px solid #ffe082;
         }
 
-        /* Soft Botanical Shimmer Sweep */
+        /* Soft Shimmer Sweep */
         .status-badge::after {
             content: '';
             position: absolute;
@@ -263,68 +329,61 @@
             display: inline-flex;
             justify-content: center;
             align-items: center;
-            width: 1.6em;
-            height: 1.6em;
-            min-width: 1.6em;
-            min-height: 1.6em;
+            width: 22px;
+            height: 22px;
+            min-width: 22px;
+            min-height: 22px;
             aspect-ratio: 1 / 1;
             flex-shrink: 0;
-            background: linear-gradient(135deg, #6247a6, #3d2c6b);
+            background: linear-gradient(135deg, #6846c6, #3b2378);
             color: #ffffff;
-            border: 1.5px solid rgba(226, 214, 255, 0.65);
+            border: 1.5px solid rgba(226, 212, 255, 0.65);
             border-radius: 8px 3px 8px 3px;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.2s ease;
         }
 
         .info-icon:hover {
-            background: linear-gradient(135deg, #f6c85f, #d99b26);
-            color: #1a1228;
-            border-color: #ffe6a3;
-            transform: scale(1.15) rotate(8deg);
-        }
-        
-        .info-icon.disabled {
-            cursor: not-allowed;
-            opacity: 0.5;
+            background: linear-gradient(135deg, #ffd147, #e69215);
+            color: #140e21;
+            border-color: #fff3c4;
+            transform: scale(1.12);
         }
 
-        .info-icon.disabled:hover {
-            background-color: #3a3a45;
-            color: #aaa;
-            transform: none;
-        }
-
-/* === BOTANICAL MULTI-TAG & AGE FILTER MENU === */
+        /* === COMPLEMENTARY PURPLE & GOLD FILTER BUTTON === */
         .tags-menu-wrapper {
             position: relative;
             user-select: none;
+            display: flex;
         }
 
         .tags-menu-trigger {
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 8px;
-            padding: 11px 18px;
+            padding: 0 20px;
             border-radius: 20px 6px 20px 6px;
-            background: linear-gradient(135deg, #32274a 0%, #1e172e 100%);
-            color: #f4f0ff;
-            border: 1px solid rgba(208, 194, 247, 0.4);
+            background: linear-gradient(135deg, #5c3db3 0%, #341f69 100%);
+            color: #ffffff;
+            border: 1.5px solid rgba(255, 209, 71, 0.55);
             font-family: inherit;
             font-size: 0.95em;
             font-weight: bold;
             cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.3), 0 6px 18px rgba(0, 0, 0, 0.42);
             transition: all 0.2s ease;
             white-space: nowrap;
         }
 
         .tags-menu-trigger:hover, .tags-menu-trigger.open {
             border-radius: 6px 20px 6px 20px;
-            border-color: #d0c2f7;
-            background: linear-gradient(135deg, #473769 0%, #2a2040 100%);
+            border-color: #ffd147;
+            background: linear-gradient(135deg, #724fd6 0%, #442a87 100%);
+            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.45), 0 0 16px rgba(255, 209, 71, 0.32);
+            transform: translateY(-1px);
         }
 
         .filter-count-badge {
@@ -918,19 +977,20 @@
                 </div>
             </div>
 
-            <div class="search-container" style="display: flex; gap: 10px; justify-content: center; align-items: center; max-width: 800px; width: 100%; margin: 15px auto 22px auto;">
-                <div style="position: relative; display: flex; align-items: center; flex-grow: 1;">
-                    <button id="searchToggle" style="background: none; border: none; cursor: pointer; padding: 0 10px; z-index: 10;" title="Toggle Search">
-                        <svg viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: #aaa;"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+            <div class="search-filter-bar">
+                <div class="search-field-shell">
+                    <button type="button" id="searchToggle" class="search-icon-btn" title="Focus Search" onclick="document.getElementById('searchInput').focus()">
+                        <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
                     </button>
-                    <input type="text" class="search-input" placeholder="Search games..." id="searchInput" style="width: 100%; opacity: 1; padding: 12px 20px; transition: all 0.3s ease; flex-grow: 1;">
+                    <input type="text" class="search-input" placeholder="Search games by title or developer..." id="searchInput">
                 </div>
                 
                 <div class="tags-menu-wrapper" id="tagsMenuWrapper">
                     <button type="button" class="tags-menu-trigger" id="tagsMenuBtn" onclick="toggleTagsMenu(event)">
-                        <span>✿ Filters</span>
+                        <span style="color: #ffd147;">✿</span>
+                        <span>Filters</span>
                         <span id="activeFilterCount" class="filter-count-badge" style="display:none;">0</span>
-                        <span style="font-size: 0.75em; color: #d0c2f7;">▼</span>
+                        <span style="font-size: 0.72em; color: #ffd147;">▼</span>
                     </button>
 
                     <div class="tags-dropdown-panel" id="tagsDropdownPanel" onclick="event.stopPropagation()" style="width: 340px;">
@@ -1126,17 +1186,21 @@
             <div class="modal-form-stack">
                 <input type="text" id="editTrailer" class="floral-input" placeholder="YouTube Trailer Video ID or URL">
                 
+                <select id="editPlatform" class="floral-select">
+                    <option value="">Platform Availability (Keep Current)...</option>
+                    <option value="Mobile">Mobile Only</option>
+                    <option value="PC">PC Only</option>
+                    <option value="PC+Mobile">PC + Mobile (Cross-Platform)</option>
+                </select>
+
                 <select id="editAge" class="floral-select">
-                    <option value="">Age Rating...</option>
+                    <option value="">Age Rating (Keep Current)...</option>
                     <option value="E">E (Everyone)</option>
                     <option value="T">T (Teen)</option>
                     <option value="M">M (Mature 17+)</option>
                 </select>
                 
-                <div class="req-field-row">
-                    <input type="text" id="editCommit" class="floral-input" placeholder="What was updated (e.g. Added Trailer)">
-                    <span class="req-icon"></span>
-                </div>
+                <input type="text" id="editCommit" class="floral-input" placeholder="Commit Note (Optional, e.g. Updated platform to PC+Mobile)">
                 
                 <button class="btn-floral blossom" onclick="submitInfoEdit()" style="width:100%; padding:12px; margin-top:4px;">Submit Update to Discord</button>
             </div>
@@ -1251,7 +1315,7 @@
                     lbList.innerHTML = lbData.top10.map((u, i) => `
                         <div class="lb-row ${i < 3 ? `rank-${i+1}` : ''}" style="cursor:pointer;" onclick="openUserProfileModal('${u.discordId}')">
                             <div class="lb-rank-badge">#${i+1}</div>
-                            <img src="${u.avatar ? `https://cdn.discordapp.com/avatars/${u.discordId}/${u.avatar}.webp` : '/Assets/placeholder.webp'}" class="lb-avatar">
+                            <img src="${u.avatar ? `https://cdn.discordapp.com/avatars/${u.discordId}/${u.avatar}.webp` : '/Assets/placeholder_pfp.webp'}" class="lb-avatar">
                             <div class="lb-info"><div class="lb-name">${u.username}</div></div>
                             <div class="lb-score">${u.totalPoints} pts</div>
                         </div>
@@ -1263,7 +1327,7 @@
                         <div style="width: 100%; height: 1px; background: linear-gradient(90deg, transparent, rgba(157, 142, 199, 0.4), transparent); margin: 12px 0;"></div>
                         <div class="lb-row" style="border-color:#9d8ec7; margin-bottom: 0; cursor: pointer;" onclick="openUserProfileModal('${lbData.userRank.discordId}')">
                             <div class="lb-rank-badge">#${lbData.userRank.rank}</div>
-                            <img src="${lbData.userRank.avatar ? `https://cdn.discordapp.com/avatars/${lbData.userRank.discordId}/${lbData.userRank.avatar}.webp` : '/Assets/placeholder.webp'}" class="lb-avatar">
+                            <img src="${lbData.userRank.avatar ? `https://cdn.discordapp.com/avatars/${lbData.userRank.discordId}/${lbData.userRank.avatar}.webp` : '/Assets/placeholder_pfp.webp'}" class="lb-avatar">
                             <div class="lb-info"><div class="lb-name">You (${lbData.userRank.username})</div></div>
                             <div class="lb-score">${lbData.userRank.totalPoints} pts</div>
                         </div>`;
@@ -1696,19 +1760,19 @@
                 filteredGames.forEach(game => {
                     if (!game) return;
                     
-                    // Determine if the game is completely empty
                     const hasData = typeof game === 'object' && !!(game.overview_text || (game.guides && game.guides.length) || (game.assets && game.assets.length) || (game.communities && game.communities.length) || (game.mods && game.mods.length) || game.trailer_id || game.ratings);
-                    
-                    const gridItem = document.createElement('div');
-                    gridItem.className = `grid-item ${hasData ? '' : 'no-data'}`; 
-                    
                     const gameName = typeof game === 'string' ? game : (game.name || 'Unknown Game');
                     const gameId = game.id || '';
                     const iconUrl = typeof game === 'object' && game.banner_url ? game.banner_url : '/Assets/placeholder.webp';
                     const developer = typeof game === 'object' && game.developer ? game.developer : '';
                     
+                    // Use an <a> element so middle-mouse-click and Ctrl+click open in a new tab natively
+                    const gridItem = document.createElement('a');
+                    gridItem.href = gameId ? `/games/${encodeURIComponent(gameId)}` : '#';
+                    gridItem.className = `grid-item ${hasData ? '' : 'no-data'}`; 
+                    
                     const isStarred = userStarredGames.includes(gameId);
-                    const starColor = isStarred ? '#ffc107' : '#555';
+                    const starColor = isStarred ? '#ffd147' : '#5e527a';
 
                     // Evaluate recency windows (7 days for NEW! and UPDATE!, 2 days for EDITED!)
                     const nowMs = Date.now();
@@ -1726,21 +1790,22 @@
                     let badgesHtml = '';
                     if (isNew || isUpdated || isEdited) {
                         badgesHtml = `
+                            <div class="card-divider"></div>
                             <div class="card-badges-row">
                                 ${isNew ? `
-                                    <button type="button" class="status-badge badge-new" onclick="event.stopPropagation(); window.location.href='/games/${gameId}'" title="Added within the last 7 days">
-                                        <span class="badge-title">NEW GAME!</span>
+                                    <button type="button" class="status-badge badge-new" onclick="event.preventDefault(); event.stopPropagation(); window.location.href='/games/${gameId}'" title="Added within the last 7 days">
+                                        <span class="badge-title">NEW!</span>
                                         <span class="badge-date">${formatBadgeDate(createdMs)}</span>
                                     </button>
                                 ` : ''}
                                 ${isUpdated ? `
-                                    <button type="button" class="status-badge badge-update" onclick="event.stopPropagation(); openAppUpdateModal('${gameId}')" title="Click to view latest patch notes">
-                                        <span class="badge-title">GAME UPDATE!</span>
+                                    <button type="button" class="status-badge badge-update" onclick="event.preventDefault(); event.stopPropagation(); openAppUpdateModal('${gameId}')" title="Click to view latest patch notes">
+                                        <span class="badge-title">UPDATE!</span>
                                         <span class="badge-date">${formatBadgeDate(updatedMs)}</span>
                                     </button>
                                 ` : ''}
                                 ${isEdited ? `
-                                    <button type="button" class="status-badge badge-edited" onclick="event.stopPropagation(); openGameEditsModal('${gameId}')" title="Click to view recent community edits">
+                                    <button type="button" class="status-badge badge-edited" onclick="event.preventDefault(); event.stopPropagation(); openGameEditsModal('${gameId}')" title="Click to view recent community edits">
                                         <span class="badge-title">EDITED!</span>
                                         <span class="badge-date">${formatBadgeDate(editedMs)}</span>
                                     </button>
@@ -1751,8 +1816,9 @@
 
                     gridItem.innerHTML = `
                         <img src="${iconUrl}" alt="${escapeHtml(gameName)}" loading="lazy" onerror="this.src='/Assets/placeholder.webp'">
+                        <div class="card-divider"></div>
                         <div class="title-wrapper">
-                            <svg class="star-btn" data-id="${gameId}" style="width:18px;height:18px;cursor:pointer;fill:${starColor}; transition:fill 0.2s;" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                            <svg class="star-btn" data-id="${gameId}" style="width:18px;height:18px;cursor:pointer;fill:${starColor};flex-shrink:0;transition:fill 0.2s, transform 0.15s;" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
                             <div class="grid-item-title">${escapeHtml(gameName)}</div>
                             <div class="info-icon" title="View Game Details">i</div>
                         </div>
@@ -1762,6 +1828,7 @@
                     
                     const starBtn = gridItem.querySelector('.star-btn');
                     starBtn.addEventListener('click', async (e) => {
+                        e.preventDefault();
                         e.stopPropagation();
                         if (!window.requireAuth('favorite games')) return;
                         if (userStarredGames.includes(gameId)) {
@@ -1777,14 +1844,9 @@
 
                     const infoBtn = gridItem.querySelector('.info-icon');
                     infoBtn.addEventListener('click', (e) => {
+                        e.preventDefault();
                         e.stopPropagation(); 
                         openGameModal(typeof game === 'object' ? game : { name: gameName }, gridItem);
-                    });
-                    
-                    gridItem.addEventListener('click', () => {
-                        if (gameId) { 
-                            window.location.href = `/games/${gameId}`;
-                        }
                     });
                     
                     gameGrid.appendChild(gridItem);
@@ -1922,8 +1984,9 @@
                     
                     // Auto-select matching pills in the "Select All That Apply" box
                     document.querySelectorAll('#sgTagsSelector .tag-pill').forEach(el => el.classList.remove('selected'));
-                    const mobilePill = document.querySelector('#sgTagsSelector .sg-platform-pill[data-tag="Mobile"]');
-                    if (mobilePill) mobilePill.classList.add('selected');
+                    const matchedPlat = data.platformTag || 'Mobile';
+                    const platPill = document.querySelector(`#sgTagsSelector .sg-platform-pill[data-tag="${matchedPlat}"]`);
+                    if (platPill) platPill.classList.add('selected');
 
                     const returnedTags = (data.tags || []).map(t => t.toLowerCase());
                     document.querySelectorAll('#sgTagsSelector .sg-genre-pill').forEach(pill => {
@@ -2077,6 +2140,11 @@
             document.getElementById('gameModal').classList.remove('active');
             
             document.getElementById('editTrailer').value = currentGameForModal.trailer_id || '';
+            const gTags = Array.isArray(currentGameForModal.tags) ? currentGameForModal.tags : [];
+            const currentPlat = gTags.find(t => t === 'PC+Mobile' || t === 'PC' || t === 'Mobile') || 'Mobile';
+            const platSelect = document.getElementById('editPlatform');
+            if (platSelect) platSelect.value = currentPlat;
+
             document.getElementById('editAge').value = currentGameForModal.ratings?.age || '';
             document.getElementById('editCommit').value = '';
             
@@ -2086,7 +2154,6 @@
         async function submitInfoEdit() {
             if (!currentGameForModal) return window.showCustomAlert("No game selected.", "Error");
             const commitMsg = document.getElementById('editCommit').value.trim();
-            if (!commitMsg) return window.showCustomAlert("Please enter a brief note describing what was updated.", "Missing Commit Note");
 
             const gName = typeof currentGameForModal === 'string' ? currentGameForModal : (currentGameForModal.name || 'Unknown Game');
             const gId = (currentGameForModal && currentGameForModal.id) ? currentGameForModal.id : gName.toLowerCase().replace(/[^a-z0-9]/g, '-');
@@ -2103,6 +2170,7 @@
                 targetIdentifier: gName, 
                 data: {
                     trailer_id: parsedTrailerId,
+                    platform_tag: document.getElementById('editPlatform')?.value || undefined,
                     age: document.getElementById('editAge').value,
                     commitMessage: commitMsg
                 }

@@ -1,7 +1,27 @@
-// --- Global .webp Auto-Fallback (Loads .webp first, falls back to .png if missing) ---
+// --- Global Image & PFP Auto-Fallback ---
 window.addEventListener('error', (e) => {
-    if (e.target && e.target.tagName === 'IMG' && e.target.src && e.target.src.endsWith('.webp')) {
-        e.target.src = e.target.src.replace(/\.webp$/, '.png');
+    const img = e.target;
+    if (!img || img.tagName !== 'IMG' || !img.src) return;
+
+    // 1. If a user/contributor avatar fails to load, fallback to /Assets/placeholder_pfp.webp
+    const isAvatar = img.classList.contains('user-avatar') ||
+                     img.classList.contains('lb-avatar') ||
+                     img.classList.contains('profile-avatar') ||
+                     img.id === 'upAvatar' ||
+                     img.id === 'pageAvatar' ||
+                     img.src.includes('discordapp.com/avatars') ||
+                     img.src.includes('discordapp.com/embed/avatars');
+
+    if (isAvatar) {
+        if (!img.src.includes('placeholder_pfp.webp')) {
+            img.src = '/Assets/placeholder_pfp.webp';
+        }
+        return;
+    }
+
+    // 2. For general local .webp assets, fallback to .png if .webp is missing
+    if (img.src.endsWith('.webp') && !img.src.includes('placeholder_pfp.webp')) {
+        img.src = img.src.replace(/\.webp$/, '.png');
     }
 }, true);
 
@@ -513,17 +533,27 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="modal-window" style="max-width: 420px;">
                 <button class="modal-close" onclick="closeSettingsModal()">×</button>
                 <h2 class="modal-title">🌿 Display Settings</h2>
-                <label class="floral-setting-card" style="margin-bottom:0;">
+                <label class="floral-setting-card">
                     <div>
-                        <div style="font-weight:bold; color:#f4f0ff;">Pause Background Animations</div>
-                        <div style="font-size:0.75em; color:#a99ec7;">Disables floating petals & fireflies for lower-end devices</div>
+                        <div style="font-weight:bold; color:#f4f0ff;">Show Leaderboard Panel</div>
+                        <div style="font-size:0.75em; color:#a99ec7;">Display contributor rankings on desktop</div>
                     </div>
-                    <input type="checkbox" id="toggleLowSpec" class="floral-checkbox" onchange="saveSettings()">
+                    <input type="checkbox" id="toggleLeaderboard" class="floral-checkbox" checked onchange="saveSettings()">
+                </label>
+                <label class="floral-setting-card">
+                    <div>
+                        <div style="font-weight:bold; color:#f4f0ff;">Leaderboard Position</div>
+                        <div style="font-size:0.75em; color:#a99ec7;">Choose which side the panel blooms</div>
+                    </div>
+                    <select id="selectLbSide" class="floral-select" style="width: auto; padding: 8px 14px;" onchange="saveSettings()">
+                        <option value="right">Right Side</option>
+                        <option value="left">Left Side</option>
+                    </select>
                 </label>
                 <label class="floral-setting-card" style="margin-bottom:0;">
                     <div>
-                        <div style="font-weight:bold; color:#f6c85f;">Low-Spec / All-in-One Mode</div>
-                        <div style="font-size:0.75em; color:#a99ec7;">Pauses background animations & opens all game resources on 1 page</div>
+                        <div style="font-weight:bold; color:#f6c85f;">Low-Spec Mode</div>
+                        <div style="font-size:0.75em; color:#a99ec7;">Disables floating background animations for better performance</div>
                     </div>
                     <input type="checkbox" id="toggleLowSpec" class="floral-checkbox" onchange="saveSettings()">
                 </label>
@@ -694,6 +724,7 @@ async function openPointWeightsModal() {
 }
 
 let cachedModalContributions = [];
+let cachedModalGamePoints = {};
 let currentModalContribSort = 'recent'; // 'recent' | 'most'
 
 function renderModalContributions(sortMode = 'recent') {
@@ -716,23 +747,35 @@ function renderModalContributions(sortMode = 'recent') {
     const grouped = {};
     cachedModalContributions.forEach(c => {
         const gKey = c.gameId || 'general';
-        if (!grouped[gKey]) grouped[gKey] = { name: c.gameName || gKey, icon: c.gameIcon || '/Assets/placeholder.webp', items: [], latestMs: 0 };
-        grouped[gKey].items.push(c);
+        if (!grouped[gKey]) {
+            grouped[gKey] = {
+                gameId: gKey,
+                name: c.gameName || gKey,
+                icon: c.gameIcon || '/Assets/placeholder.webp',
+                items: [],
+                summedPts: 0,
+                latestMs: 0
+            };
+        }
+        const itemPts = Number(c.points) || 2;
+        grouped[gKey].items.push({ ...c, points: itemPts });
+        grouped[gKey].summedPts += itemPts;
         const itemMs = new Date(c.date).getTime() || 0;
         if (itemMs > grouped[gKey].latestMs) grouped[gKey].latestMs = itemMs;
     });
 
-    // Always sort items inside each game category from most recent to oldest
     const groupsArray = Object.values(grouped);
     groupsArray.forEach(g => {
+        // Use the higher of stored gamePoints (which includes +1 game ratings) or the summed contribution weights
+        const storedGamePts = Number(cachedModalGamePoints[g.gameId]) || 0;
+        g.totalPts = Math.max(storedGamePts, g.summedPts);
         g.items.sort((a, b) => (new Date(b.date).getTime() || 0) - (new Date(a.date).getTime() || 0));
     });
 
-    // Sort categories by Recently Contributed (default) or Most Contributed
     groupsArray.sort((a, b) => {
         if (sortMode === 'most') {
-            const countDiff = b.items.length - a.items.length;
-            if (countDiff !== 0) return countDiff;
+            const ptsDiff = b.totalPts - a.totalPts;
+            if (ptsDiff !== 0) return ptsDiff;
         }
         return b.latestMs - a.latestMs;
     });
@@ -742,7 +785,7 @@ function renderModalContributions(sortMode = 'recent') {
             <div class="profile-game-header" onclick="this.parentElement.classList.toggle('open')">
                 <div style="display:flex; align-items:center; gap:10px;">
                     <img src="${group.icon}" style="width:24px; height:24px; border-radius:6px; object-fit:cover; border: 1px solid rgba(157, 142, 199, 0.4);">
-                    <strong style="color: #f4f0ff;">${escapeTxt(group.name)} <span style="color: #7bc996;">(+${group.items.length})</span></strong>
+                    <strong style="color: #f4f0ff;">${escapeTxt(group.name)} <span style="color: #7bc996;">(+${group.totalPts} pts)</span></strong>
                 </div>
                 <span class="toggle-arrow" style="font-size:0.8em; color:#a99ec7;">▼</span>
             </div>
@@ -757,9 +800,10 @@ function renderModalContributions(sortMode = 'recent') {
                                 <div style="font-weight:bold; color:#d0c2f7; font-size:1.05em;">${escapeTxt(c.target)}</div>
                                 <span style="font-size:0.75em; color:#a99ec7;">${new Date(c.date).toLocaleDateString()}</span>
                             </div>
-                            <div style="font-size:0.8em; color:#a99ec7; display:flex; align-items:center; gap:6px;">
+                            <div style="font-size:0.8em; color:#a99ec7; display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
                                 <strong style="color:#f6c85f; background:rgba(246, 200, 95, 0.12); padding:2px 8px; border-radius:8px 2px 8px 2px; border:1px solid rgba(246, 200, 95, 0.35);">${c.action ? c.action.toUpperCase() : 'EDIT'}</strong> 
                                 <span>in ${c.category}</span>
+                                <span style="margin-left:auto; color:#7bc996; font-weight:bold;">+${c.points} pts</span>
                             </div>
                             ${c.commitMessage ? `<div style="font-size:0.85em; color:#e5dcff; border-left:2px solid #9d8ec7; padding-left:8px; margin-top:8px; font-style: italic;">${escapeTxt(c.commitMessage)}</div>` : ''}
                         </a>
@@ -784,16 +828,17 @@ async function openUserProfileModal(discordId, username = null) {
         const res = await fetch(`/api/profile/${encodeURIComponent(query)}`);
         if (!res.ok) {
             cachedModalContributions = [];
+            cachedModalGamePoints = {};
             container.innerHTML = '<p style="color:#d96b98;">User not found or is an external author.</p>';
             document.getElementById('upUsername').textContent = username || 'Unknown User';
-            document.getElementById('upAvatar').src = '/Assets/placeholder.webp';
+            document.getElementById('upAvatar').src = '/Assets/placeholder_pfp.webp';
             document.getElementById('upPoints').innerHTML = '<span style="color:#7bc996; font-weight:bold;">0 pts</span>';
             return;
         }
         
         const data = await res.json();
         document.getElementById('upUsername').textContent = data.username;
-        document.getElementById('upAvatar').src = data.avatar ? `https://cdn.discordapp.com/avatars/${data.discordId}/${data.avatar}.webp` : 'https://cdn.discordapp.com/embed/avatars/0.webp';
+        document.getElementById('upAvatar').src = data.avatar ? `https://cdn.discordapp.com/avatars/${data.discordId}/${data.avatar}.webp` : '/Assets/placeholder_pfp.webp';
         
         const rankClass = (data.rank && data.rank <= 3) ? `rank-${data.rank}` : '';
         const rankBadgeHtml = data.rank ? `<span class="lb-rank-badge">#${data.rank}</span>` : '';
@@ -810,7 +855,8 @@ async function openUserProfileModal(discordId, username = null) {
         }
         
         cachedModalContributions = data.contributions || [];
-        renderModalContributions('recent'); // Always default to Recently Contributed
+        cachedModalGamePoints = data.gamePoints || {};
+        renderModalContributions('recent');
     } catch (e) {
         container.innerHTML = '<p style="color:#d96b98;">Failed to load profile.</p>';
     }

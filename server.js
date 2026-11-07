@@ -106,6 +106,86 @@ const cleanEmptyArrays = (game) => {
     return game;
 };
 
+// Extracts an 11-character YouTube Video ID from any YouTube URL or raw ID string
+const extractYouTubeId = (input) => {
+    if (!input || typeof input !== 'string') return '';
+    const trimmed = input.trim();
+    if (/^[a-zA-Z0-9_-]{11}$/.test(trimmed)) return trimmed;
+    const match = trimmed.match(/(?:youtu\.be\/|youtube(?:-nocookie)?\.com\/(?:watch\?.*v=|embed\/|v\/|shorts\/))([a-zA-Z0-9_-]{11})/);
+    return match ? match[1] : '';
+};
+
+// Converts raw contribution data into a clean, non-technical summary for Discord & User Mailboxes
+const formatContributionHumanReadable = (category, action, target, data) => {
+    if (!data || typeof data !== 'object') return 'No additional details.';
+    const labelMap = {
+        name: 'Game Name',
+        title: 'Title',
+        developer: 'Developer',
+        code: 'Coupon Code',
+        rewards: 'Rewards',
+        url: 'Link',
+        download_url: 'Download Link',
+        wiki_url: 'Mod Wiki Link',
+        redeem_portal_url: 'Redemption Page Link',
+        redeem_codes_url: 'Codes List Link',
+        author: 'Author / Info',
+        category: 'Category',
+        targetMod: 'For Mod / Modpack',
+        overview_text: 'Overview Text',
+        new_player_guide: 'New Player Guide Video',
+        new_player_video_id: 'New Player Video ID',
+        trailer_id: 'Trailer Video ID',
+        age: 'Age Rating (ESRB)',
+        tags: 'Tags',
+        commitMessage: 'Contributor Note'
+    };
+
+    const ignoredKeys = new Set(['id', 'platform', 'type', 'version', 'latest_version', 'last_major_update_date', 'latest_update_images', 'banner_url']);
+    const lines = [];
+
+    for (const [key, rawVal] of Object.entries(data)) {
+        if (ignoredKeys.has(key) || rawVal === undefined || rawVal === null || rawVal === '') continue;
+        if (Array.isArray(rawVal) && rawVal.length === 0) continue;
+
+        let valStr = Array.isArray(rawVal) ? rawVal.join(', ') : String(rawVal).replace(/\\n/g, '\n').trim();
+        if (!valStr) continue;
+        if (valStr.length > 350) valStr = valStr.substring(0, 350) + '...';
+
+        const friendlyLabel = labelMap[key] || (key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' '));
+        lines.push(`• **${friendlyLabel}:** ${valStr}`);
+    }
+
+    if (data.banner_url) {
+        lines.push(`• **Game Icon:** [View Image](${data.banner_url})`);
+    }
+
+    return lines.length > 0 ? lines.join('\n') : `• **Target:** ${target || category}`;
+};
+
+// Ensures every game has at least the 'Mobile' platform tag if no platform tag is present
+const ensureDefaultMobileTag = async (games) => {
+    const bulkOps = [];
+    games.forEach(g => {
+        if (!Array.isArray(g.tags)) g.tags = [];
+        const hasPlatform = g.tags.some(t => t === 'PC' || t === 'Mobile' || t === 'PC+Mobile');
+        if (!hasPlatform) {
+            g.tags.unshift('Mobile');
+            if (g.id) {
+                bulkOps.push({
+                    updateOne: {
+                        filter: { id: g.id },
+                        update: { $set: { tags: g.tags } }
+                    }
+                });
+            }
+        }
+    });
+    if (bulkOps.length > 0) {
+        try { await Game.collection.bulkWrite(bulkOps, { ordered: false }); } catch (e) {}
+    }
+};
+
 // --- APP STORE MAJOR UPDATE DETECTOR (EXCLUDES BUG FIXES) ---
 const isMajorAppStoreUpdate = (appData) => {
     if (!appData || !appData.currentVersionReleaseDate) return false;
@@ -333,8 +413,10 @@ app.get('/api/games', async (req, res) => {
     const startIndex = (page - 1) * limit;
 
     try {
-        // Use native MongoDB driver to completely bypass Mongoose Schema stripping
         const allGames = await Game.collection.find({}).toArray();
+        
+        // Automatically tag any untagged legacy games with 'Mobile' at minimum
+        await ensureDefaultMobileTag(allGames);
         
         // Trigger non-blocking background check for App Store major updates
         syncAppStoreUpdatesBackground(allGames);
@@ -390,6 +472,17 @@ app.get('/api/games/:id', async (req, res) => {
     try {
         const game = await Game.collection.findOne({ id: req.params.id });
         if (!game) return res.status(404).json({ error: 'Game not found' });
+
+        await ensureDefaultMobileTag([game]);
+
+        // Auto-convert any YouTube link in new_player_guide into new_player_video_id so it always embeds
+        if (!game.new_player_video_id && game.new_player_guide) {
+            const extractedVid = extractYouTubeId(game.new_player_guide);
+            if (extractedVid) {
+                game.new_player_video_id = extractedVid;
+                await Game.collection.updateOne({ id: req.params.id }, { $set: { new_player_video_id: extractedVid } });
+            }
+        }
 
         // 1. Auto-recover any approved coupon contributions that were submitted under 'Game' or 'Coupon'
         const approvedCouponContribs = await Contribution.collection.find({
@@ -633,6 +726,12 @@ app.post('/api/contribute', async (req, res) => {
         const targetIdentifier = validateInput.sanitizeString(req.body.targetIdentifier);
         const data = sanitizeObj(req.body.data);
 
+        // Automatically extract YouTube video ID if a New Player Guide link was submitted
+        if (data && data.new_player_guide) {
+            const extractedId = extractYouTubeId(data.new_player_guide);
+            if (extractedId) data.new_player_video_id = extractedId;
+        }
+
         // 1. Save sanitized draft to MongoDB
         const newContribution = new Contribution({
             submitterDiscordId: user.discordId,
@@ -645,12 +744,15 @@ app.post('/api/contribute', async (req, res) => {
         });
         await newContribution.save();
 
-        // 2. Fire serverless HTTP request to Discord to trigger the admin embed
-        const commitMessageText = data.commitMessage ? `\n**Commit Message:** ${data.commitMessage}` : '';
+        // 2. Send a clean, human-readable summary to Discord (no raw JSON dump)
+        const readableSummary = formatContributionHumanReadable(itemCategory, actionType, targetIdentifier, data);
+        const actionLabels = { CREATE: 'Add New', EDIT: 'Update', DELETE: 'Remove / Report Expired' };
+        const friendlyAction = actionLabels[actionType] || actionType;
+
         const discordPayload = {
             embeds: [{
-                title: `New Contribution: ${actionType}${itemCategory}`,
-                description: `**From:** ${user.username}\n**Game:** ${gameId || 'N/A'}\n**Target:** ${targetIdentifier || 'N/A'}${commitMessageText}\n\n\`\`\`json\n${JSON.stringify(data, null, 2).substring(0, 3900)}\n\`\`\``,
+                title: `📬 ${friendlyAction} ${itemCategory} — ${gameId || 'General'}`,
+                description: `**Submitted by:** ${user.username}\n**Target:** ${targetIdentifier || 'New Entry'}\n\n${readableSummary}`,
                 color: 0x7A6BB5
             }],
             components: [{
@@ -868,28 +970,17 @@ app.get('/api/mailbox', async (req, res) => {
             read: m.read || false
         }));
 
-        // Dynamically inject all outgoing contributions into the mailbox view
+        // Dynamically inject all outgoing contributions into the mailbox view in human-readable format
+        const actionLabels = { CREATE: 'Added', EDIT: 'Edited', DELETE: 'Reported Expired' };
         contributions.forEach(c => {
-            let dataLines = [];
-            
-            // Format the JSON dump into a clean, readable bulleted list
-            if (c.data && typeof c.data === 'object') {
-                for (const [key, value] of Object.entries(c.data)) {
-                    if (!value) continue;
-                    let displayVal = Array.isArray(value) ? value.join(', ') : String(value);
-                    
-                    // Parse literal \n characters into actual line breaks for the UI
-                    displayVal = displayVal.replace(/\\n/g, '\n').trim();
-                    const cleanKey = key.charAt(0).toUpperCase() + key.slice(1).replace('_', ' ');
-                    dataLines.push(`▪ ${cleanKey}: ${displayVal}`);
-                }
-            }
+            const cleanSummary = formatContributionHumanReadable(c.itemCategory, c.actionType, c.targetIdentifier, c.data)
+                .replace(/\*\*/g, ''); // Strip markdown asterisks for plain-text mailbox rendering
 
             allItems.push({
                 id: c._id,
                 direction: 'OUTBOUND_CONTRIBUTION',
-                subject: `Suggested ${c.itemCategory} for ${c.gameId || 'Unknown'}`,
-                content: (c.targetIdentifier && c.targetIdentifier !== 'N/A' ? `Target: ${c.targetIdentifier}\n\n` : '') + dataLines.join('\n'),
+                subject: `${actionLabels[c.actionType] || 'Suggested'} ${c.itemCategory} for ${c.gameId || 'Nurture'}`,
+                content: cleanSummary,
                 status: c.status || 'pending',
                 date: c.createdAt || c._id.getTimestamp(),
                 read: true
@@ -1049,7 +1140,11 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                             let updates = { last_edited_at: nowIso };
                             
                             if (contribution.data.overview_text !== undefined) updates.overview_text = contribution.data.overview_text;
-                            if (contribution.data.new_player_guide !== undefined) updates.new_player_guide = contribution.data.new_player_guide;
+                            if (contribution.data.new_player_guide !== undefined) {
+                                updates.new_player_guide = contribution.data.new_player_guide;
+                                const extractedVid = extractYouTubeId(contribution.data.new_player_guide);
+                                if (extractedVid) updates.new_player_video_id = extractedVid;
+                            }
                             if (contribution.data.redeem_portal_url !== undefined) updates.redeem_portal_url = contribution.data.redeem_portal_url;
                             if (contribution.data.redeem_codes_url !== undefined) updates.redeem_codes_url = contribution.data.redeem_codes_url;
                             if (contribution.data.new_player_video_id !== undefined) updates.new_player_video_id = contribution.data.new_player_video_id;
@@ -1058,8 +1153,28 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                             if (contribution.data.age !== undefined && contribution.data.age !== '') {
                                 updates['ratings.age'] = contribution.data.age;
                             }
+
+                            if (contribution.data.platform_tag && ['PC', 'Mobile', 'PC+Mobile'].includes(contribution.data.platform_tag)) {
+                                const existingTags = Array.isArray(game.tags) ? game.tags.filter(t => !['PC', 'Mobile', 'PC+Mobile'].includes(t)) : [];
+                                updates.tags = [contribution.data.platform_tag, ...existingTags];
+                            }
                             
                             await Game.collection.updateOne({ id: contribution.gameId }, { $set: updates });
+                        } else if (contribution.itemCategory === 'SubpageTag') {
+                            const secKey = (contribution.data.section || 'guides').toLowerCase();
+                            const newTag = (contribution.data.tag || '').trim();
+                            if (newTag) {
+                                const customSubtags = (game.custom_subtags && typeof game.custom_subtags === 'object') ? { ...game.custom_subtags } : {};
+                                const existingList = Array.isArray(customSubtags[secKey]) ? customSubtags[secKey] : [];
+                                if (!existingList.some(t => t.toLowerCase() === newTag.toLowerCase())) {
+                                    existingList.push(newTag);
+                                }
+                                customSubtags[secKey] = existingList;
+                                await Game.collection.updateOne(
+                                    { id: contribution.gameId },
+                                    { $set: { custom_subtags: customSubtags, last_edited_at: nowIso } }
+                                );
+                            }
                         } else {
                             const lowerCat = isCouponSubmission ? 'coupon' : contribution.itemCategory.toLowerCase();
                             const catKey = lowerCat === 'community' ? 'communities' : `${lowerCat}s`;
@@ -1219,7 +1334,11 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                             let updates = { last_edited_at: nowIso };
                             
                             if (contribution.data.overview_text !== undefined) updates.overview_text = contribution.data.overview_text;
-                            if (contribution.data.new_player_guide !== undefined) updates.new_player_guide = contribution.data.new_player_guide;
+                            if (contribution.data.new_player_guide !== undefined) {
+                                updates.new_player_guide = contribution.data.new_player_guide;
+                                const extractedVid = extractYouTubeId(contribution.data.new_player_guide);
+                                if (extractedVid) updates.new_player_video_id = extractedVid;
+                            }
                             
                             // Save both "Where to Redeem" and "Where to Get Codes" links
                             if (contribution.data.redeem_portal_url !== undefined) updates.redeem_portal_url = contribution.data.redeem_portal_url;
@@ -1336,6 +1455,7 @@ app.get('/api/profile/:query', async (req, res) => {
             avatar: user.avatar,
             discordId: user.discordId,
             totalPoints: user.totalPoints || 0,
+            gamePoints: user.gamePoints || {},
             rank,
             starredGames: user.starredGames || [],
             starredSubItems: user.starredSubItems || {},
@@ -1345,8 +1465,9 @@ app.get('/api/profile/:query', async (req, res) => {
                 gameIcon: gameMap[c.gameId]?.banner_url || '/Assets/placeholder.webp',
                 category: c.itemCategory,
                 action: c.actionType,
+                points: getContributionPoints(c),
                 commitMessage: c.data?.commitMessage || '',
-                target: c.targetIdentifier || (c.data && (c.data.title || c.data.name || c.data.code)) || 'Unknown Submission',
+                target: c.targetIdentifier || (c.data && (c.data.title || c.data.name || c.data.code)) || 'Approved Update',
                 date: c.createdAt || c._id.getTimestamp()
             }))
         });
@@ -1369,37 +1490,95 @@ app.get('/auth/discord', (req, res) => {
     res.redirect(discordLoginUrl);
 });
 
-// --- EXTERNAL GAME LOOKUP (NO API KEY REQUIRED) ---
+// --- EXTERNAL GAME LOOKUP (APPLE APP STORE + STEAM STORE API — NO KEYS REQUIRED) ---
 app.get('/api/suggest/lookup', async (req, res) => {
-    const term = req.query.term;
+    const term = (req.query.term || '').trim();
     if (!term) return res.status(400).json({ error: "No search term provided" });
 
     try {
         const allGames = await Game.collection.find({}, { projection: { id: 1, name: 1, banner_url: 1 } }).toArray();
-        const response = await axios.get(`https://itunes.apple.com/search?term=${encodeURIComponent(term)}&entity=software&limit=10`);
-        
-        if (!response.data.results || response.data.results.length === 0) {
+
+        // Query Apple App Store and Steam Store in parallel
+        const [appleRes, steamSearchRes] = await Promise.allSettled([
+            axios.get(`https://itunes.apple.com/search?term=${encodeURIComponent(term)}&entity=software&limit=10`, { timeout: 4500 }),
+            axios.get(`https://store.steampowered.com/api/storesearch/?term=${encodeURIComponent(term)}&l=english&cc=US`, { timeout: 4500 })
+        ]);
+
+        const appleResults = (appleRes.status === 'fulfilled' && appleRes.value.data?.results) ? appleRes.value.data.results : [];
+        const appleMatch = findBestAppStoreMatch(appleResults, { id: '__lookup__', name: term }, allGames);
+
+        const steamItems = (steamSearchRes.status === 'fulfilled' && steamSearchRes.value.data?.items) ? steamSearchRes.value.data.items : [];
+        const normTerm = normalizeGameTitle(term);
+        const steamMatch = steamItems.find(item => normalizeGameTitle(item.name) === normTerm) ||
+                           steamItems.find(item => normalizeGameTitle(item.name).includes(normTerm)) ||
+                           steamItems[0];
+
+        // Fetch rich Steam appdetails if we matched on Steam
+        let steamDetails = null;
+        if (steamMatch && steamMatch.id) {
+            try {
+                const detailRes = await axios.get(`https://store.steampowered.com/api/appdetails?appids=${steamMatch.id}&l=english`, { timeout: 4500 });
+                if (detailRes.data && detailRes.data[steamMatch.id]?.success) {
+                    steamDetails = detailRes.data[steamMatch.id].data;
+                }
+            } catch (e) {}
+        }
+
+        if (!appleMatch && !steamDetails) {
             return res.json({ found: false });
         }
 
-        const appData = findBestAppStoreMatch(response.data.results, { id: '__lookup__', name: term }, allGames) || response.data.results[0];
-        const cleanGenres = appData.genres.filter(g => g !== 'Games' && g !== 'Entertainment');
-        const majorUpdate = isMajorAppStoreUpdate(appData);
+        // Determine if the game is Mobile, PC, or PC+Mobile
+        const hasApple = Boolean(appleMatch);
+        const hasSteam = Boolean(steamDetails) && (
+            !hasApple || normalizeGameTitle(appleMatch.trackName) === normalizeGameTitle(steamDetails.name)
+        );
 
-        const shots = (Array.isArray(appData.screenshotUrls) && appData.screenshotUrls.length > 0)
-            ? appData.screenshotUrls.slice(0, 4)
-            : (Array.isArray(appData.ipadScreenshotUrls) ? appData.ipadScreenshotUrls.slice(0, 4) : []);
+        let platformTag = 'Mobile';
+        if (hasApple && hasSteam) platformTag = 'PC+Mobile';
+        else if (hasSteam && !hasApple) platformTag = 'PC';
 
-        res.json({
+        if (hasApple) {
+            const cleanGenres = (appleMatch.genres || []).filter(g => g !== 'Games' && g !== 'Entertainment');
+            const majorUpdate = isMajorAppStoreUpdate(appleMatch);
+            const shots = (Array.isArray(appleMatch.screenshotUrls) && appleMatch.screenshotUrls.length > 0)
+                ? appleMatch.screenshotUrls.slice(0, 4)
+                : (Array.isArray(appleMatch.ipadScreenshotUrls) ? appleMatch.ipadScreenshotUrls.slice(0, 4) : []);
+
+            return res.json({
+                found: true,
+                source: hasSteam ? 'Apple + Steam' : 'Apple App Store',
+                platformTag,
+                name: appleMatch.trackName,
+                developer: appleMatch.artistName,
+                icon_url: appleMatch.artworkUrl512,
+                tags: [platformTag, ...cleanGenres],
+                overview_text: appleMatch.description,
+                latest_version: appleMatch.version || null,
+                last_major_update_date: majorUpdate ? appleMatch.currentVersionReleaseDate : null,
+                latest_update_images: shots
+            });
+        }
+
+        // Steam-only fallback for PC games (e.g. Minecraft Dungeons, Terraria PC, etc.)
+        const steamGenres = (steamDetails.genres || []).map(g => g.description).filter(Boolean);
+        const steamShots = (steamDetails.screenshots || []).slice(0, 4).map(s => s.path_thumbnail).filter(Boolean);
+        const cleanDesc = (steamDetails.short_description || steamDetails.detailed_description || '')
+            .replace(/<[^>]*>/g, '')
+            .trim();
+
+        return res.json({
             found: true,
-            name: appData.trackName,
-            developer: appData.artistName,
-            icon_url: appData.artworkUrl512,
-            tags: cleanGenres,
-            overview_text: appData.description,
-            latest_version: appData.version || null,
-            last_major_update_date: majorUpdate ? appData.currentVersionReleaseDate : null,
-            latest_update_images: shots
+            source: 'Steam Store',
+            platformTag: 'PC',
+            name: steamDetails.name,
+            developer: (steamDetails.developers && steamDetails.developers[0]) || (steamDetails.publishers && steamDetails.publishers[0]) || 'Unknown Developer',
+            icon_url: steamDetails.header_image || (steamMatch && steamMatch.tiny_image) || '/Assets/placeholder.webp',
+            tags: ['PC', ...steamGenres],
+            overview_text: cleanDesc,
+            latest_version: null,
+            last_major_update_date: null,
+            latest_update_images: steamShots
         });
     } catch (err) {
         console.error("External lookup error:", err);

@@ -311,7 +311,7 @@
                     <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; margin-right: 6px; fill: currentColor;"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
                     <span>Back</span>
                 </button>
-                <img id="pageAvatar" src="/Assets/placeholder.webp" class="profile-avatar">
+                <img id="pageAvatar" src="/Assets/placeholder_pfp.webp" class="profile-avatar">
                 <div style="min-width: 0;">
                     <h1 id="pageUsername" style="margin: 0 0 6px 0; font-size: 1.75em; color: #f4f0ff; word-break: break-word;">Loading...</h1>
                     <div id="pagePoints" style="display: inline-flex; align-items: center; gap: 8px;">...</div>
@@ -394,7 +394,7 @@
 
                 document.title = `Nurture | ${profileData.username}'s Profile`;
                 document.getElementById('pageUsername').textContent = profileData.username;
-                document.getElementById('pageAvatar').src = profileData.avatar ? `https://cdn.discordapp.com/avatars/${profileData.discordId}/${profileData.avatar}.webp` : '/Assets/placeholder.webp';
+                document.getElementById('pageAvatar').src = profileData.avatar ? `https://cdn.discordapp.com/avatars/${profileData.discordId}/${profileData.avatar}.webp` : '/Assets/placeholder_pfp.webp';
 
                 const rankClass = (profileData.rank && profileData.rank <= 3) ? `rank-${profileData.rank}` : '';
                 const rankBadgeHtml = profileData.rank ? `<span class="lb-rank-badge">#${profileData.rank}</span>` : '';
@@ -552,25 +552,37 @@
                 return;
             }
 
+            const gamePointsMap = profileData.gamePoints || {};
             const grouped = {};
             profileData.contributions.forEach(c => {
                 const gKey = c.gameId || 'general';
-                if (!grouped[gKey]) grouped[gKey] = { name: c.gameName || gKey, icon: c.gameIcon || '/Assets/placeholder.webp', items: [], latestMs: 0 };
-                grouped[gKey].items.push(c);
+                if (!grouped[gKey]) {
+                    grouped[gKey] = {
+                        gameId: gKey,
+                        name: c.gameName || gKey,
+                        icon: c.gameIcon || '/Assets/placeholder.webp',
+                        items: [],
+                        summedPts: 0,
+                        latestMs: 0
+                    };
+                }
+                const itemPts = Number(c.points) || 2;
+                grouped[gKey].items.push({ ...c, points: itemPts });
+                grouped[gKey].summedPts += itemPts;
                 const itemMs = new Date(c.date).getTime() || 0;
                 if (itemMs > grouped[gKey].latestMs) grouped[gKey].latestMs = itemMs;
             });
 
-            // Always sort contributions inside each category newest first
             const groupsArray = Object.values(grouped);
             groupsArray.forEach(g => {
+                const storedPts = Number(gamePointsMap[g.gameId]) || 0;
+                g.totalPts = Math.max(storedPts, g.summedPts);
                 g.items.sort((a, b) => (new Date(b.date).getTime() || 0) - (new Date(a.date).getTime() || 0));
             });
 
-            // Sort game categories by Recently Contributed (default) or Most Contributed
             groupsArray.sort((a, b) => {
                 if (currentContribSort === 'most') {
-                    const diff = b.items.length - a.items.length;
+                    const diff = b.totalPts - a.totalPts;
                     if (diff !== 0) return diff;
                 }
                 return b.latestMs - a.latestMs;
@@ -581,7 +593,7 @@
                     <div class="profile-game-header" onclick="this.parentElement.classList.toggle('open')">
                         <div style="display:flex; align-items:center; gap:10px;">
                             <img src="${group.icon}" style="width:28px; height:28px; border-radius:6px; object-fit:cover; border: 1px solid rgba(157, 142, 199, 0.4);" onerror="this.src='/Assets/placeholder.webp'">
-                            <strong style="color: #f4f0ff;">${escapeTxt(group.name)} <span style="color: #7bc996;">(+${group.items.length})</span></strong>
+                            <strong style="color: #f4f0ff;">${escapeTxt(group.name)} <span style="color: #7bc996;">(+${group.totalPts} pts)</span></strong>
                         </div>
                         <span class="toggle-arrow" style="font-size:0.8em; color:#a99ec7;">▼</span>
                     </div>
@@ -602,6 +614,7 @@
                                     <div style="font-size:0.8em; color:#a99ec7; display:flex; align-items:center; flex-wrap:wrap; gap:6px;">
                                         <strong style="color:#7bc996; background:rgba(123, 201, 150, 0.12); padding:2px 8px; border-radius:8px 2px 8px 2px; border:1px solid rgba(123, 201, 150, 0.35);">${c.action ? c.action.toUpperCase() : 'EDIT'}</strong> 
                                         <span>in ${c.category}</span>
+                                        <span style="margin-left:auto; color:#ffd147; font-weight:bold;">+${c.points} pts</span>
                                     </div>
                                     ${c.commitMessage ? `<div style="font-size:0.85em; color:#e5dcff; border-left:2px solid #9d8ec7; padding-left:10px; margin-top:8px; font-style: italic; word-break:break-word;">${escapeTxt(c.commitMessage)}</div>` : ''}
                                 </div>

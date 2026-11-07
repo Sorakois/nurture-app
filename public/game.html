@@ -243,6 +243,46 @@
             margin: 0;
         }
 
+        .game-platform-row {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 8px;
+            padding: 4px 12px;
+            border-radius: 12px 3px 12px 3px;
+            background: linear-gradient(135deg, rgba(104, 70, 198, 0.28) 0%, rgba(36, 24, 64, 0.85) 100%);
+            border: 1px solid rgba(255, 209, 71, 0.45);
+            color: #ffd147;
+            font-size: 0.82em;
+            font-weight: bold;
+        }
+
+        .sub-nav-divider {
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent 0%, rgba(255, 209, 71, 0.4) 50%, transparent 100%);
+            margin: 4px 0;
+            flex-shrink: 0;
+        }
+
+        .suggest-tag-pill-btn {
+            background: rgba(255, 209, 71, 0.1);
+            color: #ffd147;
+            border: 1px dashed rgba(255, 209, 71, 0.55);
+            padding: 7px 14px;
+            border-radius: 14px 4px 14px 4px;
+            font-size: 0.8em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .suggest-tag-pill-btn:hover {
+            background: rgba(255, 209, 71, 0.22);
+            color: #ffffff;
+            border-color: #ffd147;
+            transform: translateY(-2px);
+        }
         /* === STACKED REDEEM CODES BUTTON WITH ATTACHED TOP & BOTTOM BANNERS === */
         .redeem-stack-wrapper {
             display: inline-flex;
@@ -890,6 +930,10 @@
 
         /* === TABLET & MOBILE RESPONSIVENESS (COMPLEMENTS MOBILE VIEW) === */
         @media (max-width: 980px) {
+            .sub-nav-divider { 
+                display:none;
+            }
+
             .game-layout {
                 width: 100%;
                 margin: 16px auto;
@@ -1067,6 +1111,7 @@
                         <div>
                             <h1 class="game-title" id="gameTitle">Loading...</h1>
                             <p class="game-dev" id="gameDev">-</p>
+                            <div id="gamePlatformBadge" class="game-platform-row" style="display: none;"></div>
                             <div id="gamePatchMeta" style="margin-top: 8px; font-size: 0.85em; color: #d0c2f7; display: none;"></div>
                         </div>
                     </div>
@@ -1162,7 +1207,8 @@
                         <input type="text" id="gsTitle" class="floral-input" placeholder="Link Title / Resource Name">
                         <span class="req-icon"></span>
                     </div>
-                    <input type="text" id="gsAuthor" class="floral-input" placeholder="Author / Platform / Format / Version (Optional)">
+                    <input type="text" id="gsAuthor" class="floral-input" placeholder="Category Tag / Author / Format / Version (Optional)">
+                    <div id="gsExistingTagPills" style="display:none; flex-wrap:wrap; gap:6px; padding:4px 2px;"></div>
                     <div class="req-field-row" id="gsUrlRow">
                         <input type="text" id="gsUrl" class="floral-input" placeholder="URL Link">
                         <span class="req-icon"></span>
@@ -1173,18 +1219,19 @@
                     <input type="url" id="gsWikiUrl" class="floral-input" placeholder="Dedicated Mod Wiki URL (Optional, https://...)" style="display:none;">
                 </div>
 
-                
+                <select id="gsPlatformSelect" class="floral-select" style="display:none;">
+                    <option value="Mobile">Mobile Only</option>
+                    <option value="PC">PC Only</option>
+                    <option value="PC+Mobile">PC + Mobile (Cross-Platform)</option>
+                </select>
                 
                 <div id="gsOverviewWrap" class="req-field-row" style="display:none;">
                     <textarea id="gsOverviewText" class="floral-textarea" placeholder="Edit Overview text..." style="height:150px; resize:vertical;"></textarea>
                     <span class="req-icon"></span>
                 </div>
-                <input type="text" id="gsNewPlayerGuide" class="floral-input" placeholder="(OPTIONAL) New Player Guide URL (e.g. YouTube Link)" style="display:none;">
+                <input type="text" id="gsNewPlayerGuide" class="floral-input" placeholder="(OPTIONAL) New Player Guide YouTube URL or Video ID" style="display:none;">
                 
-                <div class="req-field-row">
-                    <input type="text" id="gsCommit" class="floral-input" placeholder="What was added / changed: (e.g. Fixed typo)">
-                    <span class="req-icon"></span>
-                </div>
+                <input type="text" id="gsCommit" class="floral-input" placeholder="Commit Note (Optional, e.g. Added guide or fixed typo)">
                 <button class="btn-floral blossom" onclick="submitGameSuggestion()" style="width:100%; margin-top:4px; padding:12px;">Submit Update</button>
             </div>
         </div>
@@ -1259,8 +1306,8 @@
         }
 
         const sections = [
+            { id: 'all', label: 'All-In-One', key: null, dividerAfter: true, svg: '<path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>' },
             { id: 'overview', label: 'Overview', key: null, svg: '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>' },
-            { id: 'all', label: 'All-in-One View', key: null, svg: '<path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>' },
             { id: 'guides', label: 'Guides/Tools', key: 'guides', svg: '<path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"/>' },
             { id: 'assets', label: 'Raw Assets', key: 'assets', svg: '<path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/>' },
             { id: 'communities', label: 'Communities', key: 'communities', svg: '<path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>' },
@@ -1333,6 +1380,11 @@
                 });
                 
                 tabMenu.appendChild(link);
+                if (sec.dividerAfter) {
+                    const div = document.createElement('div');
+                    div.className = 'sub-nav-divider';
+                    tabMenu.appendChild(div);
+                }
             });
         }
 
@@ -1645,27 +1697,38 @@
             openGameSuggestModal(activeRedeemType);
         }
 
+        function parseYouTubeVideoId(raw) {
+            if (!raw || typeof raw !== 'string') return '';
+            const trimmed = raw.trim();
+            if (/^[a-zA-Z0-9_-]{11}$/.test(trimmed)) return trimmed;
+            const match = trimmed.match(/(?:youtu\.be\/|youtube(?:-nocookie)?\.com\/(?:watch\?.*v=|embed\/|v\/|shorts\/))([a-zA-Z0-9_-]{11})/);
+            return match ? match[1] : '';
+        }
+
         function getItemIcon(item, section) {
             if (item.icon_url) return item.icon_url;
 
             const platform = (Array.isArray(item.platform) ? item.platform.join(',') : (item.platform || '')).toLowerCase();
-            
-            if (platform.includes('google sheets')) return '/Assets/google_sheets_icon.webp';
-            if (platform.includes('nurture')) return '/Assets/nurture_icon.webp';
-            if (platform.includes('fribbels')) return '/Assets/fribbels.webp';
+            const targetUrl = (item.url || item.download_url || '').trim();
+            const lowerUrl = targetUrl.toLowerCase();
 
-            if (platform.includes('discord')) return 'https://cdn.simpleicons.org/discord/5865F2';
-            if (platform.includes('reddit')) return 'https://cdn.simpleicons.org/reddit/FF4500';
-            if (platform.includes('youtube')) return 'https://cdn.simpleicons.org/youtube/FF0000';
-            if (platform.includes('twitter') || platform.includes('x')) return 'https://cdn.simpleicons.org/x/000000';
+            if (platform.includes('google sheets') || lowerUrl.includes('docs.google.com/spreadsheets')) return '/Assets/google_sheets_icon.webp';
+            if (platform.includes('nurture') || lowerUrl.includes('nurture.how')) return '/Assets/nurture_icon.webp';
+            if (platform.includes('fribbels') || lowerUrl.includes('fribbels.github.io')) return '/Assets/fribbels.webp';
 
-            const targetUrl = item.url || item.download_url;
-            if (platform.includes('website') && targetUrl) {
+            if (platform.includes('discord') || lowerUrl.includes('discord.gg') || lowerUrl.includes('discord.com')) return 'https://cdn.simpleicons.org/discord/5865F2';
+            if (platform.includes('reddit') || lowerUrl.includes('reddit.com')) return 'https://cdn.simpleicons.org/reddit/FF4500';
+            if (platform.includes('youtube') || lowerUrl.includes('youtube.com') || lowerUrl.includes('youtu.be')) return 'https://cdn.simpleicons.org/youtube/FF0000';
+            if (platform.includes('twitter') || platform === 'x' || lowerUrl.includes('twitter.com') || lowerUrl.includes('x.com')) return 'https://cdn.simpleicons.org/x/ffffff';
+
+            // Dynamically grab the website's favicon from its domain for any valid external link
+            if (targetUrl && /^https?:\/\//i.test(targetUrl)) {
                 try {
-                    return `https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${encodeURIComponent(targetUrl)}&size=64`;
-                } catch (error) {
-                    console.error("Invalid URL for favicon fetching:", targetUrl);
-                }
+                    const parsedHost = new URL(targetUrl).hostname;
+                    if (parsedHost) {
+                        return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(parsedHost)}&sz=64`;
+                    }
+                } catch (error) {}
             }
 
             const defaultIcons = {
@@ -1678,12 +1741,13 @@
             return defaultIcons[section] || '/Assets/placeholder.webp';
         }
 
-        function buildControlsBar(items, categoryKey) {
-            if (!items || items.length === 0) return '';
-
+        function getSectionSubtags(items, categoryKey) {
             const ignoredTags = ['nurture', 'google sheets'];
+            const customTags = (gameData?.custom_subtags && Array.isArray(gameData.custom_subtags[currentSection]))
+                ? gameData.custom_subtags[currentSection]
+                : [];
 
-            let categories = ['All', ...new Set(items.flatMap(item => {
+            const itemTags = (items || []).flatMap(item => {
                 const val = item[categoryKey];
                 if (!val) return [];
                 if (Array.isArray(val)) return val;
@@ -1691,28 +1755,37 @@
                     return val.split(',').map(s => s.trim());
                 }
                 return [val];
-            }).filter(Boolean))];
-            
-            categories = categories.filter(cat => cat === 'All' || !ignoredTags.map(t => t.toLowerCase()).includes(cat.toLowerCase()));
+            }).filter(Boolean);
+
+            const merged = [...new Set([...customTags, ...itemTags])];
+            return merged.filter(cat => !ignoredTags.includes(cat.toLowerCase()));
+        }
+
+        function buildControlsBar(items, categoryKey) {
+            const subtags = getSectionSubtags(items, categoryKey);
+            const categories = ['All', ...subtags];
 
             setTimeout(() => {
-                document.querySelectorAll('.filter-btn').forEach(btn => {
+                document.querySelectorAll('.filter-btn[data-category]').forEach(btn => {
                     btn.addEventListener('click', (e) => {
-                        activeFilter = e.target.dataset.category;
+                        activeFilter = e.currentTarget.dataset.category;
                         renderContent();
                     });
                 });
             }, 0);
 
-            const filterButtonsHtml = categories.length > 1 ? `
+            const filterButtonsHtml = `
                 <div class="filter-bar">
                     ${categories.map(cat => `
                         <button type="button" class="filter-btn ${activeFilter === cat ? 'active' : ''}" data-category="${cat}">
                             ${cat}
                         </button>
                     `).join('')}
+                    <button type="button" class="suggest-tag-pill-btn" onclick="openGameSuggestModal('SubpageTag')" title="Suggest a new filter tag for this page">
+                        + Suggest Tag
+                    </button>
                 </div>
-            ` : '<div></div>';
+            `;
 
             return `
                 <div class="subnav-controls-row">
@@ -1740,7 +1813,7 @@
                 list.innerHTML = data.top10.map((u, i) => `
                     <div class="lb-row ${i < 3 ? `rank-${i+1}` : ''}" style="cursor:pointer;" onclick="openUserProfileModal('${u.discordId}')">
                         <div class="lb-rank-badge">#${i+1}</div>
-                        <img src="${u.avatar ? `https://cdn.discordapp.com/avatars/${u.discordId}/${u.avatar}.webp` : '/Assets/placeholder.webp'}" class="lb-avatar">
+                        <img src="${u.avatar ? `https://cdn.discordapp.com/avatars/${u.discordId}/${u.avatar}.webp` : '/Assets/placeholder_pfp.webp'}" class="lb-avatar">
                         <div class="lb-info"><div class="lb-name">${u.username}</div></div>
                         <div class="lb-score">${u.points} pts</div>
                     </div>
@@ -1752,7 +1825,7 @@
                     <div style="width: 100%; height: 1px; background: linear-gradient(90deg, transparent, rgba(157, 142, 199, 0.4), transparent); margin: 12px 0;"></div>
                     <div class="lb-row" style="border-color:#9d8ec7; margin-bottom: 0; cursor: pointer;" onclick="openUserProfileModal('${data.userRank.discordId}')">
                         <div class="lb-rank-badge">#${data.userRank.rank}</div>
-                        <img src="${data.userRank.avatar ? `https://cdn.discordapp.com/avatars/${data.userRank.discordId}/${data.userRank.avatar}.webp` : '/Assets/placeholder.webp'}" class="lb-avatar">
+                        <img src="${data.userRank.avatar ? `https://cdn.discordapp.com/avatars/${data.userRank.discordId}/${data.userRank.avatar}.webp` : '/Assets/placeholder_pfp.webp'}" class="lb-avatar">
                         <div class="lb-info"><div class="lb-name">You (${data.userRank.username})</div></div>
                         <div class="lb-score">${data.userRank.points} pts</div>
                     </div>`;
@@ -1918,26 +1991,23 @@
             if (currentSection === 'overview') {
                 const editOverviewSvg = `<svg onclick="openGameSuggestModal('Overview')" style="width:20px;height:20px;fill:#ffffff;float:right;cursor:pointer;margin-top:5px;" title="Edit Overview" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>`;
                 
+                const resolvedVideoId = parseYouTubeVideoId(gameData.new_player_video_id) || parseYouTubeVideoId(gameData.new_player_guide);
                 let guideContent = '';
-                if (gameData.new_player_video_id) {
+                if (resolvedVideoId) {
                     guideContent = `
                         <div style="position: relative; width: 100%; max-width: 720px; aspect-ratio: 16 / 9; border-radius: 16px 5px 16px 5px; overflow: hidden; background: #000; margin-top: 12px; border: 1px solid rgba(208, 194, 247, 0.35);">
                             <iframe 
-                                src="https://www.youtube.com/embed/${gameData.new_player_video_id}" 
+                                src="https://www.youtube-nocookie.com/embed/${resolvedVideoId}" 
                                 style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;"
-                                allow="accelerometer; autoplay; clipboard-encrypted-media; gyroscope; picture-in-picture" 
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                                 referrerpolicy="strict-origin-when-cross-origin"
                                 allowfullscreen>
                             </iframe>
                         </div>
                     `;
-                } else if (gameData.new_player_guide) {
-                    guideContent = `
-                        <a href="${gameData.new_player_guide}" target="_blank" class="btn-floral" style="margin-top:10px;">View Recommended Guide</a>
-                    `;
                 } else {
                     guideContent = `
-                        <button onclick="openGameSuggestModal('Overview')" style="display:inline-block; padding:10px 16px; background:#2a2a35; color:#aaa; border:1px dashed #7A6BB5; border-radius:14px 4px 14px 4px; cursor:pointer; margin-top:10px; transition:color 0.2s, border 0.2s;" onmouseover="this.style.color='#fff'; this.style.borderColor='#9d8ec7'" onmouseout="this.style.color='#aaa'; this.style.borderColor='#7A6BB5'">+ Suggest Beginner Guide</button>
+                        <button onclick="openGameSuggestModal('Overview')" style="display:inline-block; padding:10px 16px; background:#2a2a35; color:#aaa; border:1px dashed #7A6BB5; border-radius:14px 4px 14px 4px; cursor:pointer; margin-top:10px; transition:color 0.2s, border 0.2s;" onmouseover="this.style.color='#fff'; this.style.borderColor='#9d8ec7'" onmouseout="this.style.color='#aaa'; this.style.borderColor='#7A6BB5'">+ Suggest Beginner Guide Video</button>
                     `;
                 }
                 
@@ -2149,6 +2219,18 @@
                 document.getElementById('gameDev').textContent = gameData.developer;
                 document.getElementById('gameIcon').src = gameData.banner_url || '/Assets/placeholder.webp';
 
+                const platBadgeEl = document.getElementById('gamePlatformBadge');
+                if (platBadgeEl) {
+                    const gTags = Array.isArray(gameData.tags) ? gameData.tags : [];
+                    const plat = gTags.find(t => t === 'PC+Mobile' || t === 'PC' || t === 'Mobile') || 'Mobile';
+                    const platIcon = plat === 'PC+Mobile' ? '🖥️📱' : (plat === 'PC' ? '🖥️' : '📱');
+                    platBadgeEl.innerHTML = `
+                        <span>${platIcon} Available on: <b style="color:#ffffff;">${plat}</b></span>
+                        <svg onclick="openGameSuggestModal('Platform')" style="width:14px;height:14px;fill:#ffd147;cursor:pointer;margin-left:4px;" title="Suggest Platform Change" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                    `;
+                    platBadgeEl.style.display = 'inline-flex';
+                }
+
                 const patchMetaEl = document.getElementById('gamePatchMeta');
                 if (patchMetaEl && gameData.last_major_update_date) {
                     const formattedPatchDate = formatItemDate({ updatedAt: gameData.last_major_update_date });
@@ -2175,6 +2257,18 @@
         let currentSuggestTarget = null;
         let currentDisplayedItems = []; 
 
+        function selectExistingSubtagPill(tagStr) {
+            const authorInput = document.getElementById('gsAuthor');
+            if (!authorInput) return;
+            let parts = authorInput.value.split(',').map(s => s.trim()).filter(Boolean);
+            if (parts.includes(tagStr)) {
+                parts = parts.filter(p => p !== tagStr);
+            } else {
+                parts.push(tagStr);
+            }
+            authorInput.value = parts.join(', ');
+        }
+
         function openGameSuggestModal(category, itemIndex = null) {
             if (!window.requireAuth('suggest updates or new items')) return;
             currentSuggestCategory = category;
@@ -2184,10 +2278,12 @@
             const historyBtn = document.getElementById('gsHistoryBtn');
             const overviewWrap = document.getElementById('gsOverviewWrap');
             const titleRow = document.getElementById('gsTitleRow');
+            const urlRow = document.getElementById('gsUrlRow');
             const authorInput = document.getElementById('gsAuthor');
             const urlInput = document.getElementById('gsUrl');
+            const tagPillsBox = document.getElementById('gsExistingTagPills');
+            const platSelect = document.getElementById('gsPlatformSelect');
             
-            // abcdef
             const targetModInput = document.getElementById('gsTargetMod');
             const modCatInput = document.getElementById('gsModCategory');
             const wikiUrlInput = document.getElementById('gsWikiUrl');
@@ -2195,23 +2291,14 @@
             targetModInput.style.display = category === 'Guide' ? 'block' : 'none';
             modCatInput.style.display = category === 'Mod' ? 'block' : 'none';
             wikiUrlInput.style.display = category === 'Mod' ? 'block' : 'none';
-
-            if (itemIndex !== null && currentDisplayedItems[itemIndex]) {
-                const item = currentDisplayedItems[itemIndex];
-                targetModInput.value = item.targetMod || '';
-                modCatInput.value = item.category || '';
-                wikiUrlInput.value = item.wiki_url || '';
-            } else {
-                targetModInput.value = (category === 'Guide' && activeModGuideFilter !== 'All' && activeModGuideFilter !== 'Vanilla') ? activeModGuideFilter : '';
-                modCatInput.value = '';
-                wikiUrlInput.value = '';
-            }
-            // abcdedf
+            if (platSelect) platSelect.style.display = 'none';
+            if (tagPillsBox) tagPillsBox.style.display = 'none';
+            if (urlRow) urlRow.style.display = 'block';
 
             if (category === 'Overview') {
                 currentSuggestAction = 'EDIT';
                 currentSuggestTarget = 'Overview Data';
-                titleEl.textContent = 'Edit Overview';
+                titleEl.textContent = 'Edit Overview & Beginner Video';
                 historyBtn.style.display = 'inline-flex';
                 
                 document.getElementById('gsStandardInputs').style.display = 'none';
@@ -2219,7 +2306,36 @@
                 document.getElementById('gsOverviewText').style.display = 'block';
                 document.getElementById('gsNewPlayerGuide').style.display = 'block';
                 document.getElementById('gsOverviewText').value = gameData.overview_text || '';
-                document.getElementById('gsNewPlayerGuide').value = gameData.new_player_guide || '';
+                document.getElementById('gsNewPlayerGuide').value = gameData.new_player_guide || gameData.new_player_video_id || '';
+            } else if (category === 'Platform') {
+                currentSuggestAction = 'EDIT';
+                currentSuggestTarget = 'Game Platform';
+                titleEl.textContent = 'Suggest Platform Availability';
+                historyBtn.style.display = 'none';
+
+                document.getElementById('gsStandardInputs').style.display = 'none';
+                overviewWrap.style.display = 'none';
+                document.getElementById('gsNewPlayerGuide').style.display = 'none';
+                if (platSelect) {
+                    const gTags = Array.isArray(gameData.tags) ? gameData.tags : [];
+                    platSelect.value = gTags.find(t => t === 'PC+Mobile' || t === 'PC' || t === 'Mobile') || 'Mobile';
+                    platSelect.style.display = 'block';
+                }
+            } else if (category === 'SubpageTag') {
+                currentSuggestAction = 'CREATE';
+                currentSuggestTarget = `New ${currentSection} Tag`;
+                titleEl.textContent = `Suggest a Filter Tag for ${currentSection.toUpperCase()}`;
+                historyBtn.style.display = 'none';
+
+                document.getElementById('gsStandardInputs').style.display = 'flex';
+                titleRow.style.display = 'block';
+                authorInput.style.display = 'none';
+                if (urlRow) urlRow.style.display = 'none';
+                overviewWrap.style.display = 'none';
+                document.getElementById('gsNewPlayerGuide').style.display = 'none';
+
+                document.getElementById('gsTitle').placeholder = 'New Filter Tag Name (e.g. Relics, Tier List, Tools, Modpacks)';
+                document.getElementById('gsTitle').value = '';
             } else if (category === 'RedeemCodes') {
                 currentSuggestAction = 'CREATE';
                 currentSuggestTarget = 'New Coupon Code';
@@ -2236,11 +2352,10 @@
                 document.getElementById('gsTitle').value = '';
                 urlInput.placeholder = 'What does this code give? (e.g. 50 Stellar Jade & 10,000 Credits)';
                 urlInput.value = '';
-            } else if (category === 'RedeemPortal' || category === 'RedeemCodes') {
-                const isPortal = category === 'RedeemPortal';
+            } else if (category === 'RedeemPortal') {
                 currentSuggestAction = 'EDIT';
-                currentSuggestTarget = isPortal ? 'Where to Redeem URL' : 'Where to Get Codes URL';
-                titleEl.textContent = isPortal ? 'Edit "Where to Redeem" Link' : 'Edit "Where to Get Codes" Link';
+                currentSuggestTarget = 'Where to Redeem URL';
+                titleEl.textContent = 'Edit "Where to Redeem" Link';
                 historyBtn.style.display = 'inline-flex';
 
                 document.getElementById('gsStandardInputs').style.display = 'flex';
@@ -2249,15 +2364,25 @@
                 overviewWrap.style.display = 'none';
                 document.getElementById('gsNewPlayerGuide').style.display = 'none';
 
-                urlInput.placeholder = isPortal ? 'Official Redemption Page URL (https://...)' : 'Coupon Codes List / Tracker URL (https://...)';
-                urlInput.value = isPortal ? (gameData.redeem_portal_url || '') : (gameData.redeem_codes_url || '');
+                urlInput.placeholder = 'Official Redemption Page URL (https://...)';
+                urlInput.value = gameData.redeem_portal_url || '';
             } else {
                 document.getElementById('gsStandardInputs').style.display = 'flex';
                 titleRow.style.display = 'block';
                 authorInput.style.display = 'block';
-                urlInput.placeholder = 'URL Link';
+                document.getElementById('gsTitle').placeholder = 'Link Title / Resource Name';
+                urlInput.placeholder = 'URL Link (https://...)';
                 overviewWrap.style.display = 'none';
                 document.getElementById('gsNewPlayerGuide').style.display = 'none';
+
+                // Show clickable existing subpage filter tags so contributors can assign tags in 1 click
+                const catKeyMap = { Guide: 'category', Asset: 'type', Community: 'platform', Mod: 'author' };
+                const existingSubtags = getSectionSubtags(gameData[currentSection] || [], catKeyMap[category] || 'category');
+                if (tagPillsBox && existingSubtags.length > 0) {
+                    tagPillsBox.style.display = 'flex';
+                    tagPillsBox.innerHTML = `<span style="font-size:0.75em; color:#a99ec7; width:100%;">Click to add/remove page tags:</span>` +
+                        existingSubtags.map(t => `<button type="button" class="sort-opt-btn" style="border:1px solid rgba(168,139,250,0.35);" onclick="selectExistingSubtagPill('${t.replace(/'/g, "\\'")}')">+ ${escapeHtml(t)}</button>`).join('');
+                }
                 
                 if (itemIndex !== null && currentDisplayedItems[itemIndex]) {
                     currentSuggestAction = 'EDIT';
@@ -2267,8 +2392,11 @@
                     const item = currentDisplayedItems[itemIndex];
                     currentSuggestTarget = item._id || item.title || item.name;
                     document.getElementById('gsTitle').value = item.title || item.name || '';
-                    document.getElementById('gsAuthor').value = item.author || item.platform || item.type || item.version || '';
+                    document.getElementById('gsAuthor').value = item.category || item.author || item.platform || item.type || item.version || '';
                     document.getElementById('gsUrl').value = item.url || item.download_url || '';
+                    targetModInput.value = item.targetMod || '';
+                    modCatInput.value = item.category || '';
+                    wikiUrlInput.value = item.wiki_url || '';
                 } else {
                     currentSuggestAction = 'CREATE';
                     titleEl.textContent = 'Add New Item';
@@ -2278,9 +2406,86 @@
                     document.getElementById('gsTitle').value = '';
                     document.getElementById('gsAuthor').value = '';
                     document.getElementById('gsUrl').value = '';
+                    targetModInput.value = (category === 'Guide' && activeModGuideFilter !== 'All' && activeModGuideFilter !== 'Vanilla') ? activeModGuideFilter : '';
+                    modCatInput.value = '';
+                    wikiUrlInput.value = '';
                 }
             }
             document.getElementById('gameSuggestModal').classList.add('active');
+        }
+
+        async function submitGameSuggestion() {
+            const commitMessage = document.getElementById('gsCommit').value.trim();
+            let dataPayload = {};
+
+            if (currentSuggestCategory === 'Overview') {
+                const rawGuide = document.getElementById('gsNewPlayerGuide').value.trim();
+                const parsedVid = parseYouTubeVideoId(rawGuide);
+                dataPayload = { 
+                    overview_text: document.getElementById('gsOverviewText').value.trim(), 
+                    new_player_guide: rawGuide,
+                    new_player_video_id: parsedVid || undefined,
+                    commitMessage 
+                };
+            } else if (currentSuggestCategory === 'Platform') {
+                const platform_tag = document.getElementById('gsPlatformSelect').value;
+                dataPayload = { platform_tag, commitMessage };
+            } else if (currentSuggestCategory === 'SubpageTag') {
+                const tag = document.getElementById('gsTitle').value.trim();
+                if (!tag) return window.showCustomAlert("Please enter a filter tag name.", "Missing Tag Name");
+                dataPayload = { section: currentSection, tag, commitMessage };
+            } else if (currentSuggestCategory === 'RedeemPortal') {
+                const portalUrl = document.getElementById('gsUrl').value.trim();
+                if (!portalUrl) return window.showCustomAlert("Redemption Page URL is required.", "Missing URL");
+                dataPayload = { redeem_portal_url: portalUrl, commitMessage };
+            } else if (currentSuggestCategory === 'RedeemCodes') {
+                const code = document.getElementById('gsTitle').value.trim().toUpperCase();
+                const rewards = document.getElementById('gsUrl').value.trim();
+                if (!code || !rewards) return window.showCustomAlert("Both the Coupon Code and what it gives are required.", "Missing Fields");
+                dataPayload = { code, rewards, title: code, commitMessage };
+            } else {
+                const title = document.getElementById('gsTitle').value.trim();
+                const author = document.getElementById('gsAuthor').value.trim();
+                const url = document.getElementById('gsUrl').value.trim();
+                const targetMod = document.getElementById('gsTargetMod').value.trim();
+                const modCategory = document.getElementById('gsModCategory').value.trim();
+                const wiki_url = document.getElementById('gsWikiUrl').value.trim();
+                if (!title || !url) return window.showCustomAlert("Title and URL are required.", "Missing Fields");
+                dataPayload = {
+                    title,
+                    url,
+                    author,
+                    platform: author,
+                    type: author,
+                    version: author,
+                    category: currentSuggestCategory === 'Mod' ? (modCategory || author) : author,
+                    targetMod: currentSuggestCategory === 'Guide' ? targetMod : undefined,
+                    wiki_url: currentSuggestCategory === 'Mod' ? wiki_url : undefined,
+                    commitMessage
+                };
+            }
+
+            const isGameLevelCategory = ['Overview', 'RedeemPortal', 'Platform'].includes(currentSuggestCategory);
+
+            const payload = {
+                gameId: gameData.id,
+                itemCategory: isGameLevelCategory ? 'Game' : (currentSuggestCategory === 'RedeemCodes' ? 'Coupon' : currentSuggestCategory),
+                actionType: currentSuggestAction,
+                targetIdentifier: currentSuggestTarget || (dataPayload.code || dataPayload.tag || dataPayload.title || 'New Item'),
+                data: dataPayload
+            };
+
+            try {
+                const response = await fetch('/api/contribute', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.error || 'Server rejected submission');
+                }
+                document.getElementById('gameSuggestModal').classList.remove('active');
+                window.showCustomAlert("Suggestion submitted! It is now awaiting Admin Approval on Discord.", "Suggestion Submitted");
+            } catch (e) {
+                window.showCustomAlert("Failed to submit: " + e.message, "Submission Error");
+            }
         }
 
         const escapeHtml = (text) => (text || '').toString().replace(/[&<>"']/g, m => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[m]));
@@ -2315,71 +2520,6 @@
                 }).join('');
             } catch (e) {
                 content.innerHTML = '<p style="color:#ff5555;">Failed to load history.</p>';
-            }
-        }
-
-        async function submitGameSuggestion() {
-            const commitMessage = document.getElementById('gsCommit').value.trim();
-            if (!commitMessage) return window.showCustomAlert("Please enter a brief note describing what was added or changed.", "Missing Commit Note");
-            let dataPayload = {};
-
-            if (currentSuggestCategory === 'Overview') {
-                dataPayload = { 
-                    overview_text: document.getElementById('gsOverviewText').value.trim(), 
-                    new_player_guide: document.getElementById('gsNewPlayerGuide').value.trim(),
-                    commitMessage 
-                };
-            } else if (currentSuggestCategory === 'RedeemPortal') {
-                const portalUrl = document.getElementById('gsUrl').value.trim();
-                if (!portalUrl) return window.showCustomAlert("Redemption Page URL is required.", "Missing URL");
-                dataPayload = { redeem_portal_url: portalUrl, commitMessage };
-            } else if (currentSuggestCategory === 'RedeemCodes') {
-                const code = document.getElementById('gsTitle').value.trim().toUpperCase();
-                const rewards = document.getElementById('gsUrl').value.trim();
-                if (!code || !rewards) return window.showCustomAlert("Both the Coupon Code and what it gives are required.", "Missing Fields");
-                dataPayload = { code, rewards, title: code, commitMessage };
-            } else {
-                const title = document.getElementById('gsTitle').value.trim();
-                const author = document.getElementById('gsAuthor').value.trim();
-                const url = document.getElementById('gsUrl').value.trim();
-                const targetMod = document.getElementById('gsTargetMod').value.trim();
-                const modCategory = document.getElementById('gsModCategory').value.trim();
-                const wiki_url = document.getElementById('gsWikiUrl').value.trim();
-                if (!title || !url) return window.showCustomAlert("Title and URL are required.", "Missing Fields");
-                dataPayload = {
-                    title,
-                    url,
-                    author,
-                    platform: author,
-                    type: author,
-                    version: author,
-                    category: currentSuggestCategory === 'Mod' ? (modCategory || author) : author,
-                    targetMod: currentSuggestCategory === 'Guide' ? targetMod : undefined,
-                    wiki_url: currentSuggestCategory === 'Mod' ? wiki_url : undefined,
-                    commitMessage
-                };
-            }
-
-            const isGameLevelCategory = ['Overview', 'RedeemPortal'].includes(currentSuggestCategory);
-
-            const payload = {
-                gameId: gameData.id,
-                itemCategory: isGameLevelCategory ? 'Game' : (currentSuggestCategory === 'RedeemCodes' ? 'Coupon' : currentSuggestCategory),
-                actionType: currentSuggestAction,
-                targetIdentifier: currentSuggestTarget || (dataPayload.code || dataPayload.title || 'New Item'),
-                data: dataPayload
-            };
-
-            try {
-                const response = await fetch('/api/contribute', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
-                if (!response.ok) {
-                    const err = await response.json();
-                    throw new Error(err.error || 'Server rejected submission');
-                }
-                document.getElementById('gameSuggestModal').classList.remove('active');
-                window.showCustomAlert("Suggestion submitted! It is now awaiting Admin Approval on Discord.", "Suggestion Submitted");
-            } catch (e) {
-                window.showCustomAlert("Failed to submit: " + e.message, "Submission Error");
             }
         }
 

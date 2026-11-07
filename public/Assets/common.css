@@ -23,19 +23,31 @@
 }
 
 :root {
-    --bg-canopy: #110d19;
-    --bg-moss: #181524;
-    --card-bg: #1e192b;
-    --card-bg-hover: #262038;
-    --petal-light: #d0c2f7;
-    --petal-main: #9d8ec7;
-    --petal-deep: #5e4796;
-    --petal-dark: #3b2a66;
-    --blossom-pink: #d96b98;
-    --leaf-sage: #7bc996;
-    --pollen-gold: #f6c85f;
-    --border-vine: rgba(157, 142, 199, 0.28);
-    --border-bloom: rgba(208, 194, 247, 0.6);
+    /* Base Surfaces: Rich Nocturnal Indigo (avoids muddy gray-purple) */
+    --bg-canopy: #0b0714;
+    --bg-moss: #140d24;
+    --card-bg: #19112c;
+    --card-bg-hover: #23183d;
+
+    /* Primary Brand: Royal Amethyst & Orchid Highlights */
+    --petal-light: #e2d4ff;
+    --petal-main: #a88bfa;
+    --petal-deep: #6846c6;
+    --petal-dark: #3b2378;
+
+    /* Complementary Accent: Solar Nectar Gold (High-Value Focal Points) */
+    --pollen-gold: #ffd147;
+    --pollen-amber: #e69215;
+    --pollen-glow: rgba(255, 209, 71, 0.28);
+
+    /* Secondary Semantic Accents */
+    --blossom-pink: #e85d96;
+    --leaf-sage: #5cd69a;
+
+    /* Borders & Dividers */
+    --border-vine: rgba(168, 139, 250, 0.26);
+    --border-bloom: rgba(226, 212, 255, 0.65);
+    --border-gold: rgba(255, 209, 71, 0.55);
 }
 
 *, *::before, *::after, button, input, select, textarea {
@@ -64,7 +76,7 @@ body {
     opacity: 1 !important;
 }
 
-/* === NATURE & FLORAL BACKGROUND (GPU OPTIMIZED) === */
+/* === TWILIGHT & SOLAR NECTAR WALLPAPER (COMPLEMENTARY COLOR THEORY) === */
 .background-container {
     position: fixed;
     top: 0;
@@ -75,10 +87,14 @@ body {
     justify-content: center;
     overflow: hidden;
     background: 
-        radial-gradient(circle at 15% 20%, rgba(94, 71, 150, 0.22) 0%, transparent 45%),
-        radial-gradient(circle at 85% 80%, rgba(65, 110, 85, 0.15) 0%, transparent 50%),
-        radial-gradient(circle at 50% 0%, rgba(157, 142, 199, 0.18) 0%, transparent 60%),
-        linear-gradient(180deg, #0f0b17 0%, #171224 55%, #12181b 100%);
+        /* Warm Solar Gold rim-light at the top canopy */
+        radial-gradient(ellipse 65% 38% at 50% -6%, rgba(255, 204, 77, 0.14) 0%, rgba(168, 139, 250, 0.12) 45%, transparent 75%),
+        /* Royal Amethyst left nebula */
+        radial-gradient(circle at 12% 28%, rgba(114, 72, 219, 0.26) 0%, transparent 48%),
+        /* Warm Orchid & Amber bottom-right counter-glow */
+        radial-gradient(circle at 88% 82%, rgba(232, 93, 150, 0.14) 0%, rgba(255, 193, 69, 0.06) 35%, transparent 58%),
+        /* Deep Nocturnal Indigo vertical base */
+        linear-gradient(180deg, #090511 0%, #130b24 52%, #0d0818 100%);
     z-index: -1;
     pointer-events: none;
     contain: strict;
@@ -97,9 +113,7 @@ body {
     pointer-events: none;
 }
 
-/* Removed CSS drop-shadow filter to eliminate modal composite lag */
 .floating-petal {
-    filter: drop-shadow();
     position: absolute;
     will-change: transform;
     opacity: 0.6;
@@ -108,17 +122,18 @@ body {
 .firefly-spore {
     position: absolute;
     border-radius: 50%;
-    background: #f6c85f;
+    background: #ffd147;
+    box-shadow: 0 0 6px rgba(255, 209, 71, 0.8);
     will-change: transform, opacity;
 }
 
 /* === BANNER STYLES === */
 .banner {
-    background: linear-gradient(180deg, rgba(18, 13, 28, 0.96) 0%, rgba(26, 20, 40, 0.9) 100%);
-    border-bottom: 1px solid var(--border-vine);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    background: linear-gradient(180deg, rgba(14, 9, 26, 0.96) 0%, rgba(24, 16, 44, 0.92) 100%);
+    border-bottom: 1px solid rgba(255, 209, 71, 0.25);
+    box-shadow: 0 6px 28px rgba(0, 0, 0, 0.55), 0 1px 0 rgba(168, 139, 250, 0.2);
     color: white;
-    padding: 10px 16px;
+    padding: 14px 16px 22px 16px;
     text-align: center;
     font-size: 2em;
     font-weight: bold;
