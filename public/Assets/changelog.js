@@ -6,6 +6,17 @@
 const SITE_CHANGELOGS = [
     {
         version: "v1.0.1",
+        date: "2026-11-08",
+        title: "Better Colors/UI, 'My Canvas', NEW LORE SECTION (with STORY MASTER subsection!!!), Better Tagging, ",
+        changes: [
+            "[UI] Incorperated sharper colors, sleeker UI and buttons",
+            "[NEW] Interactive Graph for Lore",
+            "[NEW] New subsections for story website links",
+            "[NEW] Added a custom canvas feature to user profiles"
+        ]
+    },
+    {
+        version: "v1.0.1",
         date: "2026-10-16",
         title: "New 'My Stuff', Security, UI, and Coupon Fixes ",
         changes: [

@@ -1746,7 +1746,9 @@ app.get('/api/suggest/lookup', async (req, res) => {
         ]);
 
         const appleResults = (appleRes.status === 'fulfilled' && appleRes.value?.data?.results) ? appleRes.value.data.results : [];
-        const appleMatch = shouldCheckApple ? findBestAppStoreMatch(appleResults, { id: '__lookup__', name: term }, allGames) : null;
+        const appleMatch = shouldCheckApple
+            ? (findBestAppStoreMatch(appleResults, { id: '__lookup__', name: term }, allGames) || appleResults[0] || null)
+            : null;
 
         const steamItems = (steamSearchRes.status === 'fulfilled' && steamSearchRes.value?.data?.items) ? steamSearchRes.value.data.items : [];
         const normTerm = normalizeGameTitle(term);

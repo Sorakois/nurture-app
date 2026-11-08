@@ -1061,14 +1061,15 @@
             color: #ffd147;
         }
 
-        /* View 1: Giant Ornate 3D Book Cover */
+        /* View 1: Giant Ornate Book Cover (Zero Z-Plane Clipping) */
         .sm-book-stage {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             padding: 26px 16px 36px 16px;
-            perspective: 1200px;
+            position: relative;
+            z-index: 2;
         }
 
         .sm-giant-tome {
@@ -1090,24 +1091,27 @@
             text-align: center;
             cursor: pointer;
             user-select: none;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            transform: translateZ(0);
             box-shadow:
                 -12px 0 0 #120a24,
                 -15px 0 0 #b88614,
                 0 22px 50px rgba(0, 0, 0, 0.8),
                 inset 0 0 0 6px rgba(255, 209, 71, 0.14),
                 inset 0 0 28px rgba(0, 0, 0, 0.75);
-            transform-style: preserve-3d;
-            transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease;
+            transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.28s ease, border-color 0.28s ease;
         }
 
         .sm-giant-tome:hover {
-            transform: rotateY(-8deg) translateY(-6px) scale(1.02);
+            transform: translate3d(5px, -6px, 0) scale(1.015);
+            border-color: #ffffff;
             box-shadow:
-                -14px 4px 0 #120a24,
-                -18px 4px 0 #ffd147,
+                -16px 6px 0 #120a24,
+                -20px 6px 0 #ffd147,
                 0 28px 60px rgba(0, 0, 0, 0.9),
-                0 0 30px rgba(255, 209, 71, 0.28),
-                inset 0 0 0 6px rgba(255, 209, 71, 0.25);
+                0 0 30px rgba(255, 209, 71, 0.32),
+                inset 0 0 0 6px rgba(255, 209, 71, 0.28);
         }
 
         /* Book Spine Ridge on the Left Edge */
@@ -1227,9 +1231,9 @@
         }
 
         .sm-chapter-cover:hover {
-            transform: translateY(-5px) rotateY(-4deg);
+            transform: translate3d(3px, -5px, 0);
             border-color: #ffd147;
-            box-shadow: 0 14px 32px rgba(0, 0, 0, 0.65), 0 0 18px rgba(255, 209, 71, 0.22);
+            box-shadow: -6px 6px 0 rgba(18, 10, 36, 0.9), 0 14px 32px rgba(0, 0, 0, 0.65), 0 0 18px rgba(255, 209, 71, 0.22);
         }
 
         .sm-chapter-num {
@@ -2723,7 +2727,7 @@
                 id: 'characters',
                 title: 'Characters & Arcs',
                 description: 'Key character backstories, turning points, alliances, and personal timelines.',
-                coverIcon: '👑'
+                coverIcon: '👤'
             },
             {
                 id: 'factions',
@@ -2862,9 +2866,9 @@
                     <div class="sm-book-stage">
                         <div class="sm-giant-tome" onclick="setStoryMasterStage('toc')" title="Click to open the Table of Contents">
                             <div style="width: 100%; display: flex; flex-direction: column; align-items: center;">
-                                <div class="sm-tome-header-ornament">Archives of Nurture</div>
+                                <div class="sm-tome-header-ornament">Story Archives</div>
                                 <h2 class="sm-tome-title">${safeStr(gameData.name)}</h2>
-                                <div style="font-size: 0.78em; color: #c4b5e8; letter-spacing: 1px; text-transform: uppercase;">Chronicles & Lore Compendium</div>
+                                <div style="font-size: 0.78em; color: #c4b5e8; letter-spacing: 1px; text-transform: uppercase;">Lore Compendium</div>
                             </div>
 
                             <div class="sm-tome-medallion">
@@ -2874,8 +2878,8 @@
                             <div class="sm-tome-footer">
                                 <div class="sm-tome-author">Authored by ${safeStr(gameData.developer || 'Unknown Studio')}</div>
                                 <div class="sm-tome-contributors">
-                                    <span>✒️</span>
-                                    <span>${contribCount} Lore Contributor${contribCount !== 1 ? 's' : ''}</span>
+                                    <span>👥</span>
+                                    <span>${contribCount}Contributor${contribCount !== 1 ? 's' : ''}</span>
                                 </div>
                             </div>
                         </div>
@@ -2898,7 +2902,7 @@
                                 <p class="sm-chapter-desc">${safeStr(chap.description || '')}</p>
                             </div>
                             <div class="sm-chapter-meta">
-                                <span>${nodeCount} Timeline Event${nodeCount !== 1 ? 's' : ''}</span>
+                                <span>${nodeCount}Event${nodeCount !== 1 ? 's' : ''}</span>
                                 <span>Open Graph →</span>
                             </div>
                         </div>
@@ -3024,7 +3028,7 @@
                             ${smConnectMode ? '✕ Cancel Connect' : '🔗 Connect Events'}
                         </button>
                         <button type="button" class="btn-floral" style="height: 36px; padding: 0 12px; font-size: 0.8em;" onclick="openStoryEdgeModal()">
-                            Edge List
+                            Edge/Connections List
                         </button>
                     </div>
                 </div>
@@ -3038,7 +3042,7 @@
 
                 <div class="sm-graph-viewport" id="smGraphViewport" onscroll="drawStoryMasterEdges()">
                     <div class="sm-graph-stage" id="smGraphStage">
-                        <div class="sm-tier-badge" style="border-color: rgba(168,139,250,0.4); color: #d0c2f7;">▲ ANCIENT / OLDEST EVENTS ▲</div>
+                        <div class="sm-tier-badge" style="border-color: rgba(168,139,250,0.4); color: #d0c2f7;">▲ OLDEST EVENTS ▲</div>
                         <svg class="sm-edges-svg" id="smEdgesSvg"></svg>
                         ${tiersHtml}
                         <button type="button" class="suggest-tag-pill-btn" style="z-index: 2;" onclick="openStoryNodeModal(null, ${highestTimeOrder}, 0)">
@@ -3386,7 +3390,7 @@
                             <div>
                                 <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
                                     <span style="font-weight:bold; font-size:1.2em; color:#ffd147;">Story Master</span>
-                                    <span class="floral-badge" style="background:rgba(255,209,71,0.18); color:#ffd147; border:1px solid rgba(255,209,71,0.5); margin:0;">Interactive Tome & Graph</span>
+                                    <span class="floral-badge" style="background:rgba(255,209,71,0.18); color:#ffd147; border:1px solid rgba(255,209,71,0.5); margin:0;">Interactive Chronological Graphs</span>
                                 </div>
                                 <div style="font-size:0.9em; color:#e2d4ff;">Visually explore and contribute to the lore! Click to open the book, chapters, and chronological timeline graph.</div>
                             </div>
