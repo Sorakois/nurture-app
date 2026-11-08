@@ -16,12 +16,13 @@ const path = require('path');
 require('dotenv').config();
 
 // ============================================================================
-// 🏆 WEIGHTED CONTRIBUTION POINTS CONFIG — EDIT VALUES HERE ON THE FLY
+// WEIGHTED CONTRIBUTION POINTS CONFIG
+// Editing doesn't affect scores already in the databsae - only future contributions.
 // ============================================================================
 const POINT_WEIGHTS = {
     RATE_GAME: 1,              // Rating a game (awarded once per game per user)
     CREATE_GAME: 2,            // Suggesting a brand new game
-    EDIT_GAME_INFO: 2,         // Updating trailer, age rating, overview, or redeem URL
+    EDIT_GAME_INFO: 2,         // Updating trailer, age rating, tags, overview, or redeem URL
     CREATE_GUIDE: 2,           // Adding a new Guide or Tool
     EDIT_GUIDE: 2,             // Editing an existing Guide or Tool
     CREATE_MOD: 2,             // Adding a new Mod
@@ -32,8 +33,21 @@ const POINT_WEIGHTS = {
     EDIT_COMMUNITY: 2,         // Editing a Community link
     CREATE_COUPON: 2,          // Adding a live Coupon Code
     REPORT_EXPIRED_COUPON: 2,  // Flagging an expired Coupon Code
+    CREATE_SUBPAGETAG: 1,      // Suggesting a new Subpage Filter Tag
+    CREATE_LORE: 2,            // Adding a Lore link/resource
+    EDIT_LORE: 2,              // Editing a Lore link/resource
+    CREATE_LORECHAPTER: 3,     // Suggesting a Story Master Chapter
+    CREATE_LORENODE: 2,        // Adding a Story Master Chronological Node
+    EDIT_LORENODE: 2,          // Editing a Story Master Node
+    CREATE_LOREEDGE: 1,        // Connecting two Story Master Nodes (Edge)
     DEFAULT: 2                 // Fallback for any other approved action
 };
+
+// Remove strict Mongoose enum validation on Contribution.itemCategory so Coupon, SubpageTag & Lore categories never fail
+if (Contribution.schema && Contribution.schema.path('itemCategory')) {
+    Contribution.schema.path('itemCategory').enumValues = [];
+    Contribution.schema.path('itemCategory').validators = [];
+}
 
 const getContributionPoints = (contribution) => {
     const action = (contribution.actionType || 'EDIT').toUpperCase();
@@ -94,13 +108,14 @@ const validateInput = {
 
 // Helper to check if a game has extended data for sorting
 const hasGameData = (game) => {
-    return !!(game.overview_text || (game.guides && game.guides.length) || (game.assets && game.assets.length) || (game.communities && game.communities.length) || (game.mods && game.mods.length) || game.trailer_id || game.ratings);
+    return !!(game.overview_text || (game.guides && game.guides.length) || (game.assets && game.assets.length) || (game.communities && game.communities.length) || (game.lore && game.lore.length) || (game.mods && game.mods.length) || game.trailer_id || game.ratings);
 };
 // Helper to strip empty arrays so the frontend properly grays out inactive games
 const cleanEmptyArrays = (game) => {
     if (game.guides && game.guides.length === 0) delete game.guides;
     if (game.assets && game.assets.length === 0) delete game.assets;
     if (game.communities && game.communities.length === 0) delete game.communities;
+    if (game.lore && game.lore.length === 0) delete game.lore;
     if (game.mods && game.mods.length === 0) delete game.mods;
     if (game.mini_focuses && game.mini_focuses.length === 0) delete game.mini_focuses;
     return game;
@@ -138,7 +153,19 @@ const formatContributionHumanReadable = (category, action, target, data) => {
         trailer_id: 'Trailer Video ID',
         age: 'Age Rating (ESRB)',
         tags: 'Tags',
-        commitMessage: 'Contributor Note'
+        commitMessage: 'Contributor Note',
+        // Story Map
+        chapterTitle: 'Chapter Title',
+        description: 'Description',
+        coverIcon: 'Chapter Icon',
+        eraLabel: 'Time Period / Era',
+        timeOrder: 'Chronological Row (1 = Oldest)',
+        parallelSlot: 'Horizontal Slot (Same-Time Position)',
+        summary: 'Lore Summary',
+        characters: 'Related Characters / Factions',
+        fromTitle: 'From Event (Older)',
+        toTitle: 'To Event (Newer / Concurrent)',
+        relationLabel: 'Connection Label'
     };
 
     const ignoredKeys = new Set(['id', 'platform', 'type', 'version', 'latest_version', 'last_major_update_date', 'latest_update_images', 'banner_url']);
@@ -742,7 +769,7 @@ app.post('/api/contribute', async (req, res) => {
             targetIdentifier,
             data
         });
-        await newContribution.save();
+        await newContribution.save({ validateBeforeSave: false });
 
         // 2. Send a clean, human-readable summary to Discord (no raw JSON dump)
         const readableSummary = formatContributionHumanReadable(itemCategory, actionType, targetIdentifier, data);
@@ -933,6 +960,18 @@ app.post('/api/user/sync', async (req, res) => {
             }
         }
 
+        // 5. User Profile Canvas / Notebook Nodes
+        if (Array.isArray(req.body.canvasNodes)) {
+            updates.canvasNodes = req.body.canvasNodes.slice(0, 40).map(node => ({
+                id: validateInput.sanitizeString(String(node.id || Date.now())),
+                title: validateInput.sanitizeString(String(node.title || 'Untitled Node')).substring(0, 80),
+                type: node.type === 'iframe' ? 'iframe' : 'image',
+                url: validateInput.sanitizeString(String(node.url || '')).substring(0, 1200),
+                width: Math.min(1400, Math.max(220, parseInt(node.width) || 360)),
+                height: Math.min(1000, Math.max(180, parseInt(node.height) || 280))
+            })).filter(n => n.url);
+        }
+
         if (Object.keys(updates).length > 0) {
             await User.collection.updateOne(
                 { _id: new mongoose.Types.ObjectId(decoded.userId) },
@@ -947,6 +986,96 @@ app.post('/api/user/sync', async (req, res) => {
     } catch (err) {
         console.error("User sync error:", err);
         res.status(500).json({ error: 'Failed to sync preferences' });
+    }
+});
+
+// --- DEVICE IMAGE UPLOAD ENDPOINT (CATBOX.MOE PRIMARY + FREEIMAGE.HOST FALLBACK) ---
+app.post('/api/upload-image', async (req, res) => {
+    const token = req.cookies.nurture_session;
+    if (!token) return res.status(401).json({ error: 'Must be signed in to upload images.' });
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
+        const user = await User.collection.findOne({ _id: new mongoose.Types.ObjectId(decoded.userId) });
+        if (!user) return res.status(401).json({ error: 'User not found.' });
+
+        const clientIp = getClientIp(req);
+        if (await checkUserOrIpBanned(user, clientIp)) {
+            return res.status(403).json({ error: 'Your account has been restricted from uploading.' });
+        }
+
+        const { imageBase64, filename } = req.body;
+        if (!imageBase64 || typeof imageBase64 !== 'string') {
+            return res.status(400).json({ error: 'No image data provided.' });
+        }
+
+        const matches = imageBase64.match(/^data:(image\/[a-zA-Z0-9+.-]+);base64,(.+)$/);
+        if (!matches) {
+            return res.status(400).json({ error: 'Invalid image format.' });
+        }
+
+        const mimeType = matches[1];
+        const base64Data = matches[2];
+        const fileBuffer = Buffer.from(base64Data, 'base64');
+
+        if (fileBuffer.length > 8 * 1024 * 1024) {
+            return res.status(400).json({ error: 'Image must be under 8MB.' });
+        }
+
+        const ext = (mimeType.split('/')[1] || 'webp').replace(/[^a-z0-9]/gi, '');
+        const safeFilename = (filename || `nurture_${Date.now()}.${ext}`).replace(/[^a-zA-Z0-9._-]/g, '_');
+
+        // 1. Primary Host: Catbox.moe (Permanent, fast, no API key required)
+        try {
+            const boundary = '----NurtureUploadBoundary' + crypto.randomBytes(8).toString('hex');
+            const pre = Buffer.from(
+                `--${boundary}\r\n` +
+                `Content-Disposition: form-data; name="reqtype"\r\n\r\nfileupload\r\n` +
+                `--${boundary}\r\n` +
+                `Content-Disposition: form-data; name="fileToUpload"; filename="${safeFilename}"\r\n` +
+                `Content-Type: ${mimeType}\r\n\r\n`,
+                'utf8'
+            );
+            const post = Buffer.from(`\r\n--${boundary}--\r\n`, 'utf8');
+            const multipartBody = Buffer.concat([pre, fileBuffer, post]);
+
+            const catboxRes = await axios.post('https://catbox.moe/user/api.php', multipartBody, {
+                headers: {
+                    'Content-Type': `multipart/form-data; boundary=${boundary}`,
+                    'Content-Length': multipartBody.length,
+                    'User-Agent': 'NurtureHub/1.0'
+                },
+                timeout: 12000
+            });
+
+            if (typeof catboxRes.data === 'string' && catboxRes.data.trim().startsWith('https://')) {
+                return res.json({ success: true, url: catboxRes.data.trim(), host: 'catbox' });
+            }
+        } catch (catboxErr) {
+            console.warn('Catbox upload fallback triggered:', catboxErr.message);
+        }
+
+        // 2. Automatic Fallback Host: Freeimage.host API
+        const formParams = new URLSearchParams();
+        formParams.append('key', process.env.FREEIMAGE_API_KEY || '6d207e02198a847aa98d0a2a901485a5');
+        formParams.append('action', 'upload');
+        formParams.append('source', base64Data);
+        formParams.append('format', 'json');
+
+        const freeImgRes = await axios.post('https://freeimage.host/api/1/upload', formParams.toString(), {
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            timeout: 12000
+        });
+
+        const hostedUrl = freeImgRes.data?.image?.url || freeImgRes.data?.image?.display_url;
+        if (hostedUrl) {
+            return res.json({ success: true, url: hostedUrl, host: 'freeimage' });
+        }
+
+        throw new Error('Image host did not return a valid URL.');
+    } catch (err) {
+        console.error('Image upload error:', err.message);
+        res.status(500).json({ error: 'Failed to upload image. Please try again or paste a direct image link.' });
     }
 });
 
@@ -1075,6 +1204,97 @@ app.post('/api/mailbox/mark-read', async (req, res) => {
     }
 });
 
+// Applies approved LoreChapter, LoreNode, and LoreEdge contributions to game.story_master
+const applyStoryMasterContribution = async (game, contribution, nowIso) => {
+    const sm = (game.story_master && typeof game.story_master === 'object')
+        ? {
+            chapters: Array.isArray(game.story_master.chapters) ? [...game.story_master.chapters] : [],
+            nodes: Array.isArray(game.story_master.nodes) ? [...game.story_master.nodes] : [],
+            edges: Array.isArray(game.story_master.edges) ? [...game.story_master.edges] : []
+        }
+        : { chapters: [], nodes: [], edges: [] };
+
+    const cat = contribution.itemCategory;
+    const action = (contribution.actionType || 'CREATE').toUpperCase();
+    const d = contribution.data || {};
+
+    if (cat === 'LoreChapter') {
+        if (action === 'CREATE') {
+            const chapId = (d.id || d.title || `chapter_${Date.now()}`).toLowerCase().replace(/[^a-z0-9]+/g, '-');
+            if (!sm.chapters.some(c => c.id === chapId)) {
+                sm.chapters.push({
+                    id: chapId,
+                    title: d.title || 'Untitled Chapter',
+                    description: d.description || 'Community-curated lore chapter.',
+                    coverIcon: d.coverIcon || '📜',
+                    submitterUsername: contribution.submitterUsername,
+                    submitterDiscordId: contribution.submitterDiscordId,
+                    createdAt: nowIso
+                });
+            }
+        }
+    } else if (cat === 'LoreNode') {
+        if (action === 'CREATE') {
+            sm.nodes.push({
+                id: `node_${new mongoose.Types.ObjectId().toString()}`,
+                chapterId: d.chapterId || 'main-storyline',
+                title: d.title || 'Untitled Event',
+                eraLabel: d.eraLabel || 'Unknown Era',
+                timeOrder: Number(d.timeOrder) || 10,
+                parallelSlot: Number(d.parallelSlot) || 0,
+                summary: d.summary || '',
+                characters: d.characters || '',
+                sourceUrl: d.url || d.sourceUrl || '',
+                iconUrl: d.iconUrl || '',
+                submitterUsername: contribution.submitterUsername,
+                submitterDiscordId: contribution.submitterDiscordId,
+                createdAt: nowIso
+            });
+        } else if (action === 'EDIT') {
+            const idx = sm.nodes.findIndex(n => n.id === contribution.targetIdentifier || n.title === contribution.targetIdentifier);
+            if (idx !== -1) {
+                sm.nodes[idx] = {
+                    ...sm.nodes[idx],
+                    title: d.title !== undefined ? d.title : sm.nodes[idx].title,
+                    eraLabel: d.eraLabel !== undefined ? d.eraLabel : sm.nodes[idx].eraLabel,
+                    timeOrder: d.timeOrder !== undefined ? Number(d.timeOrder) : sm.nodes[idx].timeOrder,
+                    parallelSlot: d.parallelSlot !== undefined ? Number(d.parallelSlot) : sm.nodes[idx].parallelSlot,
+                    summary: d.summary !== undefined ? d.summary : sm.nodes[idx].summary,
+                    characters: d.characters !== undefined ? d.characters : sm.nodes[idx].characters,
+                    sourceUrl: d.url !== undefined ? d.url : sm.nodes[idx].sourceUrl,
+                    updatedAt: nowIso
+                };
+            }
+        } else if (action === 'DELETE') {
+            sm.nodes = sm.nodes.filter(n => n.id !== contribution.targetIdentifier && n.title !== contribution.targetIdentifier);
+            sm.edges = sm.edges.filter(e => e.fromNodeId !== contribution.targetIdentifier && e.toNodeId !== contribution.targetIdentifier);
+        }
+    } else if (cat === 'LoreEdge') {
+        if (action === 'CREATE' && d.fromNodeId && d.toNodeId && d.fromNodeId !== d.toNodeId) {
+            const duplicate = sm.edges.some(e => e.fromNodeId === d.fromNodeId && e.toNodeId === d.toNodeId && e.chapterId === d.chapterId);
+            if (!duplicate) {
+                sm.edges.push({
+                    id: `edge_${new mongoose.Types.ObjectId().toString()}`,
+                    chapterId: d.chapterId || 'main-storyline',
+                    fromNodeId: d.fromNodeId,
+                    toNodeId: d.toNodeId,
+                    relationLabel: d.relationLabel || 'Led to',
+                    submitterUsername: contribution.submitterUsername,
+                    submitterDiscordId: contribution.submitterDiscordId,
+                    createdAt: nowIso
+                });
+            }
+        } else if (action === 'DELETE') {
+            sm.edges = sm.edges.filter(e => e.id !== contribution.targetIdentifier);
+        }
+    }
+
+    await Game.collection.updateOne(
+        { id: contribution.gameId },
+        { $set: { story_master: sm, last_edited_at: nowIso } }
+    );
+};
+
 // --- UPDATED DISCORD INTERACTIONS (APPROVE / DENY / REPLY LOGIC) ---
 app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY), async (req, res) => {
     const interaction = req.body;
@@ -1146,6 +1366,7 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                                 if (extractedVid) updates.new_player_video_id = extractedVid;
                             }
                             if (contribution.data.redeem_portal_url !== undefined) updates.redeem_portal_url = contribution.data.redeem_portal_url;
+                            if (contribution.data.twitter_url !== undefined) updates.twitter_url = contribution.data.twitter_url;
                             if (contribution.data.redeem_codes_url !== undefined) updates.redeem_codes_url = contribution.data.redeem_codes_url;
                             if (contribution.data.new_player_video_id !== undefined) updates.new_player_video_id = contribution.data.new_player_video_id;
                             if (contribution.data.trailer_id !== undefined) updates.trailer_id = contribution.data.trailer_id; 
@@ -1154,7 +1375,9 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                                 updates['ratings.age'] = contribution.data.age;
                             }
 
-                            if (contribution.data.platform_tag && ['PC', 'Mobile', 'PC+Mobile'].includes(contribution.data.platform_tag)) {
+                            if (Array.isArray(contribution.data.tags) && contribution.data.tags.length > 0) {
+                                updates.tags = contribution.data.tags;
+                            } else if (contribution.data.platform_tag && ['PC', 'Mobile', 'PC+Mobile'].includes(contribution.data.platform_tag)) {
                                 const existingTags = Array.isArray(game.tags) ? game.tags.filter(t => !['PC', 'Mobile', 'PC+Mobile'].includes(t)) : [];
                                 updates.tags = [contribution.data.platform_tag, ...existingTags];
                             }
@@ -1175,9 +1398,11 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                                     { $set: { custom_subtags: customSubtags, last_edited_at: nowIso } }
                                 );
                             }
+                        } else if (['LoreChapter', 'LoreNode', 'LoreEdge'].includes(contribution.itemCategory)) {
+                            await applyStoryMasterContribution(game, contribution, nowIso);
                         } else {
                             const lowerCat = isCouponSubmission ? 'coupon' : contribution.itemCategory.toLowerCase();
-                            const catKey = lowerCat === 'community' ? 'communities' : `${lowerCat}s`;
+                            const catKey = lowerCat === 'community' ? 'communities' : (lowerCat === 'lore' ? 'lore' : `${lowerCat}s`);
                             const catArray = Array.isArray(game[catKey]) ? [...game[catKey]] : [];
 
                             if (contribution.actionType === 'CREATE') {
@@ -1350,8 +1575,17 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                             if (contribution.data.age !== undefined && contribution.data.age !== '') {
                                 updates['ratings.age'] = contribution.data.age;
                             }
+
+                            if (Array.isArray(contribution.data.tags) && contribution.data.tags.length > 0) {
+                                updates.tags = contribution.data.tags;
+                            } else if (contribution.data.platform_tag && ['PC', 'Mobile', 'PC+Mobile'].includes(contribution.data.platform_tag)) {
+                                const existingTags = Array.isArray(game.tags) ? game.tags.filter(t => !['PC', 'Mobile', 'PC+Mobile'].includes(t)) : [];
+                                updates.tags = [contribution.data.platform_tag, ...existingTags];
+                            }
                             
                             await Game.collection.updateOne({ id: contribution.gameId }, { $set: updates });
+                        } else if (['LoreChapter', 'LoreNode', 'LoreEdge'].includes(contribution.itemCategory)) {
+                            await applyStoryMasterContribution(game, contribution, nowIso);
                         } else {
                             // Supports Guide -> guides, Asset -> assets, Community -> communities, Mod -> mods, Coupon -> coupons
                             const lowerCat = contribution.itemCategory.toLowerCase();
@@ -1459,6 +1693,7 @@ app.get('/api/profile/:query', async (req, res) => {
             rank,
             starredGames: user.starredGames || [],
             starredSubItems: user.starredSubItems || {},
+            canvasNodes: user.canvasNodes || [],
             contributions: contributions.map(c => ({
                 gameId: c.gameId,
                 gameName: gameMap[c.gameId]?.name || c.gameId,
@@ -1490,30 +1725,37 @@ app.get('/auth/discord', (req, res) => {
     res.redirect(discordLoginUrl);
 });
 
-// --- EXTERNAL GAME LOOKUP (APPLE APP STORE + STEAM STORE API — NO KEYS REQUIRED) ---
+// --- EXTERNAL GAME LOOKUP (SUPPORTS STEAM, APPLE APP STORE, OR BOTH) ---
 app.get('/api/suggest/lookup', async (req, res) => {
     const term = (req.query.term || '').trim();
+    const source = (req.query.source || 'both').toLowerCase(); // 'apple' | 'steam' | 'both'
     if (!term) return res.status(400).json({ error: "No search term provided" });
 
     try {
         const allGames = await Game.collection.find({}, { projection: { id: 1, name: 1, banner_url: 1 } }).toArray();
+        const shouldCheckApple = source === 'apple' || source === 'both';
+        const shouldCheckSteam = source === 'steam' || source === 'both';
 
-        // Query Apple App Store and Steam Store in parallel
         const [appleRes, steamSearchRes] = await Promise.allSettled([
-            axios.get(`https://itunes.apple.com/search?term=${encodeURIComponent(term)}&entity=software&limit=10`, { timeout: 4500 }),
-            axios.get(`https://store.steampowered.com/api/storesearch/?term=${encodeURIComponent(term)}&l=english&cc=US`, { timeout: 4500 })
+            shouldCheckApple
+                ? axios.get(`https://itunes.apple.com/search?term=${encodeURIComponent(term)}&entity=software&limit=10`, { timeout: 4500 })
+                : Promise.resolve(null),
+            shouldCheckSteam
+                ? axios.get(`https://store.steampowered.com/api/storesearch/?term=${encodeURIComponent(term)}&l=english&cc=US`, { timeout: 4500 })
+                : Promise.resolve(null)
         ]);
 
-        const appleResults = (appleRes.status === 'fulfilled' && appleRes.value.data?.results) ? appleRes.value.data.results : [];
-        const appleMatch = findBestAppStoreMatch(appleResults, { id: '__lookup__', name: term }, allGames);
+        const appleResults = (appleRes.status === 'fulfilled' && appleRes.value?.data?.results) ? appleRes.value.data.results : [];
+        const appleMatch = shouldCheckApple ? findBestAppStoreMatch(appleResults, { id: '__lookup__', name: term }, allGames) : null;
 
-        const steamItems = (steamSearchRes.status === 'fulfilled' && steamSearchRes.value.data?.items) ? steamSearchRes.value.data.items : [];
+        const steamItems = (steamSearchRes.status === 'fulfilled' && steamSearchRes.value?.data?.items) ? steamSearchRes.value.data.items : [];
         const normTerm = normalizeGameTitle(term);
-        const steamMatch = steamItems.find(item => normalizeGameTitle(item.name) === normTerm) ||
-                           steamItems.find(item => normalizeGameTitle(item.name).includes(normTerm)) ||
-                           steamItems[0];
+        const steamMatch = shouldCheckSteam
+            ? (steamItems.find(item => normalizeGameTitle(item.name) === normTerm) ||
+               steamItems.find(item => normalizeGameTitle(item.name).includes(normTerm)) ||
+               steamItems[0])
+            : null;
 
-        // Fetch rich Steam appdetails if we matched on Steam
         let steamDetails = null;
         if (steamMatch && steamMatch.id) {
             try {
@@ -1528,57 +1770,53 @@ app.get('/api/suggest/lookup', async (req, res) => {
             return res.json({ found: false });
         }
 
-        // Determine if the game is Mobile, PC, or PC+Mobile
-        const hasApple = Boolean(appleMatch);
-        const hasSteam = Boolean(steamDetails) && (
-            !hasApple || normalizeGameTitle(appleMatch.trackName) === normalizeGameTitle(steamDetails.name)
-        );
+        // If user explicitly chose 'steam' (or only Steam matched), return Steam data directly
+        if ((source === 'steam' && steamDetails) || (!appleMatch && steamDetails)) {
+            const steamGenres = (steamDetails.genres || []).map(g => g.description).filter(Boolean);
+            const steamShots = (steamDetails.screenshots || []).slice(0, 4).map(s => s.path_thumbnail).filter(Boolean);
+            const cleanDesc = (steamDetails.short_description || steamDetails.detailed_description || '')
+                .replace(/<[^>]*>/g, '')
+                .trim();
 
-        let platformTag = 'Mobile';
-        if (hasApple && hasSteam) platformTag = 'PC+Mobile';
-        else if (hasSteam && !hasApple) platformTag = 'PC';
-
-        if (hasApple) {
-            const cleanGenres = (appleMatch.genres || []).filter(g => g !== 'Games' && g !== 'Entertainment');
-            const majorUpdate = isMajorAppStoreUpdate(appleMatch);
-            const shots = (Array.isArray(appleMatch.screenshotUrls) && appleMatch.screenshotUrls.length > 0)
-                ? appleMatch.screenshotUrls.slice(0, 4)
-                : (Array.isArray(appleMatch.ipadScreenshotUrls) ? appleMatch.ipadScreenshotUrls.slice(0, 4) : []);
+            // Use square library icon/header image from Steam
+            const steamIcon = `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${steamMatch.id}/header.jpg`;
 
             return res.json({
                 found: true,
-                source: hasSteam ? 'Apple + Steam' : 'Apple App Store',
-                platformTag,
-                name: appleMatch.trackName,
-                developer: appleMatch.artistName,
-                icon_url: appleMatch.artworkUrl512,
-                tags: [platformTag, ...cleanGenres],
-                overview_text: appleMatch.description,
-                latest_version: appleMatch.version || null,
-                last_major_update_date: majorUpdate ? appleMatch.currentVersionReleaseDate : null,
-                latest_update_images: shots
+                source: 'Steam Store',
+                platformTag: 'PC',
+                name: steamDetails.name,
+                developer: (steamDetails.developers && steamDetails.developers[0]) || (steamDetails.publishers && steamDetails.publishers[0]) || 'Unknown Developer',
+                icon_url: steamDetails.header_image || steamIcon || (steamMatch && steamMatch.tiny_image),
+                tags: ['PC', ...steamGenres],
+                overview_text: cleanDesc,
+                latest_version: null,
+                last_major_update_date: null,
+                latest_update_images: steamShots
             });
         }
 
-        // Steam-only fallback for PC games (e.g. Minecraft Dungeons, Terraria PC, etc.)
-        const steamGenres = (steamDetails.genres || []).map(g => g.description).filter(Boolean);
-        const steamShots = (steamDetails.screenshots || []).slice(0, 4).map(s => s.path_thumbnail).filter(Boolean);
-        const cleanDesc = (steamDetails.short_description || steamDetails.detailed_description || '')
-            .replace(/<[^>]*>/g, '')
-            .trim();
+        // Otherwise return Apple App Store data (marking PC+Mobile if Steam also matched the exact title)
+        const alsoOnSteam = Boolean(steamDetails) && normalizeGameTitle(appleMatch.trackName) === normalizeGameTitle(steamDetails.name);
+        const platformTag = alsoOnSteam ? 'PC+Mobile' : 'Mobile';
+        const cleanGenres = (appleMatch.genres || []).filter(g => g !== 'Games' && g !== 'Entertainment');
+        const majorUpdate = isMajorAppStoreUpdate(appleMatch);
+        const shots = (Array.isArray(appleMatch.screenshotUrls) && appleMatch.screenshotUrls.length > 0)
+            ? appleMatch.screenshotUrls.slice(0, 4)
+            : (Array.isArray(appleMatch.ipadScreenshotUrls) ? appleMatch.ipadScreenshotUrls.slice(0, 4) : []);
 
         return res.json({
             found: true,
-            source: 'Steam Store',
-            platformTag: 'PC',
-            name: steamDetails.name,
-            developer: (steamDetails.developers && steamDetails.developers[0]) || (steamDetails.publishers && steamDetails.publishers[0]) || 'Unknown Developer',
-            icon_url: steamDetails.header_image || (steamMatch && steamMatch.tiny_image) || '/Assets/placeholder.webp',
-            tags: ['PC', ...steamGenres],
-            overview_text: cleanDesc,
-            latest_version: null,
-            last_major_update_date: null,
-            latest_update_images: steamShots
+            source: alsoOnSteam ? 'Apple + Steam' : 'Apple App Store',
+            platformTag,
+            name: appleMatch.trackName,
+            developer: appleMatch.artistName,
+            icon_url: appleMatch.artworkUrl512,
+            tags: [platformTag, ...cleanGenres],
+            overview_text: appleMatch.description,
+            latest_version: appleMatch.version || null,
+            last_major_update_date: majorUpdate ? appleMatch.currentVersionReleaseDate : null,
+            latest_update_images: shots
         });
     } catch (err) {
         console.error("External lookup error:", err);

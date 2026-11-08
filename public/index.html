@@ -1111,6 +1111,9 @@
             <div class="video-container" id="modalVideoContainer" style="display:none;">
                 <iframe id="modalTrailer" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
             </div>
+
+            <!-- Platform & Genre Tags Bar (Below YouTube Trailer, Above Ratings) -->
+            <div id="modalTagsContainer" style="display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:6px; margin-bottom:12px; padding:9px 12px; background:rgba(18, 12, 32, 0.78); border:1px solid rgba(168, 139, 250, 0.28); border-radius:14px 4px 14px 4px;"></div>
             
             <div class="ratings-grid">
                 <div class="rating-box" style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
@@ -1139,10 +1142,9 @@
                 </div>
             </div>
 
-            <!-- BUTTONS MUST BE INSIDE THE modal-window DIV -->
             <div style="display: flex; gap: 12px; margin-top: 12px;">
                 <button class="btn-floral pollen" onclick="openRateGameModal()" style="flex: 1; padding:12px;">⭐ Rate Game</button>
-                <button class="btn-floral" onclick="openEditInfoModal()" style="flex: 1; padding:12px;">🌸 Suggest Data</button>
+                <button class="btn-floral" onclick="openEditInfoModal()" style="flex: 1; padding:12px;">🌸 Suggest Data & Tags</button>
             </div>
         </div>
     </div>
@@ -1177,20 +1179,19 @@
         </div>
     </div>
 
-    <!-- Suggest Info Edit Modal -->
+    <!-- Suggest Info & Genre Tags Edit Modal -->
     <div id="editInfoModal" class="modal-overlay">
-        <div class="modal-window" style="max-width: 500px;">
+        <div class="modal-window" style="max-width: 540px;">
             <button class="modal-close" onclick="document.getElementById('editInfoModal').classList.remove('active')">×</button>
-            <h2 class="modal-title">Suggest Data Update</h2>
+            <h2 class="modal-title">Suggest Data & Tag Updates</h2>
             
             <div class="modal-form-stack">
                 <input type="text" id="editTrailer" class="floral-input" placeholder="YouTube Trailer Video ID or URL">
                 
                 <select id="editPlatform" class="floral-select">
-                    <option value="">Platform Availability (Keep Current)...</option>
-                    <option value="Mobile">Mobile Only</option>
-                    <option value="PC">PC Only</option>
-                    <option value="PC+Mobile">PC + Mobile (Cross-Platform)</option>
+                    <option value="Mobile">Platform: Mobile Only</option>
+                    <option value="PC">Platform: PC Only</option>
+                    <option value="PC+Mobile">Platform: PC + Mobile (Cross-Platform)</option>
                 </select>
 
                 <select id="editAge" class="floral-select">
@@ -1199,8 +1200,26 @@
                     <option value="T">T (Teen)</option>
                     <option value="M">M (Mature 17+)</option>
                 </select>
+
+                <!-- Interactive Genre Tag Picker inside Suggest Data Modal -->
+                <div id="editGenreTagsBox" style="background: rgba(17, 13, 25, 0.85); border: 1px solid rgba(168, 139, 250, 0.28); border-radius: 16px 5px 16px 5px; padding: 12px 14px; text-align: left;">
+                    <div class="tags-section-title" style="margin-bottom: 8px;">📚 Genre Tags (Select all that apply)</div>
+                    <div class="tags-pills-grid">
+                        <button type="button" class="tag-pill edit-genre-pill" data-tag="Gacha" onclick="this.classList.toggle('selected')">Gacha</button>
+                        <button type="button" class="tag-pill edit-genre-pill" data-tag="RPG" onclick="this.classList.toggle('selected')">RPG</button>
+                        <button type="button" class="tag-pill edit-genre-pill" data-tag="Action" onclick="this.classList.toggle('selected')">Action</button>
+                        <button type="button" class="tag-pill edit-genre-pill" data-tag="Turn-Based" onclick="this.classList.toggle('selected')">Turn-Based</button>
+                        <button type="button" class="tag-pill edit-genre-pill" data-tag="Tower Defense" onclick="this.classList.toggle('selected')">Tower Defense</button>
+                        <button type="button" class="tag-pill edit-genre-pill" data-tag="Rhythm" onclick="this.classList.toggle('selected')">Rhythm</button>
+                        <button type="button" class="tag-pill edit-genre-pill" data-tag="City Builder" onclick="this.classList.toggle('selected')">City Builder</button>
+                        <button type="button" class="tag-pill edit-genre-pill" data-tag="Survival & Crafting" onclick="this.classList.toggle('selected')">Survival & Crafting</button>
+                        <button type="button" class="tag-pill edit-genre-pill" data-tag="Simulation" onclick="this.classList.toggle('selected')">Simulation</button>
+                        <button type="button" class="tag-pill edit-genre-pill" data-tag="Moddable" onclick="this.classList.toggle('selected')">Moddable</button>
+                        <button type="button" class="tag-pill edit-genre-pill" data-tag="Co-op / Multiplayer" onclick="this.classList.toggle('selected')">Co-op / Multiplayer</button>
+                    </div>
+                </div>
                 
-                <input type="text" id="editCommit" class="floral-input" placeholder="Commit Note (Optional, e.g. Updated platform to PC+Mobile)">
+                <input type="text" id="editCommit" class="floral-input" placeholder="Commit Note (Optional, e.g. Updated genre tags or trailer)">
                 
                 <button class="btn-floral blossom" onclick="submitInfoEdit()" style="width:100%; padding:12px; margin-top:4px;">Submit Update to Discord</button>
             </div>
@@ -1209,40 +1228,33 @@
 
     <!-- Suggest Game Modal -->
     <div id="suggestModal" class="modal-overlay">
-        <div class="modal-window" style="max-width: 600px;">
+        <div class="modal-window" style="max-width: 620px;">
             <button class="modal-close" onclick="document.getElementById('suggestModal').classList.remove('active')">×</button>
             <h2 class="modal-title">Suggest a New Game</h2>
             
-            <!-- Emphasized Auto-Fill Lookup Callout -->
+            <!-- Store-Specific Auto-Fill Lookup Callout -->
             <div class="lookup-callout-box">
                 <div class="lookup-callout-header">
                     <div class="lookup-callout-title">QUICK Auto-Fill Lookup</div>
                     <span class="lookup-badge">Recommended</span>
                 </div>
                 <div class="lookup-callout-sub">
-                    Search the game title below to automatically pull its official icon, developer, tags, and description!
+                    Choose a store and search below to pull the official icon, developer, tags, and description!
                 </div>
 
-                <div style="display:flex; gap:10px;">
-                    <input type="text" id="suggestSearch" class="floral-input" placeholder="Type a game name (e.g. Wuthering Waves)..." onkeydown="if(event.key==='Enter'){event.preventDefault(); lookupGame();}">
-                    <button class="btn-floral pollen" onclick="lookupGame()" style="padding:10px 20px; white-space:nowrap;">Auto-Fill</button>
-                </div>
-            </div>
-
-            <div class="modal-form-stack">
-                <div style="display:flex; gap: 12px; align-items: stretch;">
-                    <img id="sgIconPreview" src="/Assets/placeholder.webp" style="width: 96px; height: 96px; border-radius: 16px 5px 16px 5px; object-fit: cover; border: 1.5px solid #9d8ec7; display: none; flex-shrink: 0; align-self: center;">
-                    <div class="modal-form-stack">
-                        <div class="req-field-row">
-                            <input type="text" id="sgName" class="floral-input" placeholder="Game Name">
-                            <span class="req-icon"></span>
-                        </div>
-                        <div class="req-field-row">
-                            <input type="text" id="sgDev" class="floral-input" placeholder="Developer">
-                            <span class="req-icon"></span>
-                        </div>
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                    <input type="text" id="suggestSearch" class="floral-input" placeholder="Type a game name (e.g. Elden Ring, Wuthering Waves)..." onkeydown="if(event.key==='Enter'){event.preventDefault(); lookupGame();}">
+                    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                        <span style="font-size:0.82em; color:#ffd147; font-weight:bold; white-space:nowrap;">Search with:</span>
+                        <select id="suggestStoreSource" class="floral-select" style="flex:1; min-width:170px; padding:8px 12px;">
+                            <option value="steam">Steam Store (PC)</option>
+                            <option value="apple">Apple App Store (Mobile)</option>
+                            <option value="both" selected>Auto (Steam + Apple)</option>
+                        </select>
+                        <button type="button" class="btn-floral pollen" onclick="lookupGame()" style="padding:0 20px; height:38px; white-space:nowrap;">Auto-Fill</button>
                     </div>
                 </div>
+            </div>
 
                 <!-- Select All That Apply Tag Picker (Replaces CSV Input) -->
                 <div id="sgTagsSelector" style="background: rgba(17, 13, 25, 0.85); border: 1px solid rgba(157, 142, 199, 0.28); border-radius: 16px 5px 16px 5px; padding: 12px 14px; text-align: left;">
@@ -1278,7 +1290,7 @@
                     <span class="req-icon"></span>
                 </div>
 
-                <input type="text" id="sgCommit" class="floral-input" placeholder="Commit Note (Optional, e.g. Added via App Store Lookup)">
+                <input type="text" id="sgCommit" class="floral-input" placeholder="(Optional) What did you edit/add?">
                 
                 <button class="btn-floral blossom" onclick="submitSuggestion()" style="width:100%; margin-top:4px; padding:12px;">Submit to Admins</button>
             </div>
@@ -1591,6 +1603,20 @@
                 videoContainer.style.display = 'none';
             }
             
+            const tagsBox = document.getElementById('modalTagsContainer');
+            if (tagsBox) {
+                const gTags = Array.isArray(game.tags) && game.tags.length > 0 ? game.tags : ['Mobile'];
+                tagsBox.innerHTML = gTags.map(t => {
+                    const isPlat = t === 'PC' || t === 'Mobile' || t === 'PC+Mobile';
+                    const badgeStyle = isPlat
+                        ? 'background:rgba(255, 209, 71, 0.16); color:#ffd147; border:1px solid rgba(255, 209, 71, 0.55);'
+                        : 'background:rgba(104, 70, 198, 0.25); color:#e2d4ff; border:1px solid rgba(168, 139, 250, 0.4);';
+                    return `<span style="${badgeStyle} padding:3px 10px; border-radius:10px 3px 10px 3px; font-size:0.78em; font-weight:bold;">${escapeHtml(t)}</span>`;
+                }).join('') + `
+                    <button type="button" onclick="openEditInfoModal()" style="background:none; border:1px dashed rgba(226,212,255,0.45); color:#c4afff; border-radius:8px 2px 8px 2px; padding:2px 8px; font-size:0.72em; cursor:pointer;" title="Edit Platform & Genre Tags">✎ Edit Tags</button>
+                `;
+            }
+
             const esrbImages = {
                 'E': '<img src="https://www.esrb.org/wp-content/uploads/2019/05/E.svg" style="height:35px; object-fit:contain;">',
                 'T': '<img src="https://www.esrb.org/wp-content/uploads/2019/05/T.svg" style="height:35px; object-fit:contain;">',
@@ -1971,10 +1997,11 @@
         }
 
         async function lookupGame() {
-            const term = document.getElementById('suggestSearch').value;
+            const term = document.getElementById('suggestSearch').value.trim();
+            const source = document.getElementById('suggestStoreSource')?.value || 'both';
             if (!term) return;
             try {
-                const res = await fetch(`/api/suggest/lookup?term=${encodeURIComponent(term)}`);
+                const res = await fetch(`/api/suggest/lookup?term=${encodeURIComponent(term)}&source=${encodeURIComponent(source)}`);
                 const data = await res.json();
                 if (data.found) {
                     document.getElementById('sgName').value = data.name;
@@ -1982,9 +2009,8 @@
                     document.getElementById('sgDesc').value = data.overview_text;
                     document.getElementById('sgIcon').value = data.icon_url;
                     
-                    // Auto-select matching pills in the "Select All That Apply" box
                     document.querySelectorAll('#sgTagsSelector .tag-pill').forEach(el => el.classList.remove('selected'));
-                    const matchedPlat = data.platformTag || 'Mobile';
+                    const matchedPlat = data.platformTag || (source === 'steam' ? 'PC' : 'Mobile');
                     const platPill = document.querySelector(`#sgTagsSelector .sg-platform-pill[data-tag="${matchedPlat}"]`);
                     if (platPill) platPill.classList.add('selected');
 
@@ -2006,7 +2032,7 @@
                     preview.src = data.icon_url;
                     preview.style.display = 'block';
                 } else {
-                    window.showCustomAlert("Game not found in the App Store database. If this is a PC game, select 'PC' below and fill in the fields manually.", "Lookup Result");
+                    window.showCustomAlert(`No match found on ${source === 'steam' ? 'Steam' : source === 'apple' ? 'the Apple App Store' : 'Steam or Apple'}. Try switching the "Search with" dropdown or fill in the fields manually.`, "Lookup Result");
                 }
             } catch (e) {
                 window.showCustomAlert("Lookup failed. Please try again or fill in the fields manually.", "Lookup Error");
@@ -2127,7 +2153,7 @@
 
                 document.getElementById('rateGameModal').classList.remove('active');
                 openGameModal(currentGameForModal, { getBoundingClientRect: () => ({ left: window.innerWidth/2, top: window.innerHeight/2, width: 0, height: 0 }) });
-                window.showCustomAlert("Your rating has been saved and live averages are updated!", "Rating Saved");
+                window.showCustomAlert("Thanks! Your rating has been saved.", "Rating Saved");
             } catch (e) {
                 window.showCustomAlert(e.message || "Failed to save rating.", "Rating Error");
             }
@@ -2144,6 +2170,12 @@
             const currentPlat = gTags.find(t => t === 'PC+Mobile' || t === 'PC' || t === 'Mobile') || 'Mobile';
             const platSelect = document.getElementById('editPlatform');
             if (platSelect) platSelect.value = currentPlat;
+
+            // Pre-select the game's existing genre tags
+            document.querySelectorAll('#editGenreTagsBox .edit-genre-pill').forEach(pill => {
+                const tagVal = pill.getAttribute('data-tag');
+                pill.classList.toggle('selected', gTags.includes(tagVal));
+            });
 
             document.getElementById('editAge').value = currentGameForModal.ratings?.age || '';
             document.getElementById('editCommit').value = '';
@@ -2163,6 +2195,12 @@
             if (rawTrailer.includes('v=')) parsedTrailerId = rawTrailer.split('v=')[1].split('&')[0];
             else if (rawTrailer.includes('youtu.be/')) parsedTrailerId = rawTrailer.split('youtu.be/')[1].split('?')[0];
 
+            const selectedPlatform = document.getElementById('editPlatform')?.value || 'Mobile';
+            const selectedGenres = Array.from(document.querySelectorAll('#editGenreTagsBox .edit-genre-pill.selected'))
+                .map(el => el.getAttribute('data-tag'))
+                .filter(Boolean);
+            const combinedTags = [selectedPlatform, ...selectedGenres];
+
             const payload = {
                 gameId: gId,
                 itemCategory: 'Game', 
@@ -2170,7 +2208,8 @@
                 targetIdentifier: gName, 
                 data: {
                     trailer_id: parsedTrailerId,
-                    platform_tag: document.getElementById('editPlatform')?.value || undefined,
+                    platform_tag: selectedPlatform,
+                    tags: combinedTags,
                     age: document.getElementById('editAge').value,
                     commitMessage: commitMsg
                 }
@@ -2183,7 +2222,7 @@
                     throw new Error(err.error || 'Server rejected submission');
                 }
                 document.getElementById('editInfoModal').classList.remove('active');
-                window.showCustomAlert("Data update suggested! It is now awaiting Admin Approval on Discord.", "Update Submitted");
+                window.showCustomAlert("Data & tag update suggested! It is now awaiting Admin Approval on Discord.", "Update Submitted");
             } catch (e) { 
                 window.showCustomAlert("Failed to submit: " + e.message, "Submission Error"); 
             }

@@ -59,6 +59,174 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
 
+        /* === MY CANVAS / MY NOTEBOOK (FULL-WIDTH WORKSPACE ABOVE GAMES & ITEMS) === */
+        .canvas-module-card {
+            width: 100%;
+            margin-bottom: 24px;
+            background: linear-gradient(180deg, rgba(32, 25, 48, 0.95) 0%, rgba(21, 17, 33, 0.95) 100%);
+            border: 1px solid rgba(168, 139, 250, 0.3);
+            border-radius: 24px 8px 24px 8px;
+            padding: 24px;
+            box-sizing: border-box;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.42);
+        }
+
+        .canvas-nodes-workspace {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-start;
+            gap: 18px;
+            width: 100%;
+        }
+
+        .canvas-node {
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(165deg, rgba(34, 24, 58, 0.96) 0%, rgba(18, 13, 32, 0.98) 100%);
+            border: 1.5px solid rgba(168, 139, 250, 0.32);
+            border-radius: 20px 6px 20px 6px;
+            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            position: relative;
+            overflow: hidden;
+            box-sizing: border-box;
+            max-width: 100%;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .canvas-node.node-active {
+            border-color: rgba(255, 209, 71, 0.65);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6), 0 0 16px rgba(255, 209, 71, 0.14);
+        }
+
+        /* Compact sleeping state when toggled OFF */
+        .canvas-node.node-collapsed {
+            width: 280px !important;
+            height: auto !important;
+        }
+
+        .canvas-node-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 10px 14px;
+            background: rgba(14, 10, 24, 0.75);
+            border-bottom: 1px solid rgba(168, 139, 250, 0.22);
+            flex-shrink: 0;
+        }
+
+        .node-title-input {
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 8px 2px 8px 2px;
+            color: #f4f0ff;
+            font-size: 0.95em;
+            font-weight: bold;
+            padding: 4px 6px;
+            flex: 1;
+            min-width: 0;
+            text-overflow: ellipsis;
+            transition: border-color 0.15s ease, background 0.15s ease;
+        }
+
+        .node-title-input:not([readonly]):hover,
+        .node-title-input:not([readonly]):focus {
+            outline: none;
+            background: rgba(26, 18, 46, 0.9);
+            border-color: rgba(255, 209, 71, 0.55);
+        }
+
+        .node-type-pill {
+            font-size: 0.68em;
+            font-weight: bold;
+            text-transform: uppercase;
+            padding: 2px 7px;
+            border-radius: 7px 2px 7px 2px;
+            background: rgba(168, 139, 250, 0.16);
+            color: #d0c2f7;
+            border: 1px solid rgba(168, 139, 250, 0.35);
+            flex-shrink: 0;
+        }
+
+        .node-delete-btn {
+            background: rgba(232, 93, 150, 0.16);
+            border: 1px solid rgba(232, 93, 150, 0.45);
+            color: #ffb3d1;
+            width: 24px;
+            height: 24px;
+            border-radius: 8px 2px 8px 2px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 0;
+            flex-shrink: 0;
+            transition: background 0.15s ease, color 0.15s ease;
+        }
+
+        .node-delete-btn:hover {
+            background: #e85d96;
+            color: #ffffff;
+        }
+
+        .canvas-node-body {
+            flex: 1;
+            position: relative;
+            width: 100%;
+            min-height: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(11, 7, 20, 0.85);
+            overflow: hidden;
+        }
+
+        .canvas-node-sleeping {
+            padding: 14px 16px;
+            font-size: 0.8em;
+            color: #a99ec7;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .canvas-node-body img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+            user-select: none;
+        }
+
+        .canvas-node-body iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+            background: #ffffff;
+        }
+
+        /* Custom Bottom-Right Drag Resize Handle */
+        .node-resize-handle {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(135deg, transparent 45%, rgba(255, 209, 71, 0.85) 45%);
+            cursor: nwse-resize;
+            z-index: 20;
+            border-bottom-right-radius: 6px;
+            touch-action: none;
+        }
+
+        .canvas-node.is-resizing iframe {
+            pointer-events: none;
+        }
+
         /* Side-by-Side Modules: My Games (Left) & My Items (Right) */
         .profile-modules-grid {
             display: grid;
@@ -242,6 +410,14 @@
 
         /* Mobile Responsiveness (Mirrors game.html containment) */
         @media (max-width: 980px) {
+            .canvas-module-card {
+                padding: 18px;
+            }
+
+            .canvas-node.node-collapsed {
+                width: 100% !important;
+            }
+
             .profile-page-wrap {
                 width: 100%;
                 margin: 16px auto 40px auto;
@@ -323,6 +499,25 @@
             </button>
         </div>
 
+        <!-- Full-Width Module: My Canvas / My Notebook -->
+        <section class="canvas-module-card" id="canvasModuleSection">
+            <div class="module-header">
+                <div>
+                    <h2 class="module-title">My Canvas</h2>
+                    <div style="font-size: 0.82em; color: #a99ec7; margin-top: 3px;">
+                        Toggle any node ON to view its image or interactive embed, and drag the bottom-right corner to resize!
+                    </div>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                    <button type="button" class="btn-floral" onclick="toggleAllCanvasNodes(false)" style="height: 34px; padding: 0 12px; font-size: 0.78em;">Collapse All</button>
+                    <button type="button" class="btn-floral pollen" id="addCanvasNodeBtn" onclick="openAddCanvasNodeModal()" style="display: none; height: 36px; padding: 0 16px; font-size: 0.85em;">
+                        + Add Node
+                    </button>
+                </div>
+            </div>
+            <div id="canvasWorkspace" class="canvas-nodes-workspace"></div>
+        </section>
+
         <!-- Side-by-Side Modules: My Games (Left) & My Items (Right) -->
         <div class="profile-modules-grid">
             <!-- Left Module: My Games -->
@@ -362,6 +557,54 @@
             </div>
             <div id="contributionsContainer" style="display: flex; flex-direction: column; gap: 12px;"></div>
         </section>
+    </div>
+
+    <!-- Add Canvas / Notebook Node Modal -->
+    <div id="addCanvasNodeModal" class="modal-overlay">
+        <div class="modal-window" style="max-width: 520px;">
+            <button class="modal-close" onclick="document.getElementById('addCanvasNodeModal').classList.remove('active')">×</button>
+            <h2 class="modal-title">🎨 Add Canvas Node</h2>
+
+            <div class="modal-form-stack">
+                <div class="req-field-row">
+                    <input type="text" id="cnTitle" class="floral-input" placeholder="Node Title (e.g. My Relic Build, Farming Sheet)">
+                    <span class="req-icon"></span>
+                </div>
+
+                <div style="display: flex; gap: 8px;">
+                    <button type="button" id="cnTypeImgBtn" class="btn-floral pollen" style="flex: 1;" onclick="setCanvasModalType('image')">🖼️ Image</button>
+                    <button type="button" id="cnTypeIframeBtn" class="btn-floral" style="flex: 1;" onclick="setCanvasModalType('iframe')">🌐 Embed (iFrame)</button>
+                </div>
+
+                <!-- Image Source Controls (Direct Link OR Device Upload) -->
+                <div id="cnImageUploadWrap" class="modal-form-stack" style="background: rgba(17, 13, 25, 0.75); border: 1px solid rgba(168, 139, 250, 0.28); border-radius: 16px 5px 16px 5px; padding: 12px;">
+                    <div style="font-size: 0.82em; color: #d0c2f7; font-weight: bold;">Option A: Upload Image from Device</div>
+                    <input type="file" id="cnFileInput" accept="image/*" class="floral-input" style="padding: 8px;" onchange="handleCanvasFileUpload(this)">
+                    <div id="cnUploadStatus" style="font-size: 0.8em; color: #ffd147; display: none;">Uploading image...</div>
+                    <div style="font-size: 0.82em; color: #d0c2f7; font-weight: bold; margin-top: 4px;">Option B: Paste Direct Image URL</div>
+                </div>
+
+                <div class="req-field-row">
+                    <input type="text" id="cnUrl" class="floral-input" placeholder="Paste Image URL or Embed URL (https://...)">
+                    <span class="req-icon"></span>
+                </div>
+
+                <div style="display: flex; gap: 10px;">
+                    <div style="flex: 1;">
+                        <div style="font-size: 0.75em; color: #a99ec7; margin-bottom: 4px;">Initial Width (px)</div>
+                        <input type="number" id="cnWidth" class="floral-input" value="380" min="220" max="1400">
+                    </div>
+                    <div style="flex: 1;">
+                        <div style="font-size: 0.75em; color: #a99ec7; margin-bottom: 4px;">Initial Height (px)</div>
+                        <input type="number" id="cnHeight" class="floral-input" value="300" min="180" max="1000">
+                    </div>
+                </div>
+
+                <button type="button" id="cnSubmitBtn" class="btn-floral blossom" onclick="createCanvasNode()" style="width: 100%; margin-top: 6px;">
+                    + Add to My Canvas
+                </button>
+            </div>
+        </div>
     </div>
 
     <script src="/Assets/common.js"></script>
@@ -437,6 +680,7 @@
                 renderMyGames();
                 renderMyItems();
                 renderContributions();
+                initCanvasWorkspace();
 
             } catch (e) {
                 document.getElementById('pageUsername').textContent = "User Not Found";
@@ -624,6 +868,274 @@
                     </div>
                 </div>
             `).join('');
+        }
+
+        let canvasNodes = [];
+        let activeCanvasNodeIds = new Set(); // All nodes start toggled OFF by default
+        let isProfileOwner = false;
+        let currentCanvasModalType = 'image';
+
+        function checkIsProfileOwner() {
+            try {
+                const session = JSON.parse(localStorage.getItem('nurture_user_session') || '{}');
+                if (session && session.discordId && profileData && session.discordId === profileData.discordId) {
+                    return true;
+                }
+            } catch (e) {}
+            return false;
+        }
+
+        window.addEventListener('nurtureUserSynced', () => {
+            if (profileData) {
+                isProfileOwner = checkIsProfileOwner();
+                const addBtn = document.getElementById('addCanvasNodeBtn');
+                if (addBtn) addBtn.style.display = isProfileOwner ? 'inline-flex' : 'none';
+                renderCanvasNodes();
+            }
+        });
+
+        function initCanvasWorkspace() {
+            canvasNodes = Array.isArray(profileData.canvasNodes) ? profileData.canvasNodes : [];
+            isProfileOwner = checkIsProfileOwner();
+            const addBtn = document.getElementById('addCanvasNodeBtn');
+            if (addBtn) addBtn.style.display = isProfileOwner ? 'inline-flex' : 'none';
+            renderCanvasNodes();
+        }
+
+        function normalizeEmbedUrl(rawUrl, type) {
+            let trimmed = (rawUrl || '').trim();
+            // If user pasted raw <iframe src="..."> HTML, extract the src attribute
+            const iframeMatch = trimmed.match(/src=["']([^"']+)["']/i);
+            if (iframeMatch) trimmed = iframeMatch[1];
+
+            if (type === 'iframe') {
+                // Convert standard YouTube watch/short links into embeddable /embed/ URLs
+                const ytMatch = trimmed.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?.*v=|shorts\/))([a-zA-Z0-9_-]{11})/);
+                if (ytMatch) return `https://www.youtube-nocookie.com/embed/${ytMatch[1]}`;
+            }
+            return trimmed;
+        }
+
+        function renderCanvasNodes() {
+            const workspace = document.getElementById('canvasWorkspace');
+            if (!workspace) return;
+
+            if (canvasNodes.length === 0) {
+                workspace.innerHTML = `<p style="color:#a99ec7; margin: 0;">${isProfileOwner ? 'Your Canvas is empty! Click "+ Add Node" above to pin custom images, build cards, spreadsheets, or embeds.' : 'No canvas nodes added yet.'}</p>`;
+                return;
+            }
+
+            workspace.innerHTML = canvasNodes.map((node, idx) => {
+                const isOpen = activeCanvasNodeIds.has(node.id);
+                const w = Number(node.width) || 380;
+                const h = Number(node.height) || 300;
+                const safeTitle = escapeTxt(node.title || 'Untitled Node');
+                const safeUrl = escapeTxt(normalizeEmbedUrl(node.url, node.type));
+
+                let bodyHtml = '';
+                if (!isOpen) {
+                    bodyHtml = `
+                        <div class="canvas-node-sleeping">
+                            <span>Toggle switch ON to load ${node.type === 'iframe' ? 'interactive embed' : 'image'}</span>
+                            <span style="font-family:monospace; font-size:0.85em; color:#ffd147;">${w}×${h}</span>
+                        </div>
+                    `;
+                } else if (node.type === 'iframe') {
+                    bodyHtml = `
+                        <iframe src="${safeUrl}" loading="lazy" sandbox="allow-scripts allow-same-origin allow-popups allow-forms" referrerpolicy="no-referrer"></iframe>
+                        <div class="node-resize-handle" onpointerdown="startNodeResize(event, '${escapeTxt(node.id)}')" title="Drag to resize node"></div>
+                    `;
+                } else {
+                    bodyHtml = `
+                        <img src="${safeUrl}" alt="${safeTitle}" loading="lazy" onerror="this.src='/Assets/placeholder.webp'">
+                        <div class="node-resize-handle" onpointerdown="startNodeResize(event, '${escapeTxt(node.id)}')" title="Drag to resize node"></div>
+                    `;
+                }
+
+                return `
+                    <div class="canvas-node ${isOpen ? 'node-active' : 'node-collapsed'}" id="cnode_${escapeTxt(node.id)}" style="width:${w}px; height:${isOpen ? `${h}px` : 'auto'};">
+                        <div class="canvas-node-header">
+                            <input type="text" class="node-title-input" value="${safeTitle}" ${isProfileOwner ? '' : 'readonly'}
+                                title="${isProfileOwner ? 'Click to rename node' : safeTitle}"
+                                onchange="updateCanvasNodeTitle('${escapeTxt(node.id)}', this.value)"
+                                onkeydown="if(event.key==='Enter'){this.blur();}">
+                            <span class="node-type-pill">${node.type === 'iframe' ? 'iFrame' : 'Image'}</span>
+                            <input type="checkbox" class="floral-checkbox" ${isOpen ? 'checked' : ''} onchange="toggleCanvasNode('${escapeTxt(node.id)}', this.checked)" title="Toggle Node On/Off">
+                            ${isProfileOwner ? `<button type="button" class="node-delete-btn" onclick="deleteCanvasNode('${escapeTxt(node.id)}')" title="Delete Node">×</button>` : ''}
+                        </div>
+                        <div class="canvas-node-body">
+                            ${bodyHtml}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function toggleCanvasNode(nodeId, isChecked) {
+            if (isChecked) activeCanvasNodeIds.add(nodeId);
+            else activeCanvasNodeIds.delete(nodeId);
+            renderCanvasNodes();
+        }
+
+        function toggleAllCanvasNodes(openAll) {
+            if (openAll) canvasNodes.forEach(n => activeCanvasNodeIds.add(n.id));
+            else activeCanvasNodeIds.clear();
+            renderCanvasNodes();
+        }
+
+        function syncCanvasToServer() {
+            if (!isProfileOwner) return;
+            if (typeof window.syncUserPreferences === 'function') {
+                window.syncUserPreferences({ canvasNodes });
+            }
+        }
+
+        function updateCanvasNodeTitle(nodeId, newTitle) {
+            if (!isProfileOwner) return;
+            const target = canvasNodes.find(n => n.id === nodeId);
+            if (!target) return;
+            target.title = (newTitle || 'Untitled Node').trim();
+            syncCanvasToServer();
+        }
+
+        async function deleteCanvasNode(nodeId) {
+            if (!isProfileOwner) return;
+            const confirmed = await window.showCustomConfirm('Remove this node from your Canvas?', 'Delete Canvas Node');
+            if (!confirmed) return;
+            canvasNodes = canvasNodes.filter(n => n.id !== nodeId);
+            activeCanvasNodeIds.delete(nodeId);
+            renderCanvasNodes();
+            syncCanvasToServer();
+        }
+
+        // Smooth pointer-drag resizer for any open Canvas Node
+        function startNodeResize(e, nodeId) {
+            e.preventDefault();
+            e.stopPropagation();
+            const cardEl = document.getElementById(`cnode_${nodeId}`);
+            const nodeObj = canvasNodes.find(n => n.id === nodeId);
+            if (!cardEl || !nodeObj) return;
+
+            cardEl.classList.add('is-resizing');
+            const startX = e.clientX;
+            const startY = e.clientY;
+            const startW = cardEl.offsetWidth;
+            const startH = cardEl.offsetHeight;
+
+            function onPointerMove(moveEvent) {
+                const newW = Math.min(1400, Math.max(220, Math.round(startW + (moveEvent.clientX - startX))));
+                const newH = Math.min(1000, Math.max(180, Math.round(startH + (moveEvent.clientY - startY))));
+                cardEl.style.width = `${newW}px`;
+                cardEl.style.height = `${newH}px`;
+                nodeObj.width = newW;
+                nodeObj.height = newH;
+            }
+
+            function onPointerUp() {
+                cardEl.classList.remove('is-resizing');
+                window.removeEventListener('pointermove', onPointerMove);
+                window.removeEventListener('pointerup', onPointerUp);
+                syncCanvasToServer();
+            }
+
+            window.addEventListener('pointermove', onPointerMove);
+            window.addEventListener('pointerup', onPointerUp);
+        }
+
+        function openAddCanvasNodeModal() {
+            if (!window.requireAuth('add nodes to your Canvas')) return;
+            document.getElementById('cnTitle').value = '';
+            document.getElementById('cnUrl').value = '';
+            document.getElementById('cnFileInput').value = '';
+            document.getElementById('cnUploadStatus').style.display = 'none';
+            setCanvasModalType('image');
+            document.getElementById('addCanvasNodeModal').classList.add('active');
+        }
+
+        function setCanvasModalType(type) {
+            currentCanvasModalType = type;
+            const imgBtn = document.getElementById('cnTypeImgBtn');
+            const iframeBtn = document.getElementById('cnTypeIframeBtn');
+            const uploadWrap = document.getElementById('cnImageUploadWrap');
+            const urlInput = document.getElementById('cnUrl');
+
+            imgBtn.classList.toggle('pollen', type === 'image');
+            iframeBtn.classList.toggle('pollen', type === 'iframe');
+            uploadWrap.style.display = type === 'image' ? 'flex' : 'none';
+            urlInput.placeholder = type === 'image'
+                ? 'Or paste direct Image URL (https://...)'
+                : 'Paste Embed URL or <iframe> code (Google Sheets, YouTube, TierMaker...)';
+        }
+
+        function handleCanvasFileUpload(fileInput) {
+            const file = fileInput.files && fileInput.files[0];
+            if (!file) return;
+            if (file.size > 8 * 1024 * 1024) {
+                fileInput.value = '';
+                return window.showCustomAlert('Please choose an image smaller than 8MB.', 'File Too Large');
+            }
+
+            const statusEl = document.getElementById('cnUploadStatus');
+            const submitBtn = document.getElementById('cnSubmitBtn');
+            statusEl.textContent = 'Uploading image to cloud host...';
+            statusEl.style.color = '#ffd147';
+            statusEl.style.display = 'block';
+            submitBtn.disabled = true;
+
+            const reader = new FileReader();
+            reader.onload = async () => {
+                try {
+                    const res = await fetch('/api/upload-image', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ imageBase64: reader.result, filename: file.name })
+                    });
+                    const data = await res.json();
+                    if (!res.ok || !data.url) {
+                        throw new Error(data.error || 'Upload failed');
+                    }
+                    document.getElementById('cnUrl').value = data.url;
+                    if (!document.getElementById('cnTitle').value.trim()) {
+                        document.getElementById('cnTitle').value = file.name.replace(/\.[^/.]+$/, '');
+                    }
+                    statusEl.textContent = '✓ Image uploaded & ready!';
+                    statusEl.style.color = '#5cd69a';
+                } catch (err) {
+                    statusEl.textContent = '✕ ' + (err.message || 'Upload failed');
+                    statusEl.style.color = '#ff4d5e';
+                } finally {
+                    submitBtn.disabled = false;
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function createCanvasNode() {
+            const title = document.getElementById('cnTitle').value.trim() || 'Untitled Node';
+            const rawUrl = document.getElementById('cnUrl').value.trim();
+            if (!rawUrl) {
+                return window.showCustomAlert('Please upload an image or enter a valid URL.', 'Missing URL');
+            }
+
+            const cleanUrl = normalizeEmbedUrl(rawUrl, currentCanvasModalType);
+            const width = Math.min(1400, Math.max(220, parseInt(document.getElementById('cnWidth').value) || 380));
+            const height = Math.min(1000, Math.max(180, parseInt(document.getElementById('cnHeight').value) || 300));
+            const newId = 'node_' + Date.now();
+
+            canvasNodes.push({
+                id: newId,
+                title,
+                type: currentCanvasModalType,
+                url: cleanUrl,
+                width,
+                height
+            });
+
+            // Automatically toggle ON the newly created node so the owner can see and resize it immediately
+            activeCanvasNodeIds.add(newId);
+            document.getElementById('addCanvasNodeModal').classList.remove('active');
+            renderCanvasNodes();
+            syncCanvasToServer();
         }
 
         document.addEventListener('DOMContentLoaded', initProfilePage);

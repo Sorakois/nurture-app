@@ -243,6 +243,96 @@
             margin: 0;
         }
 
+        .dev-meta-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .game-twitter-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 10px 3px 10px 3px;
+            background: rgba(18, 14, 28, 0.92);
+            border: 1px solid rgba(226, 212, 255, 0.45);
+            color: #ffffff;
+            font-size: 0.78em;
+            font-weight: bold;
+            text-decoration: none;
+            cursor: pointer;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35);
+            transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+        }
+
+        .game-twitter-btn:hover {
+            transform: translateY(-2px);
+            background: #000000;
+            border-color: #ffd147;
+            color: #ffd147;
+        }
+
+        .game-twitter-btn svg {
+            width: 13px;
+            height: 13px;
+            fill: currentColor;
+            flex-shrink: 0;
+        }
+
+        .game-twitter-btn.missing-link {
+            opacity: 0.65;
+            border-style: dashed;
+        }
+
+        .game-twitter-btn.missing-link:hover {
+            opacity: 1;
+        }
+
+        /* Story Master Feature Callout Card inside #miniFocusContainer */
+        .story-master-banner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            background: linear-gradient(135deg, rgba(88, 56, 175, 0.92) 0%, rgba(34, 22, 66, 0.96) 60%, rgba(217, 155, 38, 0.22) 100%);
+            padding: 20px 24px;
+            border-radius: 20px 6px 20px 6px;
+            border: 1.5px solid rgba(255, 209, 71, 0.65);
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            user-select: none;
+            transition: transform 0.2s ease, border-radius 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+        }
+
+        .story-master-banner:hover {
+            transform: translateY(-3px);
+            border-radius: 6px 20px 6px 20px;
+            border-color: #ffffff;
+            box-shadow: 0 14px 34px rgba(0, 0, 0, 0.6), 0 0 22px rgba(255, 209, 71, 0.28);
+        }
+
+        .story-master-icon-box {
+            width: 58px;
+            height: 58px;
+            border-radius: 16px 4px 16px 4px;
+            background: rgba(14, 9, 26, 0.75);
+            border: 1.5px solid rgba(255, 209, 71, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+        }
+
+        .story-master-icon-box svg {
+            width: 32px;
+            height: 32px;
+            fill: #ffd147;
+        }
+
         .game-platform-row {
             display: inline-flex;
             align-items: center;
@@ -928,8 +1018,538 @@
             border-top: 1px solid rgba(157, 142, 199, 0.25);
         }
 
+        /* === STORY MASTER: 3D GIANT TOME & CHAPTER COVERS === */
+        .sm-breadcrumb-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            padding-bottom: 16px;
+            margin-bottom: 24px;
+            border-bottom: 1px solid rgba(168, 139, 250, 0.28);
+        }
+
+        .sm-crumb-trail {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            font-size: 0.9em;
+        }
+
+        .sm-crumb-btn {
+            background: rgba(26, 18, 46, 0.85);
+            border: 1px solid rgba(168, 139, 250, 0.38);
+            color: #e2d4ff;
+            padding: 6px 12px;
+            border-radius: 12px 3px 12px 3px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.18s ease;
+        }
+
+        .sm-crumb-btn:hover {
+            border-color: #ffd147;
+            color: #ffffff;
+            transform: translateY(-1px);
+        }
+
+        .sm-crumb-btn.active {
+            background: linear-gradient(135deg, #6846c6 0%, #3b2378 100%);
+            border-color: #ffd147;
+            color: #ffd147;
+        }
+
+        /* View 1: Giant Ornate 3D Book Cover */
+        .sm-book-stage {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 26px 16px 36px 16px;
+            perspective: 1200px;
+        }
+
+        .sm-giant-tome {
+            position: relative;
+            width: 100%;
+            max-width: 390px;
+            min-height: 510px;
+            background:
+                radial-gradient(circle at 50% 42%, rgba(255, 209, 71, 0.16) 0%, rgba(104, 70, 198, 0.25) 45%, transparent 72%),
+                linear-gradient(145deg, #2d1d54 0%, #170e2e 60%, #0e081d 100%);
+            border: 2.5px solid #ffd147;
+            border-radius: 10px 28px 28px 10px;
+            padding: 34px 28px 30px 42px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            text-align: center;
+            cursor: pointer;
+            user-select: none;
+            box-shadow:
+                -12px 0 0 #120a24,
+                -15px 0 0 #b88614,
+                0 22px 50px rgba(0, 0, 0, 0.8),
+                inset 0 0 0 6px rgba(255, 209, 71, 0.14),
+                inset 0 0 28px rgba(0, 0, 0, 0.75);
+            transform-style: preserve-3d;
+            transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease;
+        }
+
+        .sm-giant-tome:hover {
+            transform: rotateY(-8deg) translateY(-6px) scale(1.02);
+            box-shadow:
+                -14px 4px 0 #120a24,
+                -18px 4px 0 #ffd147,
+                0 28px 60px rgba(0, 0, 0, 0.9),
+                0 0 30px rgba(255, 209, 71, 0.28),
+                inset 0 0 0 6px rgba(255, 209, 71, 0.25);
+        }
+
+        /* Book Spine Ridge on the Left Edge */
+        .sm-giant-tome::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 16px;
+            width: 3px;
+            background: linear-gradient(180deg, rgba(255, 209, 71, 0.65), rgba(168, 139, 250, 0.25), rgba(255, 209, 71, 0.65));
+            box-shadow: -6px 0 10px rgba(0, 0, 0, 0.6);
+        }
+
+        .sm-tome-header-ornament {
+            font-size: 0.76em;
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            color: #ffd147;
+            font-weight: bold;
+            border-bottom: 1px solid rgba(255, 209, 71, 0.4);
+            padding-bottom: 6px;
+            width: 85%;
+        }
+
+        .sm-tome-title {
+            font-size: 1.75em;
+            color: #ffffff;
+            margin: 10px 0 4px 0;
+            line-height: 1.2;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.85), 0 0 18px rgba(255, 209, 71, 0.3);
+        }
+
+        /* Center Medallion Holding the Game Icon */
+        .sm-tome-medallion {
+            position: relative;
+            width: 148px;
+            height: 148px;
+            border-radius: 28px 8px 28px 8px;
+            padding: 6px;
+            background: linear-gradient(135deg, #ffd147 0%, #9d7aff 50%, #e69215 100%);
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.75), 0 0 24px rgba(255, 209, 71, 0.3);
+            margin: 14px 0;
+        }
+
+        .sm-tome-medallion img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 22px 5px 22px 5px;
+            display: block;
+            border: 2px solid #140d24;
+        }
+
+        .sm-tome-footer {
+            width: 90%;
+            border-top: 1px solid rgba(255, 209, 71, 0.35);
+            padding-top: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .sm-tome-author {
+            font-size: 0.92em;
+            color: #e2d4ff;
+            font-weight: bold;
+        }
+
+        .sm-tome-contributors {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            align-self: center;
+            background: rgba(14, 9, 26, 0.85);
+            border: 1px solid rgba(255, 209, 71, 0.5);
+            color: #ffd147;
+            padding: 4px 14px;
+            border-radius: 12px 3px 12px 3px;
+            font-size: 0.82em;
+            font-weight: bold;
+        }
+
+        .sm-tome-prompt {
+            margin-top: 18px;
+            font-size: 0.92em;
+            color: #ffd147;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
+
+        /* View 2: Table of Contents (Visual Chapter Covers) */
+        .sm-chapters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(235px, 1fr));
+            gap: 20px;
+            margin-top: 10px;
+        }
+
+        .sm-chapter-cover {
+            position: relative;
+            background:
+                radial-gradient(circle at 50% 25%, rgba(255, 209, 71, 0.12), transparent 65%),
+                linear-gradient(160deg, rgba(44, 30, 78, 0.96) 0%, rgba(20, 14, 36, 0.98) 100%);
+            border: 1.5px solid rgba(226, 212, 255, 0.38);
+            border-left: 6px solid #ffd147;
+            border-radius: 8px 20px 20px 8px;
+            padding: 22px 18px;
+            min-height: 230px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+            transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .sm-chapter-cover:hover {
+            transform: translateY(-5px) rotateY(-4deg);
+            border-color: #ffd147;
+            box-shadow: 0 14px 32px rgba(0, 0, 0, 0.65), 0 0 18px rgba(255, 209, 71, 0.22);
+        }
+
+        .sm-chapter-num {
+            font-size: 0.72em;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #ffd147;
+            font-weight: bold;
+        }
+
+        .sm-chapter-emblem {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px 4px 14px 4px;
+            background: rgba(14, 9, 26, 0.78);
+            border: 1px solid rgba(255, 209, 71, 0.45);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.65em;
+            margin: 12px 0;
+            box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.5);
+        }
+
+        .sm-chapter-title {
+            font-size: 1.18em;
+            font-weight: bold;
+            color: #ffffff;
+            margin: 0 0 6px 0;
+        }
+
+        .sm-chapter-desc {
+            font-size: 0.82em;
+            color: #c4b5e8;
+            line-height: 1.4;
+            margin: 0 0 14px 0;
+            flex-grow: 1;
+        }
+
+        .sm-chapter-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 10px;
+            border-top: 1px solid rgba(168, 139, 250, 0.22);
+            font-size: 0.78em;
+            color: #ffd147;
+            font-weight: bold;
+        }
+        /* === STORY MASTER PART 4B: CHRONOLOGICAL LORE GRAPH CANVAS === */
+        .sm-graph-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            padding: 14px 18px;
+            margin-bottom: 16px;
+            background: linear-gradient(145deg, rgba(32, 22, 58, 0.95) 0%, rgba(18, 12, 34, 0.98) 100%);
+            border: 1.5px solid rgba(255, 209, 71, 0.45);
+            border-radius: 18px 6px 18px 6px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+        }
+
+        .sm-graph-legend {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+            font-size: 0.78em;
+            color: #d0c2f7;
+        }
+
+        .sm-legend-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 10px 3px 10px 3px;
+            background: rgba(14, 9, 26, 0.75);
+            border: 1px solid rgba(168, 139, 250, 0.3);
+            color: #e2d4ff;
+            font-weight: bold;
+        }
+
+        .sm-connect-banner {
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 10px 16px;
+            margin-bottom: 14px;
+            background: linear-gradient(90deg, rgba(255, 209, 71, 0.2) 0%, rgba(104, 70, 198, 0.3) 100%);
+            border: 1.5px dashed #ffd147;
+            border-radius: 14px 4px 14px 4px;
+            color: #ffd147;
+            font-size: 0.88em;
+            font-weight: bold;
+        }
+
+        .sm-connect-banner.active {
+            display: flex;
+        }
+
+        /* Scrollable Graph Viewport with Subtle Astral Grid */
+        .sm-graph-viewport {
+            position: relative;
+            width: 100%;
+            min-height: 540px;
+            max-height: 78vh;
+            overflow: auto;
+            background-color: #0d0818;
+            background-image:
+                radial-gradient(rgba(168, 139, 250, 0.16) 1px, transparent 1px),
+                linear-gradient(180deg, rgba(255, 209, 71, 0.04) 0%, transparent 15%, transparent 85%, rgba(104, 70, 198, 0.06) 100%);
+            background-size: 26px 26px, 100% 100%;
+            border: 1.5px solid rgba(168, 139, 250, 0.35);
+            border-radius: 22px 8px 22px 8px;
+            box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.85);
+            padding: 36px 28px;
+            box-sizing: border-box;
+        }
+
+        .sm-graph-stage {
+            position: relative;
+            min-width: 680px;
+            min-height: 460px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 56px;
+            padding: 20px 16px 40px 16px;
+            z-index: 2;
+        }
+
+        /* Central Chronological Spine Line (Top = Oldest -> Bottom = Newest) */
+        .sm-graph-stage::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            background: linear-gradient(180deg, rgba(255, 209, 71, 0.65) 0%, rgba(168, 139, 250, 0.35) 50%, rgba(255, 209, 71, 0.65) 100%);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* SVG Layer for Directed Edges & Relationship Labels */
+        .sm-edges-svg {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+            overflow: visible;
+        }
+
+        .sm-edge-path {
+            fill: none;
+            stroke: #ffd147;
+            stroke-width: 2.2px;
+            stroke-dasharray: 6 4;
+            opacity: 0.85;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.8));
+            animation: smEdgeFlow 24s linear infinite;
+        }
+
+        @keyframes smEdgeFlow {
+            to { stroke-dashoffset: -200; }
+        }
+
+        .sm-edge-label-bg {
+            fill: #160f29;
+            stroke: rgba(255, 209, 71, 0.65);
+            stroke-width: 1px;
+            rx: 6px;
+            ry: 6px;
+        }
+
+        .sm-edge-label-text {
+            fill: #ffe89e;
+            font-size: 10.5px;
+            font-weight: bold;
+            text-anchor: middle;
+            dominant-baseline: central;
+        }
+
+        /* Horizontal Chronological Row (Same Row = Concurrent Events) */
+        .sm-time-tier {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+        }
+
+        .sm-tier-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 3px 12px;
+            border-radius: 10px 3px 10px 3px;
+            background: rgba(14, 9, 26, 0.94);
+            border: 1px solid rgba(255, 209, 71, 0.5);
+            color: #ffd147;
+            font-size: 0.74em;
+            font-weight: bold;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+        }
+
+        .sm-tier-nodes-row {
+            display: flex;
+            flex-direction: row;
+            align-items: stretch;
+            justify-content: center;
+            gap: 34px;
+            flex-wrap: nowrap;
+        }
+
+        /* Individual Lore Event Node Card */
+        .sm-lore-node {
+            position: relative;
+            width: 245px;
+            min-width: 245px;
+            background: linear-gradient(160deg, rgba(42, 29, 74, 0.96) 0%, rgba(21, 14, 38, 0.98) 100%);
+            border: 1.5px solid rgba(226, 212, 255, 0.45);
+            border-radius: 18px 6px 18px 6px;
+            padding: 14px 16px;
+            box-sizing: border-box;
+            color: #f4f0ff;
+            cursor: pointer;
+            user-select: none;
+            box-shadow: 0 10px 26px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+            transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+        }
+
+        .sm-lore-node:hover {
+            transform: translateY(-3px);
+            border-color: #ffd147;
+            box-shadow: 0 14px 32px rgba(0, 0, 0, 0.8), 0 0 18px rgba(255, 209, 71, 0.25);
+        }
+
+        .sm-lore-node.connect-source-selected {
+            border-color: #5cd69a !important;
+            box-shadow: 0 0 22px rgba(92, 214, 154, 0.65) !important;
+        }
+
+        .sm-node-era {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+            font-size: 0.72em;
+            color: #ffd147;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        .sm-node-drag-grip {
+            cursor: grab;
+            color: #a88bfa;
+            font-size: 1.1em;
+            padding: 0 4px;
+            title: "Drag to adjust position";
+        }
+
+        .sm-node-drag-grip:active {
+            cursor: grabbing;
+        }
+
+        .sm-node-title {
+            font-size: 1.02em;
+            font-weight: bold;
+            color: #ffffff;
+            margin: 0 0 6px 0;
+            line-height: 1.25;
+        }
+
+        .sm-node-summary {
+            font-size: 0.8em;
+            color: #c4b5e8;
+            line-height: 1.4;
+            margin: 0 0 10px 0;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .sm-node-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .sm-node-tag {
+            font-size: 0.68em;
+            padding: 2px 7px;
+            border-radius: 7px 2px 7px 2px;
+            background: rgba(168, 139, 250, 0.18);
+            border: 1px solid rgba(168, 139, 250, 0.35);
+            color: #e2d4ff;
+            font-weight: bold;
+        }
+
         /* === TABLET & MOBILE RESPONSIVENESS (COMPLEMENTS MOBILE VIEW) === */
         @media (max-width: 980px) {
+            .dev-meta-row { 
+                justify-content: center; 
+            }
+
             .sub-nav-divider { 
                 display:none;
             }
@@ -1110,7 +1730,10 @@
                         <img src="/Assets/placeholder.webp" alt="Game Icon" id="gameIcon" referrerpolicy="no-referrer">
                         <div>
                             <h1 class="game-title" id="gameTitle">Loading...</h1>
-                            <p class="game-dev" id="gameDev">-</p>
+                            <div class="dev-meta-row">
+                                <p class="game-dev" id="gameDev">-</p>
+                                <span id="gameTwitterContainer"></span>
+                            </div>
                             <div id="gamePlatformBadge" class="game-platform-row" style="display: none;"></div>
                             <div id="gamePatchMeta" style="margin-top: 8px; font-size: 0.85em; color: #d0c2f7; display: none;"></div>
                         </div>
@@ -1230,8 +1853,10 @@
                     <span class="req-icon"></span>
                 </div>
                 <input type="text" id="gsNewPlayerGuide" class="floral-input" placeholder="(OPTIONAL) New Player Guide YouTube URL or Video ID" style="display:none;">
+                <input type="url" id="gsTwitterUrl" class="floral-input" placeholder="(OPTIONAL) Official X / Twitter URL (https://x.com/...)" style="display:none;">
                 
-                <input type="text" id="gsCommit" class="floral-input" placeholder="Commit Note (Optional, e.g. Added guide or fixed typo)">
+                
+                <input type="text" id="gsCommit" class="floral-input" placeholder="(Optional) What did you edit/add?">
                 <button class="btn-floral blossom" onclick="submitGameSuggestion()" style="width:100%; margin-top:4px; padding:12px;">Submit Update</button>
             </div>
         </div>
@@ -1246,6 +1871,112 @@
         </div>
     </div>
 
+    <!-- Story Master: Suggest New Chapter Modal -->
+    <div id="smChapterModal" class="modal-overlay">
+        <div class="modal-window" style="max-width: 500px;">
+            <button class="modal-close" onclick="document.getElementById('smChapterModal').classList.remove('active')">×</button>
+            <h2 class="modal-title">Suggest a Lore Chapter</h2>
+            <div class="modal-form-stack">
+                <div class="req-field-row">
+                    <input type="text" id="smChapTitle" class="floral-input" placeholder="Chapter Title (e.g.The Swarm Disaster, Factions, Character Arcs)">
+                    <span class="req-icon"></span>
+                </div>
+                <input type="text" id="smChapIcon" class="floral-input" placeholder="Chapter Emblem Emoji or Icon (Optional, e.g. ⚔️, 🌌, 👑)">
+                <div class="req-field-row">
+                    <textarea id="smChapDesc" class="floral-textarea" placeholder="Brief description of what events or lore belong in this chapter..." style="height: 95px; resize: none;"></textarea>
+                    <span class="req-icon"></span>
+                </div>
+                <input type="text" id="smChapCommit" class="floral-input" placeholder="Commit Note (Optional)">
+                <button type="button" class="btn-floral pollen" onclick="submitStoryChapterSuggestion()" style="width: 100%; margin-top: 4px;">
+                    Submit Chapter to Admins
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Story Master: Add / Edit Chronological Lore Node Modal -->
+    <div id="smNodeModal" class="modal-overlay">
+        <div class="modal-window" style="max-width: 560px;">
+            <button class="modal-close" onclick="document.getElementById('smNodeModal').classList.remove('active')">×</button>
+            <h2 class="modal-title" id="smNodeModalTitle">Suggest Lore Event Node</h2>
+            <div class="modal-form-stack">
+                <div class="req-field-row">
+                    <input type="text" id="smNodeTitle" class="floral-input" placeholder="Event / Node Title (e.g. The Fall of Khaenri'ah, Amber Era 2147)">
+                    <span class="req-icon"></span>
+                </div>
+                <input type="text" id="smNodeEra" class="floral-input" placeholder="Era / Time Label (e.g. Ancient Era, Chapter 1, 500 Years Ago)">
+
+                <div style="display: flex; gap: 10px;">
+                    <div style="flex: 1;">
+                        <div style="font-size: 0.74em; color: #ffd147; margin-bottom: 4px; font-weight: bold;">
+                            Chronological Row (1 = Oldest Top, Higher = Newer Bottom)
+                        </div>
+                        <input type="number" id="smNodeTimeOrder" class="floral-input" value="10" min="1" max="9999">
+                    </div>
+                    <div style="flex: 1;">
+                        <div style="font-size: 0.74em; color: #d0c2f7; margin-bottom: 4px; font-weight: bold;">
+                            Same-Time Horizontal Slot (Left = -1, Center = 0, Right = 1)
+                        </div>
+                        <input type="number" id="smNodeParallelSlot" class="floral-input" value="0" min="-20" max="20">
+                    </div>
+                </div>
+
+                <input type="text" id="smNodeCharacters" class="floral-input" placeholder="Related Characters / Factions (comma separated, optional)">
+
+                <div class="req-field-row">
+                    <textarea id="smNodeSummary" class="floral-textarea" placeholder="Describe what happened in this lore event..." style="height: 115px; resize: vertical;"></textarea>
+                    <span class="req-icon"></span>
+                </div>
+
+                <input type="url" id="smNodeUrl" class="floral-input" placeholder="Optional Source / Wiki / YouTube Reference Link (https://...)">
+                <input type="text" id="smNodeCommit" class="floral-input" placeholder="Commit Note (Optional)">
+
+                <button type="button" class="btn-floral pollen" onclick="submitStoryNodeSuggestion()" style="width: 100%; margin-top: 4px;">
+                    Submit Lore Event Node
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Story Master: Suggest Edge (Connection Between Two Nodes) Modal -->
+    <div id="smEdgeModal" class="modal-overlay">
+        <div class="modal-window" style="max-width: 480px;">
+            <button class="modal-close" onclick="document.getElementById('smEdgeModal').classList.remove('active')">×</button>
+            <h2 class="modal-title">Connect Two Lore Events</h2>
+            <div class="modal-form-stack">
+                <div>
+                    <div style="font-size: 0.78em; color: #a99ec7; margin-bottom: 4px; font-weight: bold;">From Event (Origin / Cause):</div>
+                    <select id="smEdgeFrom" class="floral-select"></select>
+                </div>
+                <div>
+                    <div style="font-size: 0.78em; color: #a99ec7; margin-bottom: 4px; font-weight: bold;">To Event (Outcome / Connected Event):</div>
+                    <select id="smEdgeTo" class="floral-select"></select>
+                </div>
+                <div class="req-field-row">
+                    <input type="text" id="smEdgeLabel" class="floral-input" placeholder="Connection Label (e.g. Caused, Led to, Betrayed, Parallel to)" value="Led to">
+                    <span class="req-icon"></span>
+                </div>
+                <input type="text" id="smEdgeCommit" class="floral-input" placeholder="Commit Note (Optional)">
+                <button type="button" class="btn-floral pollen" onclick="submitStoryEdgeSuggestion()" style="width: 100%; margin-top: 4px;">
+                    Submit Connection
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Story Master: Lore Event Reader Modal -->
+    <div id="smReaderModal" class="modal-overlay">
+        <div class="modal-window" style="max-width: 580px;">
+            <button class="modal-close" onclick="document.getElementById('smReaderModal').classList.remove('active')">×</button>
+            <div id="smReaderEra" style="font-size: 0.8em; color: #ffd147; font-weight: bold; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 4px;"></div>
+            <h2 class="modal-title" id="smReaderTitle" style="margin-top: 0;">Event Title</h2>
+            <div id="smReaderTags" style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px;"></div>
+            <div id="smReaderSummary" style="color: #e5dcff; font-size: 0.96em; line-height: 1.65; white-space: pre-wrap; margin-bottom: 18px; max-height: 340px; overflow-y: auto; padding-right: 6px;"></div>
+            <div id="smReaderMeta" style="font-size: 0.8em; color: #a99ec7; margin-bottom: 16px;"></div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;" id="smReaderActions"></div>
+        </div>
+    </div>
+
     <!-- Shared Logic -->
     <script src="/Assets/common.js"></script>
 
@@ -1256,10 +1987,12 @@
         
         const pathParts = window.location.pathname.split('/').filter(p => p);
         const gameId = pathParts[1];
-        const urlTabParam = new URLSearchParams(window.location.search).get('tab');
         const savedSettings = JSON.parse(localStorage.getItem('nurture_settings') || '{}');
         const defaultTab = savedSettings.lowSpecMode ? 'all' : 'overview';
+        const urlParamsInit = new URLSearchParams(window.location.search);
+        const urlTabParam = urlParamsInit.get('tab');
         let currentSection = urlTabParam || pathParts[2] || 'overview';
+        let currentSubView = urlParamsInit.get('view') || null; // 'story-master' when inside Story Master
         let activeModGuideFilter = 'All'; // Filters Guides by a specific Mod (US2)
         let onePageSearchQuery = '';      // Instant filter inside All-in-One View (US3)
 
@@ -1311,6 +2044,7 @@
             { id: 'guides', label: 'Guides/Tools', key: 'guides', svg: '<path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"/>' },
             { id: 'assets', label: 'Raw Assets', key: 'assets', svg: '<path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/>' },
             { id: 'communities', label: 'Communities', key: 'communities', svg: '<path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>' },
+            { id: 'lore', label: 'Lore', key: 'lore', svg: '<path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM9 4h2v5l-1-.75L9 9V4zm9 16H6V4h1v9l3-2.25L13 13V4h5v16z"/>' },
             { id: 'mods', label: 'Mods', key: 'mods', svg: '<path d="M20.5 11H19V7c0-1.1-.9-2-2-2h-4V3.5C13 2.12 11.88 1 10.5 1S8 2.12 8 3.5V5H4c-1.1 0-1.99.9-1.99 2v3.8H3.5c1.49 0 2.7 1.21 2.7 2.7s-1.21 2.7-2.7 2.7H2V20c0 1.1.9 2 2 2h3.8v-1.5c0-1.49 1.21-2.7 2.7-2.7 1.49 0 2.7 1.21 2.7 2.7V22H17c1.1 0 2-.9 2-2v-4h1.5c1.38 0 2.5-1.12 2.5-2.5S21.88 11 20.5 11z"/>' }
         ];
 
@@ -1370,9 +2104,10 @@
                 
                 link.addEventListener('click', (e) => {
                     e.preventDefault();
-                    if (currentSection === sec.id) return;
+                    if (currentSection === sec.id && !currentSubView) return;
 
                     currentSection = sec.id;
+                    currentSubView = null;
                     activeFilter = 'All';
                     window.history.pushState({}, '', url); 
                     renderTabs(); 
@@ -1735,6 +2470,7 @@
                 guides: 'https://api.iconify.design/fluent-emoji:blue-book.svg',
                 assets: 'https://api.iconify.design/fluent-emoji:open-file-folder.svg',
                 communities: 'https://api.iconify.design/fluent-emoji:people-hugging.svg',
+                lore: 'https://api.iconify.design/fluent-emoji:scroll.svg',
                 mods: 'https://api.iconify.design/fluent-emoji:puzzle-piece.svg'
             };
 
@@ -1960,6 +2696,665 @@
             `;
         }
 
+        function openStoryMasterView(pushHistory = true) {
+            currentSection = 'lore';
+            currentSubView = 'story-master';
+            if (pushHistory) {
+                window.history.pushState({}, '', `/games/${gameId}?tab=lore&view=story-master`);
+            }
+            renderTabs();
+            renderContent();
+        }
+
+        // ====================================================================
+        // 📖 STORY MASTER ENGINE (PART 4A: 3D TOME & TABLE OF CONTENTS)
+        // ====================================================================
+        let smViewState = 'book'; // 'book' | 'toc' | 'graph'
+        let smActiveChapterId = 'main-storyline';
+
+        const DEFAULT_STORY_CHAPTERS = [
+            {
+                id: 'main-storyline',
+                title: 'Main Storyline',
+                description: 'Core chronological events, world history, and overarching story arcs from ancient eras to the present.',
+                coverIcon: '📜'
+            },
+            {
+                id: 'characters',
+                title: 'Characters & Arcs',
+                description: 'Key character backstories, turning points, alliances, and personal timelines.',
+                coverIcon: '👑'
+            },
+            {
+                id: 'factions',
+                title: 'Factions & World',
+                description: 'Major organizations, regions, pantheons/aeons, and historical conflicts.',
+                coverIcon: '🏛️'
+            }
+        ];
+
+        function getStoryMasterData() {
+            const raw = (gameData && gameData.story_master) || {};
+            const customChapters = Array.isArray(raw.chapters) ? raw.chapters : [];
+            const mergedChapters = [...DEFAULT_STORY_CHAPTERS];
+
+            customChapters.forEach(ch => {
+                if (ch && ch.id && !mergedChapters.some(existing => existing.id === ch.id)) {
+                    mergedChapters.push(ch);
+                }
+            });
+
+            return {
+                chapters: mergedChapters,
+                nodes: Array.isArray(raw.nodes) ? raw.nodes : [],
+                edges: Array.isArray(raw.edges) ? raw.edges : []
+            };
+        }
+
+        function countLoreContributors() {
+            const contributors = new Set();
+            const sm = getStoryMasterData();
+            (gameData?.lore || []).forEach(item => {
+                const user = item.submitterDiscordId || item.submitterUsername || item.submitter;
+                if (user) contributors.add(user);
+            });
+            sm.chapters.forEach(c => { if (c.submitterDiscordId || c.submitterUsername) contributors.add(c.submitterDiscordId || c.submitterUsername); });
+            sm.nodes.forEach(n => { if (n.submitterDiscordId || n.submitterUsername) contributors.add(n.submitterDiscordId || n.submitterUsername); });
+            sm.edges.forEach(e => { if (e.submitterDiscordId || e.submitterUsername) contributors.add(e.submitterDiscordId || e.submitterUsername); });
+            return contributors.size;
+        }
+
+        function exitStoryMasterToLoreLinks() {
+            currentSection = 'lore';
+            currentSubView = null;
+            smViewState = 'book';
+            window.history.pushState({}, '', `/games/${gameId}?tab=lore`);
+            renderTabs();
+            renderContent();
+        }
+
+        function setStoryMasterStage(stage, chapterId = null) {
+            smViewState = stage;
+            if (chapterId) smActiveChapterId = chapterId;
+            renderStoryMaster();
+        }
+
+        function openSuggestChapterModal() {
+            if (!window.requireAuth('suggest a new Lore Chapter')) return;
+            document.getElementById('smChapTitle').value = '';
+            document.getElementById('smChapIcon').value = '';
+            document.getElementById('smChapDesc').value = '';
+            document.getElementById('smChapCommit').value = '';
+            document.getElementById('smChapterModal').classList.add('active');
+        }
+
+        async function submitStoryChapterSuggestion() {
+            const title = document.getElementById('smChapTitle').value.trim();
+            const coverIcon = document.getElementById('smChapIcon').value.trim() || '📜';
+            const description = document.getElementById('smChapDesc').value.trim();
+            const commitMessage = document.getElementById('smChapCommit').value.trim();
+
+            if (!title || !description) {
+                return window.showCustomAlert('Please enter both a Chapter Title and a brief Description.', 'Missing Fields');
+            }
+
+            const payload = {
+                gameId: gameData.id,
+                itemCategory: 'LoreChapter',
+                actionType: 'CREATE',
+                targetIdentifier: title,
+                data: {
+                    id: title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+                    title,
+                    coverIcon,
+                    description,
+                    commitMessage
+                }
+            };
+
+            try {
+                const res = await fetch('/api/contribute', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.error || 'Failed to submit chapter');
+                }
+                document.getElementById('smChapterModal').classList.remove('active');
+                window.showCustomAlert('Lore Chapter suggested! Once approved by an admin on Discord, it will appear in the Table of Contents.', 'Chapter Submitted');
+            } catch (e) {
+                window.showCustomAlert(e.message || 'Failed to submit chapter.', 'Submission Error');
+            }
+        }
+
+        function renderStoryMaster() {
+            const safeStr = (text) => (text || '').toString().replace(/[&<>"']/g, m => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[m]));
+            const sm = getStoryMasterData();
+            const activeChapter = sm.chapters.find(c => c.id === smActiveChapterId) || sm.chapters[0];
+            const contribCount = countLoreContributors();
+
+            const breadcrumbHtml = `
+                <div class="sm-breadcrumb-bar">
+                    <div class="sm-crumb-trail">
+                        <button type="button" class="sm-crumb-btn" onclick="exitStoryMasterToLoreLinks()">← Lore Links</button>
+                        <span style="color:#887da8;">/</span>
+                        <button type="button" class="sm-crumb-btn ${smViewState === 'book' ? 'active' : ''}" onclick="setStoryMasterStage('book')">📖 Tome Cover</button>
+                        <span style="color:#887da8;">/</span>
+                        <button type="button" class="sm-crumb-btn ${smViewState === 'toc' ? 'active' : ''}" onclick="setStoryMasterStage('toc')">📑 Table of Contents (${sm.chapters.length})</button>
+                        ${smViewState === 'graph' && activeChapter ? `
+                            <span style="color:#887da8;">/</span>
+                            <button type="button" class="sm-crumb-btn active">${safeStr(activeChapter.coverIcon || '📜')} ${safeStr(activeChapter.title)}</button>
+                        ` : ''}
+                    </div>
+                    ${smViewState === 'toc' ? `
+                        <button type="button" class="btn-floral pollen" style="height:34px; padding:0 14px; font-size:0.82em;" onclick="openSuggestChapterModal()">+ Suggest Chapter</button>
+                    ` : ''}
+                </div>
+            `;
+
+            // VIEW 1: THE GIANT 3D BOOK COVER
+            if (smViewState === 'book') {
+                const iconUrl = gameData.banner_url || '/Assets/placeholder.webp';
+                contentArea.innerHTML = `
+                    ${breadcrumbHtml}
+                    <div class="sm-book-stage">
+                        <div class="sm-giant-tome" onclick="setStoryMasterStage('toc')" title="Click to open the Table of Contents">
+                            <div style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+                                <div class="sm-tome-header-ornament">Archives of Nurture</div>
+                                <h2 class="sm-tome-title">${safeStr(gameData.name)}</h2>
+                                <div style="font-size: 0.78em; color: #c4b5e8; letter-spacing: 1px; text-transform: uppercase;">Chronicles & Lore Compendium</div>
+                            </div>
+
+                            <div class="sm-tome-medallion">
+                                <img src="${safeStr(iconUrl)}" alt="${safeStr(gameData.name)}" onerror="this.src='/Assets/placeholder.webp'">
+                            </div>
+
+                            <div class="sm-tome-footer">
+                                <div class="sm-tome-author">Authored by ${safeStr(gameData.developer || 'Unknown Studio')}</div>
+                                <div class="sm-tome-contributors">
+                                    <span>✒️</span>
+                                    <span>${contribCount} Lore Contributor${contribCount !== 1 ? 's' : ''}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="sm-tome-prompt">Click the Tome to open the Table of Contents</div>
+                    </div>
+                `;
+                return;
+            }
+
+            // VIEW 2: TABLE OF CONTENTS (CHAPTER COVERS)
+            if (smViewState === 'toc') {
+                const chapterCardsHtml = sm.chapters.map((chap, idx) => {
+                    const nodeCount = sm.nodes.filter(n => n.chapterId === chap.id).length;
+                    return `
+                        <div class="sm-chapter-cover" onclick="setStoryMasterStage('graph', '${safeStr(chap.id)}')">
+                            <div>
+                                <div class="sm-chapter-num">Chapter ${idx + 1}</div>
+                                <div class="sm-chapter-emblem">${safeStr(chap.coverIcon || '📜')}</div>
+                                <h3 class="sm-chapter-title">${safeStr(chap.title)}</h3>
+                                <p class="sm-chapter-desc">${safeStr(chap.description || '')}</p>
+                            </div>
+                            <div class="sm-chapter-meta">
+                                <span>${nodeCount} Timeline Event${nodeCount !== 1 ? 's' : ''}</span>
+                                <span>Open Graph →</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                contentArea.innerHTML = `
+                    ${breadcrumbHtml}
+                    <div style="margin-bottom: 16px;">
+                        <h2 style="margin: 0 0 4px 0; color: #f4f0ff;">Table of Contents</h2>
+                        <div style="font-size: 0.88em; color: #b4a3dc;">Select any chapter below to explore its chronological event graph or suggest new events and connections.</div>
+                    </div>
+                    <div class="sm-chapters-grid">
+                        ${chapterCardsHtml}
+                    </div>
+                `;
+                return;
+            }
+
+            // VIEW 3: HAND OFF TO CHRONOLOGICAL LORE GRAPH CANVAS (PART 4B)
+            if (typeof renderStoryMasterGraphView === 'function') {
+                renderStoryMasterGraphView(breadcrumbHtml, activeChapter, sm);
+            }
+        }
+
+        // ====================================================================
+        // 🕸️ STORY MASTER: CHRONOLOGICAL GRAPH, NODES & EDGES
+        // ====================================================================
+        let smConnectMode = false;
+        let smConnectFirstNodeId = null;
+        let smEditingNodeId = null;
+        let smDraggedOffsets = {}; // Temporary visual drag offsets per nodeId
+
+        function renderStoryMasterGraphView(breadcrumbHtml, activeChapter, sm) {
+            const safeStr = (text) => (text || '').toString().replace(/[&<>"']/g, m => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[m]));
+            const chapId = activeChapter ? activeChapter.id : 'main-storyline';
+            const chapterNodes = sm.nodes.filter(n => (n.chapterId || 'main-storyline') === chapId);
+            const chapterEdges = sm.edges.filter(e => (e.chapterId || 'main-storyline') === chapId);
+
+            // Group nodes by timeOrder (Ascending: smallest number = Oldest at Top, largest = Newest at Bottom)
+            const tierMap = new Map();
+            chapterNodes.forEach(node => {
+                const tOrder = Number(node.timeOrder) || 10;
+                if (!tierMap.has(tOrder)) tierMap.set(tOrder, []);
+                tierMap.get(tOrder).push(node);
+            });
+
+            const sortedTimeOrders = Array.from(tierMap.keys()).sort((a, b) => a - b);
+
+            let tiersHtml = '';
+            if (sortedTimeOrders.length === 0) {
+                tiersHtml = `
+                    <div style="text-align: center; padding: 60px 20px; background: rgba(20, 14, 36, 0.88); border: 1.5px dashed rgba(255, 209, 71, 0.45); border-radius: 20px 6px 20px 6px; max-width: 480px; z-index: 2;">
+                        <div style="font-size: 2.2em; margin-bottom: 10px;">🕰️</div>
+                        <h3 style="margin: 0 0 8px 0; color: #f4f0ff;">No Lore Events in "${safeStr(activeChapter?.title || 'Chapter')}" Yet</h3>
+                        <p style="color: #b4a3dc; font-size: 0.9em; margin: 0 0 18px 0; line-height: 1.45;">
+                            Be the first to chart this chapter! Place the oldest events at the top (Row 1) and newer events below.
+                        </p>
+                        <button type="button" class="btn-floral pollen" onclick="openStoryNodeModal(null, 10, 0)">+ Add First Lore Event</button>
+                    </div>
+                `;
+            } else {
+                tiersHtml = sortedTimeOrders.map((tOrder, tierIdx) => {
+                    const rowNodes = tierMap.get(tOrder).slice().sort((a, b) => (Number(a.parallelSlot) || 0) - (Number(b.parallelSlot) || 0));
+                    const eraTitle = rowNodes[0]?.eraLabel || `Chronological Tier ${tierIdx + 1}`;
+                    const nextSlot = (Number(rowNodes[rowNodes.length - 1]?.parallelSlot) || 0) + 1;
+
+                    const nodesHtml = rowNodes.map(n => {
+                        const charTags = (n.characters || '').split(',').map(s => s.trim()).filter(Boolean).slice(0, 3);
+                        const isSelectedSource = smConnectMode && smConnectFirstNodeId === n.id;
+                        const offset = smDraggedOffsets[n.id] || { x: 0, y: 0 };
+
+                        return `
+                            <div class="sm-lore-node ${isSelectedSource ? 'connect-source-selected' : ''}"
+                                 id="smnode_${safeStr(n.id)}"
+                                 data-node-id="${safeStr(n.id)}"
+                                 style="transform: translate(${offset.x}px, ${offset.y}px);"
+                                 onclick="handleStoryNodeClick('${safeStr(n.id)}')">
+                                <div class="sm-node-era">
+                                    <span>${safeStr(n.eraLabel || `Row #${tOrder}`)}</span>
+                                    <span class="sm-node-drag-grip" onpointerdown="startLoreNodeDrag(event, '${safeStr(n.id)}')" onclick="event.stopPropagation()" title="Drag node to adjust layout">⠿</span>
+                                </div>
+                                <h4 class="sm-node-title">${safeStr(n.title)}</h4>
+                                <p class="sm-node-summary">${safeStr(n.summary)}</p>
+                                ${charTags.length > 0 ? `
+                                    <div class="sm-node-tags">
+                                        ${charTags.map(t => `<span class="sm-node-tag">${safeStr(t)}</span>`).join('')}
+                                    </div>
+                                ` : ''}
+                            </div>
+                        `;
+                    }).join('');
+
+                    return `
+                        <div class="sm-time-tier" data-time-order="${tOrder}">
+                            <div class="sm-tier-badge">
+                                <span>⏳ Row ${tOrder} • ${safeStr(eraTitle)}</span>
+                                <button type="button" onclick="openStoryNodeModal(null, ${tOrder}, ${nextSlot})" style="background:none; border:none; color:#5cd69a; font-weight:bold; cursor:pointer; font-size:0.95em; padding:0 0 0 6px;" title="Add a parallel event happening at this exact same time">+ Same-Time Event</button>
+                            </div>
+                            <div class="sm-tier-nodes-row">
+                                ${nodesHtml}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            const highestTimeOrder = sortedTimeOrders.length > 0 ? sortedTimeOrders[sortedTimeOrders.length - 1] + 10 : 10;
+
+            contentArea.innerHTML = `
+                ${breadcrumbHtml}
+                <div class="sm-graph-toolbar">
+                    <div class="sm-graph-legend">
+                        <span class="sm-legend-pill">▲ Top = Oldest Event</span>
+                        <span class="sm-legend-pill">▼ Bottom = Newest Event</span>
+                        <span class="sm-legend-pill">◄► Same Row = Concurrent Time</span>
+                    </div>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                        <button type="button" class="btn-floral pollen" style="height: 36px; padding: 0 14px; font-size: 0.82em;" onclick="openStoryNodeModal(null, ${highestTimeOrder}, 0)">
+                            + Add Event Node
+                        </button>
+                        <button type="button" class="btn-floral ${smConnectMode ? 'blossom' : ''}" style="height: 36px; padding: 0 14px; font-size: 0.82em;" onclick="toggleStoryConnectMode()">
+                            ${smConnectMode ? '✕ Cancel Connect' : '🔗 Connect Events'}
+                        </button>
+                        <button type="button" class="btn-floral" style="height: 36px; padding: 0 12px; font-size: 0.8em;" onclick="openStoryEdgeModal()">
+                            Edge List
+                        </button>
+                    </div>
+                </div>
+
+                <div class="sm-connect-banner ${smConnectMode ? 'active' : ''}" id="smConnectBanner">
+                    <span id="smConnectPromptText">
+                        ${smConnectFirstNodeId ? 'Step 2: Now click the target Event Node this leads to!' : 'Step 1: Click the starting Event Node (Origin / Cause) on the graph below...'}
+                    </span>
+                    <button type="button" class="btn-floral" style="height: 28px; padding: 0 10px; font-size: 0.78em;" onclick="toggleStoryConnectMode(false)">Cancel</button>
+                </div>
+
+                <div class="sm-graph-viewport" id="smGraphViewport" onscroll="drawStoryMasterEdges()">
+                    <div class="sm-graph-stage" id="smGraphStage">
+                        <div class="sm-tier-badge" style="border-color: rgba(168,139,250,0.4); color: #d0c2f7;">▲ ANCIENT / OLDEST EVENTS ▲</div>
+                        <svg class="sm-edges-svg" id="smEdgesSvg"></svg>
+                        ${tiersHtml}
+                        <button type="button" class="suggest-tag-pill-btn" style="z-index: 2;" onclick="openStoryNodeModal(null, ${highestTimeOrder}, 0)">
+                            ▼ + Add Newer Event Below (Row ${highestTimeOrder}) ▼
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            requestAnimationFrame(() => {
+                drawStoryMasterEdges(chapterEdges);
+            });
+        }
+
+        // Draws SVG cubic bezier arrows between connected nodes on the canvas
+        function drawStoryMasterEdges(edgesOverride = null) {
+            const svg = document.getElementById('smEdgesSvg');
+            const stage = document.getElementById('smGraphStage');
+            if (!svg || !stage || !gameData) return;
+
+            const sm = getStoryMasterData();
+            const edges = edgesOverride || sm.edges.filter(e => (e.chapterId || 'main-storyline') === smActiveChapterId);
+
+            const stageRect = stage.getBoundingClientRect();
+            svg.setAttribute('width', stage.scrollWidth);
+            svg.setAttribute('height', stage.scrollHeight);
+
+            let svgContent = `
+                <defs>
+                    <marker id="smArrowhead" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+                        <polygon points="0 0, 9 3.5, 0 7" fill="#ffd147" />
+                    </marker>
+                </defs>
+            `;
+
+            const safeStr = (text) => (text || '').toString().replace(/[&<>"']/g, m => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[m]));
+
+            edges.forEach(edge => {
+                const fromEl = document.getElementById(`smnode_${edge.fromNodeId}`);
+                const toEl = document.getElementById(`smnode_${edge.toNodeId}`);
+                if (!fromEl || !toEl) return;
+
+                const r1 = fromEl.getBoundingClientRect();
+                const r2 = toEl.getBoundingClientRect();
+
+                const x1 = (r1.left - stageRect.left) + (r1.width / 2);
+                const y1 = (r1.top - stageRect.top) + r1.height;
+                const x2 = (r2.left - stageRect.left) + (r2.width / 2);
+                const y2 = (r2.top - stageRect.top);
+
+                // If nodes are on the same horizontal row, connect their left/right sides
+                const sameRow = Math.abs(r1.top - r2.top) < 35;
+                let pathD = '';
+                let midX = (x1 + x2) / 2;
+                let midY = (y1 + y2) / 2;
+
+                if (sameRow) {
+                    const startX = r1.left < r2.left ? (r1.right - stageRect.left) : (r1.left - stageRect.left);
+                    const endX = r1.left < r2.left ? (r2.left - stageRect.left) : (r2.right - stageRect.left);
+                    const centerY = (r1.top - stageRect.top) + (r1.height / 2);
+                    pathD = `M ${startX} ${centerY} C ${(startX + endX)/2} ${centerY - 32}, ${(startX + endX)/2} ${centerY - 32}, ${endX} ${centerY}`;
+                    midX = (startX + endX) / 2;
+                    midY = centerY - 24;
+                } else {
+                    const ctrlOffset = Math.max(36, Math.abs(y2 - y1) * 0.45);
+                    pathD = `M ${x1} ${y1} C ${x1} ${y1 + ctrlOffset}, ${x2} ${y2 - ctrlOffset}, ${x2} ${y2}`;
+                }
+
+                const labelText = safeStr(edge.relationLabel || 'Led to');
+                const pillW = Math.max(54, labelText.length * 6.5 + 16);
+
+                svgContent += `
+                    <path d="${pathD}" class="sm-edge-path" marker-end="url(#smArrowhead)" />
+                    <rect x="${midX - pillW / 2}" y="${midY - 10}" width="${pillW}" height="20" class="sm-edge-label-bg" />
+                    <text x="${midX}" y="${midY}" class="sm-edge-label-text">${labelText}</text>
+                `;
+            });
+
+            svg.innerHTML = svgContent;
+        }
+
+        window.addEventListener('resize', () => {
+            if (currentSection === 'lore' && currentSubView === 'story-master' && smViewState === 'graph') {
+                drawStoryMasterEdges();
+            }
+        });
+
+        // Interactive Node Dragging (Repositions node visually & redraws edges live)
+        function startLoreNodeDrag(e, nodeId) {
+            e.preventDefault();
+            e.stopPropagation();
+            const nodeEl = document.getElementById(`smnode_${nodeId}`);
+            if (!nodeEl) return;
+
+            const current = smDraggedOffsets[nodeId] || { x: 0, y: 0 };
+            const startX = e.clientX - current.x;
+            const startY = e.clientY - current.y;
+
+            function onMove(moveEv) {
+                const nx = Math.round(moveEv.clientX - startX);
+                const ny = Math.round(moveEv.clientY - startY);
+                smDraggedOffsets[nodeId] = { x: nx, y: ny };
+                nodeEl.style.transform = `translate(${nx}px, ${ny}px)`;
+                drawStoryMasterEdges();
+            }
+
+            function onUp() {
+                window.removeEventListener('pointermove', onMove);
+                window.removeEventListener('pointerup', onUp);
+            }
+
+            window.addEventListener('pointermove', onMove);
+            window.addEventListener('pointerup', onUp);
+        }
+
+        function toggleStoryConnectMode(forceState = null) {
+            if (!window.requireAuth('connect lore events')) return;
+            smConnectMode = forceState !== null ? forceState : !smConnectMode;
+            smConnectFirstNodeId = null;
+            renderStoryMaster();
+        }
+
+        function handleStoryNodeClick(nodeId) {
+            const sm = getStoryMasterData();
+            const node = sm.nodes.find(n => n.id === nodeId);
+            if (!node) return;
+
+            // If in Interactive Connect Mode, clicking Node 1 then Node 2 opens the Edge Modal pre-filled
+            if (smConnectMode) {
+                if (!smConnectFirstNodeId) {
+                    smConnectFirstNodeId = nodeId;
+                    renderStoryMaster();
+                    return;
+                }
+                if (smConnectFirstNodeId === nodeId) {
+                    smConnectFirstNodeId = null;
+                    renderStoryMaster();
+                    return;
+                }
+                const firstId = smConnectFirstNodeId;
+                smConnectMode = false;
+                smConnectFirstNodeId = null;
+                renderStoryMaster();
+                openStoryEdgeModal(firstId, nodeId);
+                return;
+            }
+
+            // Otherwise, open the Lore Event Reader Modal
+            const safeStr = (text) => (text || '').toString().replace(/[&<>"']/g, m => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[m]));
+            document.getElementById('smReaderEra').textContent = `${node.eraLabel || 'Timeline Event'} • Chronological Row #${node.timeOrder || 10}`;
+            document.getElementById('smReaderTitle').textContent = node.title || 'Untitled Event';
+            document.getElementById('smReaderSummary').textContent = node.summary || 'No summary provided.';
+
+            const chars = (node.characters || '').split(',').map(s => s.trim()).filter(Boolean);
+            document.getElementById('smReaderTags').innerHTML = chars.map(c => `<span class="sm-node-tag">${safeStr(c)}</span>`).join('');
+
+            const subName = node.submitterUsername || 'Community';
+            document.getElementById('smReaderMeta').innerHTML = `Contributed by <b style="color:#d0c2f7;">${safeStr(subName)}</b>`;
+
+            const actionsBox = document.getElementById('smReaderActions');
+            const srcBtn = node.sourceUrl
+                ? `<a href="${safeStr(node.sourceUrl)}" target="_blank" rel="noopener noreferrer" class="btn-floral pollen" style="flex:1;">🔗 View Source / Video</a>`
+                : '';
+            actionsBox.innerHTML = `
+                ${srcBtn}
+                <button type="button" class="btn-floral" style="flex:1;" onclick="document.getElementById('smReaderModal').classList.remove('active'); openStoryNodeModal('${safeStr(node.id)}')">
+                    ✎ Suggest Edit
+                </button>
+            `;
+
+            document.getElementById('smReaderModal').classList.add('active');
+        }
+
+        function openStoryNodeModal(editNodeId = null, defaultTimeOrder = 10, defaultParallelSlot = 0) {
+            if (!window.requireAuth('suggest or edit Lore Events')) return;
+            smEditingNodeId = editNodeId;
+            const sm = getStoryMasterData();
+            const existing = editNodeId ? sm.nodes.find(n => n.id === editNodeId) : null;
+
+            document.getElementById('smNodeModalTitle').textContent = existing ? '✎ Suggest Lore Node Edit' : '✨ Suggest Lore Event Node';
+            document.getElementById('smNodeTitle').value = existing ? (existing.title || '') : '';
+            document.getElementById('smNodeEra').value = existing ? (existing.eraLabel || '') : '';
+            document.getElementById('smNodeTimeOrder').value = existing ? (existing.timeOrder || 10) : defaultTimeOrder;
+            document.getElementById('smNodeParallelSlot').value = existing ? (existing.parallelSlot || 0) : defaultParallelSlot;
+            document.getElementById('smNodeCharacters').value = existing ? (existing.characters || '') : '';
+            document.getElementById('smNodeSummary').value = existing ? (existing.summary || '') : '';
+            document.getElementById('smNodeUrl').value = existing ? (existing.sourceUrl || '') : '';
+            document.getElementById('smNodeCommit').value = '';
+
+            document.getElementById('smNodeModal').classList.add('active');
+        }
+
+        async function submitStoryNodeSuggestion() {
+            const title = document.getElementById('smNodeTitle').value.trim();
+            const eraLabel = document.getElementById('smNodeEra').value.trim() || 'Timeline Event';
+            const timeOrder = Number(document.getElementById('smNodeTimeOrder').value) || 10;
+            const parallelSlot = Number(document.getElementById('smNodeParallelSlot').value) || 0;
+            const characters = document.getElementById('smNodeCharacters').value.trim();
+            const summary = document.getElementById('smNodeSummary').value.trim();
+            const url = document.getElementById('smNodeUrl').value.trim();
+            const commitMessage = document.getElementById('smNodeCommit').value.trim();
+
+            if (!title || !summary) {
+                return window.showCustomAlert('Please enter both an Event Title and a Lore Summary.', 'Missing Fields');
+            }
+
+            const payload = {
+                gameId: gameData.id,
+                itemCategory: 'LoreNode',
+                actionType: smEditingNodeId ? 'EDIT' : 'CREATE',
+                targetIdentifier: smEditingNodeId || title,
+                data: {
+                    chapterId: smActiveChapterId,
+                    title,
+                    eraLabel,
+                    timeOrder,
+                    parallelSlot,
+                    characters,
+                    summary,
+                    url,
+                    commitMessage
+                }
+            };
+
+            try {
+                const res = await fetch('/api/contribute', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.error || 'Failed to submit lore event');
+                }
+                document.getElementById('smNodeModal').classList.remove('active');
+                window.showCustomAlert('Lore Event submitted! Once approved by an admin on Discord, it will appear on the chapter timeline graph.', 'Lore Node Submitted');
+            } catch (e) {
+                window.showCustomAlert(e.message || 'Failed to submit lore event.', 'Submission Error');
+            }
+        }
+
+        function openStoryEdgeModal(preFromId = null, preToId = null) {
+            if (!window.requireAuth('suggest connections between lore events')) return;
+            const sm = getStoryMasterData();
+            const chapterNodes = sm.nodes
+                .filter(n => (n.chapterId || 'main-storyline') === smActiveChapterId)
+                .sort((a, b) => (Number(a.timeOrder) || 0) - (Number(b.timeOrder) || 0));
+
+            if (chapterNodes.length < 2) {
+                return window.showCustomAlert('At least 2 Lore Event Nodes are needed in this chapter before you can connect them with an edge.', 'Need More Nodes');
+            }
+
+            const safeStr = (text) => (text || '').toString().replace(/[&<>"']/g, m => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[m]));
+            const optionsHtml = chapterNodes.map(n => `<option value="${safeStr(n.id)}">[Row ${n.timeOrder || 10}] ${safeStr(n.title)}</option>`).join('');
+
+            const fromSel = document.getElementById('smEdgeFrom');
+            const toSel = document.getElementById('smEdgeTo');
+            fromSel.innerHTML = optionsHtml;
+            toSel.innerHTML = optionsHtml;
+
+            if (preFromId) fromSel.value = preFromId;
+            if (preToId) toSel.value = preToId;
+            else if (chapterNodes.length > 1) toSel.selectedIndex = 1;
+
+            document.getElementById('smEdgeLabel').value = 'Led to';
+            document.getElementById('smEdgeCommit').value = '';
+            document.getElementById('smEdgeModal').classList.add('active');
+        }
+
+        async function submitStoryEdgeSuggestion() {
+            const fromNodeId = document.getElementById('smEdgeFrom').value;
+            const toNodeId = document.getElementById('smEdgeTo').value;
+            const relationLabel = document.getElementById('smEdgeLabel').value.trim() || 'Led to';
+            const commitMessage = document.getElementById('smEdgeCommit').value.trim();
+
+            if (!fromNodeId || !toNodeId || fromNodeId === toNodeId) {
+                return window.showCustomAlert('Please select two different Lore Events to connect.', 'Invalid Connection');
+            }
+
+            const sm = getStoryMasterData();
+            const fromNode = sm.nodes.find(n => n.id === fromNodeId);
+            const toNode = sm.nodes.find(n => n.id === toNodeId);
+
+            const payload = {
+                gameId: gameData.id,
+                itemCategory: 'LoreEdge',
+                actionType: 'CREATE',
+                targetIdentifier: `${fromNode?.title || fromNodeId} -> ${toNode?.title || toNodeId}`,
+                data: {
+                    chapterId: smActiveChapterId,
+                    fromNodeId,
+                    toNodeId,
+                    fromTitle: fromNode?.title || fromNodeId,
+                    toTitle: toNode?.title || toNodeId,
+                    relationLabel,
+                    commitMessage
+                }
+            };
+
+            try {
+                const res = await fetch('/api/contribute', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.error || 'Failed to submit connection');
+                }
+                document.getElementById('smEdgeModal').classList.remove('active');
+                window.showCustomAlert('Connection submitted! Once approved by an admin on Discord, the arrow will appear on the graph.', 'Edge Submitted');
+            } catch (e) {
+                window.showCustomAlert(e.message || 'Failed to submit connection.', 'Submission Error');
+            }
+        }
+
         function renderContent() {
             if (!gameData) return;
             
@@ -1972,7 +3367,34 @@
                 return;
             }
 
-            if (currentSection === 'guides' && gameData.mini_focuses && gameData.mini_focuses.length > 0) {
+            if (currentSection === 'lore' && currentSubView === 'story-master') {
+                mfContainer.style.display = 'none';
+                if (typeof renderStoryMaster === 'function') {
+                    renderStoryMaster();
+                }
+                return;
+            }
+
+            if (currentSection === 'lore') {
+                mfContainer.style.display = 'grid';
+                mfContainer.innerHTML = `
+                    <div class="story-master-banner" onclick="openStoryMasterView()">
+                        <div style="display: flex; align-items: center; gap: 16px;">
+                            <div class="story-master-icon-box">
+                                <svg viewBox="0 0 24 24"><path d="M21 5c-1.11-.35-2.33-.5-3.5-.5-1.95 0-4.05.4-5.5 1.5-1.45-1.1-3.55-1.5-5.5-1.5S2.45 4.9 1 6v14.65c0 .25.25.5.5.5.1 0 .15-.05.25-.05C3.1 20.45 5.05 20 6.5 20c1.95 0 4.05.4 5.5 1.5 1.35-.85 3.8-1.5 5.5-1.5 1.65 0 3.35.3 4.75 1.05.1.05.15.05.25.05.25 0 .5-.25.5-.5V6c-.6-.45-1.25-.75-2-1zm0 13.5c-1.1-.35-2.3-.5-3.5-.5-1.7 0-4.15.65-5.5 1.5V8c1.35-.85 3.8-1.5 5.5-1.5 1.2 0 2.4.15 3.5.5v11.5z"/></svg>
+                            </div>
+                            <div>
+                                <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+                                    <span style="font-weight:bold; font-size:1.2em; color:#ffd147;">Story Master</span>
+                                    <span class="floral-badge" style="background:rgba(255,209,71,0.18); color:#ffd147; border:1px solid rgba(255,209,71,0.5); margin:0;">Interactive Tome & Graph</span>
+                                </div>
+                                <div style="font-size:0.9em; color:#e2d4ff;">Visually explore and contribute to the lore! Click to open the book, chapters, and chronological timeline graph.</div>
+                            </div>
+                        </div>
+                        <span class="btn-floral pollen" style="height:36px; padding:0 16px; font-size:0.85em; flex-shrink:0;">Open Book →</span>
+                    </div>
+                `;
+            } else if (currentSection === 'guides' && gameData.mini_focuses && gameData.mini_focuses.length > 0) {
                 mfContainer.style.display = 'grid';
                 mfContainer.innerHTML = gameData.mini_focuses.map(focus => `
                         <div style="display: flex; align-items: center; gap: 15px; background: linear-gradient(135deg, #4C3A90 0%, #2a2a35 100%); padding: 18px; border-radius: 18px 6px 18px 6px; border: 1px solid #7A6BB5; user-select: none;">
@@ -2027,6 +3449,7 @@
                 guides: { title: 'Guides/Tools', dbKey: 'Guide', data: gameData.guides, catKey: 'category', metaKey: 'author', metaPrefix: 'By ' },
                 assets: { title: 'Raw Assets', dbKey: 'Asset', data: gameData.assets, catKey: 'type', metaKey: 'type', metaPrefix: 'Format: ' },
                 communities: { title: 'Communities', dbKey: 'Community', data: gameData.communities, catKey: 'platform', metaKey: 'platform', metaPrefix: 'Platform: ' },
+                lore: { title: 'Lore & Worldbuilding', dbKey: 'Lore', data: gameData.lore, catKey: 'category', metaKey: 'author', metaPrefix: 'By ' },
                 mods: { title: 'Mods', dbKey: 'Mod', data: gameData.mods, catKey: 'author', metaKey: 'version', metaPrefix: 'Version: ' }
             };
 
@@ -2202,6 +3625,7 @@
         window.addEventListener('popstate', () => {
             const urlParams = new URLSearchParams(window.location.search);
             currentSection = urlParams.get('tab') || 'overview';
+            currentSubView = urlParams.get('view') || null;
             renderTabs();
             renderContent();
         });
@@ -2217,8 +3641,30 @@
 
                 document.getElementById('gameTitle').textContent = gameData.name;
                 document.getElementById('gameDev').textContent = gameData.developer;
+                // Link to twitter for main announcements
+                const twitterContainer = document.getElementById('gameTwitterContainer');
+                if (twitterContainer) {
+                    const xLogoSvg = `<svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>`;
+                    const twUrl = (gameData.twitter_url || '').trim();
+                    if (twUrl) {
+                        twitterContainer.innerHTML = `
+                            <a href="${escapeHtml(twUrl)}" target="_blank" rel="noopener noreferrer" class="game-twitter-btn" title="Official X / Twitter">
+                                ${xLogoSvg}
+                                <span>Official</span>
+                            </a>
+                        `;
+                    } else {
+                        twitterContainer.innerHTML = `
+                            <button type="button" class="game-twitter-btn missing-link" onclick="openGameSuggestModal('Overview')" title="Suggest Official X / Twitter Link">
+                                ${xLogoSvg}
+                                <span>+ Add X</span>
+                            </button>
+                        `;
+                    }
+                }
+                // ------------------------------------
                 document.getElementById('gameIcon').src = gameData.banner_url || '/Assets/placeholder.webp';
-
+                // Show what platforms supported
                 const platBadgeEl = document.getElementById('gamePlatformBadge');
                 if (platBadgeEl) {
                     const gTags = Array.isArray(gameData.tags) ? gameData.tags : [];
@@ -2230,7 +3676,7 @@
                     `;
                     platBadgeEl.style.display = 'inline-flex';
                 }
-
+                // Show badges
                 const patchMetaEl = document.getElementById('gamePatchMeta');
                 if (patchMetaEl && gameData.last_major_update_date) {
                     const formattedPatchDate = formatItemDate({ updatedAt: gameData.last_major_update_date });
@@ -2288,6 +3734,12 @@
             const modCatInput = document.getElementById('gsModCategory');
             const wikiUrlInput = document.getElementById('gsWikiUrl');
 
+            const twitterInput = document.getElementById('gsTwitterUrl');
+            if (twitterInput) {
+                twitterInput.style.display = category === 'Overview' ? 'block' : 'none';
+                twitterInput.value = gameData.twitter_url || '';
+            }
+            
             targetModInput.style.display = category === 'Guide' ? 'block' : 'none';
             modCatInput.style.display = category === 'Mod' ? 'block' : 'none';
             wikiUrlInput.style.display = category === 'Mod' ? 'block' : 'none';
@@ -2421,10 +3873,12 @@
             if (currentSuggestCategory === 'Overview') {
                 const rawGuide = document.getElementById('gsNewPlayerGuide').value.trim();
                 const parsedVid = parseYouTubeVideoId(rawGuide);
+                const twitter_url = document.getElementById('gsTwitterUrl')?.value.trim() || '';
                 dataPayload = { 
                     overview_text: document.getElementById('gsOverviewText').value.trim(), 
                     new_player_guide: rawGuide,
                     new_player_video_id: parsedVid || undefined,
+                    twitter_url: twitter_url || undefined,
                     commitMessage 
                 };
             } else if (currentSuggestCategory === 'Platform') {
