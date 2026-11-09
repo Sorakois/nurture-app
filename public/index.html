@@ -1554,26 +1554,20 @@
             }
         };
 
-        const searchGames = async (query) => {
+        const searchGames = (query) => {
             if (!query || query.length === 0) {
                 isSearching = false;
-                currentPage = 1;
-                loadGames(1, false);
+                updateGrid(allGames);
                 return;
             }
-            if (query.length < 2) return;
 
             isSearching = true;
-
-            try {
-                const results = await apiCall(`/games/search/${encodeURIComponent(query)}`);
-                updateGrid(results);
-            } catch (error) {
-                const filtered = allGames.filter(game => 
-                    game.name.toLowerCase().includes(query.toLowerCase())
-                );
-                updateGrid(filtered);
-            }
+            const q = query.toLowerCase();
+            const filtered = allGames.filter(game =>
+                (game.name && game.name.toLowerCase().includes(q)) ||
+                (game.developer && game.developer.toLowerCase().includes(q))
+            );
+            updateGrid(filtered);
         };
 
         function renderStars(val, count) {
@@ -2243,14 +2237,14 @@
             }
         }
 
-        window.addEventListener('online', () => fetchInitialData());
+        // window.addEventListener('online', () => fetchInitialData());
 
         // Update live only when the server broadcasts an actual change
-        window.addEventListener('nurtureLiveUpdate', (e) => {
-            if (!isSearching && e.detail?.type === 'game_updated') {
-                fetchInitialData(true);
-            }
-        });
+        // window.addEventListener('nurtureLiveUpdate', (e) => {
+        //     if (!isSearching && e.detail?.type === 'game_updated') {
+        //         fetchInitialData(true);
+        //     }
+        // });
     </script>
 </body>
 </html>

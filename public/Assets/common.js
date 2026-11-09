@@ -303,7 +303,7 @@ function renderLoggedOutUI(container) {
     container.innerHTML = `
         <div class="banner-primary-actions">
             <div class="no-ads-cta-wrap">
-                <a href="/auth/discord" class="social-button discord-button no-ads-pulse-btn">
+                <a href="/auth/discord" class="social-button discord-button no-ads-pulse-btn" onclick="sessionStorage.removeItem('nurture_is_guest')">
                     <img src="https://cdn.simpleicons.org/discord/ffffff" alt="Discord Icon">
                     <span class="sub-text">Sign In</span>
                 </a>
@@ -380,14 +380,33 @@ function renderLoggedInUI(container, user) {
     fetchUnreadMailCount();
 }
 
-function clearCachedAuth() { localStorage.removeItem('nurture_user_session'); }
-
-async function fetchUnreadMailCount() {
+async function fetchUnreadMailCount(force = false) {
     try {
+        const TEN_MINS = 10 * 60 * 1000;
+        const cachedAt = Number(sessionStorage.getItem('nurture_mail_checked_at') || 0);
+        const cachedCount = Number(sessionStorage.getItem('nurture_unread_mail_count') || 0);
+
+        if (!force && cachedAt > 0 && (Date.now() - cachedAt) < TEN_MINS) {
+            const badge = document.getElementById('unreadBadge');
+            const mobileDot = document.getElementById('mobileMenuUnreadDot');
+            if (badge) {
+                badge.textContent = cachedCount;
+                badge.style.display = cachedCount > 0 ? 'inline-block' : 'none';
+            }
+            if (mobileDot) {
+                mobileDot.style.display = cachedCount > 0 ? 'block' : 'none';
+            }
+            return;
+        }
+
         const res = await fetch('/api/mailbox');
         if (!res.ok) return;
         const mail = await res.json();
         const unread = mail.filter(m => !m.read && m.direction === 'INBOUND').length;
+
+        sessionStorage.setItem('nurture_mail_checked_at', String(Date.now()));
+        sessionStorage.setItem('nurture_unread_mail_count', String(unread));
+
         const badge = document.getElementById('unreadBadge');
         const mobileDot = document.getElementById('mobileMenuUnreadDot');
         if (badge) {
@@ -400,27 +419,46 @@ async function fetchUnreadMailCount() {
     } catch (e) {}
 }
 
+function clearCachedAuth() {
+    localStorage.removeItem('nurture_user_session');
+    sessionStorage.removeItem('nurture_auth_verified_at');
+    sessionStorage.removeItem('nurture_is_guest');
+}
+
 function initAuth() {
     const authContainer = document.getElementById('authContainer');
     if (!authContainer) return;
 
     const cachedUserRaw = localStorage.getItem('nurture_user_session');
     if (cachedUserRaw) {
-        try { renderLoggedInUI(authContainer, JSON.parse(cachedUserRaw)); } 
-        catch (e) { localStorage.removeItem('nurture_user_session'); renderLoggedOutUI(authContainer); }
-    } else { renderLoggedOutUI(authContainer); }
+        try {
+            const parsedUser = JSON.parse(cachedUserRaw);
+            renderLoggedInUI(authContainer, parsedUser);
+        } catch (e) {
+            clearCachedAuth();
+            renderLoggedOutUI(authContainer);
+        }
+    } else {
+        renderLoggedOutUI(authContainer);
+    }
+
+    // Avoid hitting /api/auth/me on every single page navigation if we already verified this session recently
+    const TEN_MINUTES = 10 * 60 * 1000;
+    const lastVerified = Number(sessionStorage.getItem('nurture_auth_verified_at') || 0);
+    if (sessionStorage.getItem('nurture_is_guest') === 'true' && !cachedUserRaw) {
+        return;
+    }
+    if (cachedUserRaw && (Date.now() - lastVerified) < TEN_MINUTES) {
+        window.dispatchEvent(new CustomEvent('nurtureUserSynced', { detail: JSON.parse(cachedUserRaw) }));
+        return;
+    }
 
     fetch('/api/auth/me')
-        .then(res => {
-            if (res.status === 401) {
-                localStorage.removeItem('nurture_user_session');
-                renderLoggedOutUI(authContainer);
-                throw new Error("Unauthorized");
-            }
-            return res.json();
-        })
+        .then(res => res.json())
         .then(data => {
             if (data && data.authenticated && data.user) {
+                sessionStorage.removeItem('nurture_is_guest');
+                sessionStorage.setItem('nurture_auth_verified_at', String(Date.now()));
                 localStorage.setItem('nurture_user_session', JSON.stringify(data.user));
                 renderLoggedInUI(authContainer, data.user);
 
@@ -451,6 +489,10 @@ function initAuth() {
                 }
 
                 window.dispatchEvent(new CustomEvent('nurtureUserSynced', { detail: data.user }));
+            } else {
+                clearCachedAuth();
+                sessionStorage.setItem('nurture_is_guest', 'true');
+                renderLoggedOutUI(authContainer);
             }
         }).catch(() => {});
 }
@@ -659,6 +701,7 @@ async function markAsRead(id, element) {
     try {
         await fetch('/api/mailbox/mark-read', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messageIds: [id] }) });
         element.classList.remove('unread');
+        sessionStorage.removeItem('nurture_mail_checked_at');
         element.onclick = null;
         const badge = element.querySelector('.new-badge');
         if (badge) badge.style.display = 'none';
@@ -671,6 +714,7 @@ async function markAllRead() {
         await fetch('/api/mailbox/mark-read', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messageIds: [] }) });
         loadMailboxMessages(); 
         document.getElementById('unreadBadge').style.display = 'none';
+        sessionStorage.removeItem('nurture_mail_checked_at');
         const mobileDot = document.getElementById('mobileMenuUnreadDot');
         if (mobileDot) mobileDot.style.display = 'none';
     } catch (e) {
@@ -997,31 +1041,120 @@ function applySettings() {
     window.dispatchEvent(new CustomEvent('nurtureSettingsChanged', { detail: { showLb, lbSide, lowSpecMode } }));
 }
 
-// --- Real-Time Live Stream Client (No 15s Polling or Micro-Refreshes) ---
-document.addEventListener('DOMContentLoaded', () => {
-    if (typeof EventSource === 'undefined') return;
+// // --- Real-Time Live Stream Client (No 15s Polling or Micro-Refreshes) ---
+// document.addEventListener('DOMContentLoaded', () => {
+//     if (typeof EventSource === 'undefined') return;
 
-    let es;
-    function connectLiveStream() {
-        es = new EventSource('/api/stream');
-        es.onmessage = (event) => {
-            try {
-                const data = JSON.parse(event.data);
-                if (!data || data.type === 'connected') return;
+//     let es;
+//     function connectLiveStream() {
+//         es = new EventSource('/api/stream');
+//         es.onmessage = (event) => {
+//             try {
+//                 const data = JSON.parse(event.data);
+//                 if (!data || data.type === 'connected') return;
 
-                if (data.type === 'mail_updated' || data.type === 'game_updated') {
-                    const cachedUserRaw = localStorage.getItem('nurture_user_session');
-                    if (cachedUserRaw) fetchUnreadMailCount();
-                }
+//                 if (data.type === 'mail_updated' || data.type === 'game_updated') {
+//                     const cachedUserRaw = localStorage.getItem('nurture_user_session');
+//                     if (cachedUserRaw) fetchUnreadMailCount();
+//                 }
 
-                window.dispatchEvent(new CustomEvent('nurtureLiveUpdate', { detail: data }));
-            } catch (e) {}
-        };
-        es.onerror = () => {
-            es.close();
-            setTimeout(connectLiveStream, 5000);
-        };
+//                 window.dispatchEvent(new CustomEvent('nurtureLiveUpdate', { detail: data }));
+//             } catch (e) {}
+//         };
+//         es.onerror = () => {
+//             es.close();
+//             setTimeout(connectLiveStream, 5000);
+//         };
+//     }
+
+//     connectLiveStream();
+// });
+
+// --- 30-Second Unfocused Tab Auto-Unloader (Zero Background CPU, RAM, or Server Usage) ---
+(function() {
+    const UNLOAD_DELAY_MS = 30000; // 30 seconds
+    let unloadTimer = null;
+    let isTabUnloaded = false;
+    let detachedNodes = [];
+
+    function unloadInactiveTab() {
+        if (isTabUnloaded || document.visibilityState === 'visible') return;
+        isTabUnloaded = true;
+
+        // 1. Freeze GSAP animations and hide background layer
+        if (typeof gsap !== 'undefined') gsap.globalTimeline.pause();
+        const bgLayer = document.querySelector('.floral-bg-layer');
+        if (bgLayer) bgLayer.style.display = 'none';
+
+        // 2. Unload all iframes (YouTube embeds, Profile Canvas embeds) to free browser memory
+        document.querySelectorAll('iframe').forEach(iframe => {
+            if (iframe.src && iframe.src !== 'about:blank') {
+                iframe.setAttribute('data-unloaded-src', iframe.src);
+                iframe.src = 'about:blank';
+            }
+        });
+
+        // 3. Detach heavy page containers from the live DOM tree
+        const targets = document.querySelectorAll('.main-wrapper, .game-layout, .profile-page-wrap');
+        detachedNodes = [];
+        targets.forEach((el, idx) => {
+            const placeholder = document.createElement('div');
+            placeholder.id = `nurture_sleep_placeholder_${idx}`;
+            placeholder.style.cssText = 'text-align:center; padding:80px 20px; color:#a99ec7; font-size:1.1em;';
+            placeholder.textContent = 'Tab sleeping to save memory — focus tab to resume...';
+            el.parentNode.replaceChild(placeholder, el);
+            detachedNodes.push({ placeholder, el });
+        });
     }
 
-    connectLiveStream();
-});
+    function restoreFocusedTab() {
+        if (unloadTimer) {
+            clearTimeout(unloadTimer);
+            unloadTimer = null;
+        }
+        if (!isTabUnloaded) return;
+        isTabUnloaded = false;
+
+        // 1. Re-attach the detached DOM containers in <1ms without any network requests
+        detachedNodes.forEach(({ placeholder, el }) => {
+            if (placeholder && placeholder.parentNode) {
+                placeholder.parentNode.replaceChild(el, placeholder);
+            }
+        });
+        detachedNodes = [];
+
+        // 2. Restore any unloaded iframes that are currently visible
+        document.querySelectorAll('iframe[data-unloaded-src]').forEach(iframe => {
+            const savedSrc = iframe.getAttribute('data-unloaded-src');
+            const parentModal = iframe.closest('.modal-overlay');
+            if (!parentModal || parentModal.classList.contains('active')) {
+                iframe.src = savedSrc;
+            }
+            iframe.removeAttribute('data-unloaded-src');
+        });
+
+        // 3. Resume background animations unless Low-Spec Mode is enabled
+        const isLowSpec = document.body.classList.contains('low-spec-mode');
+        const bgLayer = document.querySelector('.floral-bg-layer');
+        if (bgLayer && !isLowSpec) bgLayer.style.display = 'block';
+        if (typeof gsap !== 'undefined' && !isLowSpec && document.querySelectorAll('.modal-overlay.active').length === 0) {
+            gsap.globalTimeline.play();
+        }
+    }
+
+    function scheduleTabCheck() {
+        if (document.visibilityState === 'hidden') {
+            if (!unloadTimer && !isTabUnloaded) {
+                unloadTimer = setTimeout(unloadInactiveTab, UNLOAD_DELAY_MS);
+            }
+        } else {
+            restoreFocusedTab();
+        }
+    }
+
+    document.addEventListener('visibilitychange', scheduleTabCheck);
+    window.addEventListener('blur', () => {
+        if (document.visibilityState === 'hidden') scheduleTabCheck();
+    });
+    window.addEventListener('focus', restoreFocusedTab);
+})();

@@ -3984,21 +3984,21 @@
         initPage();
 
         // Listen for real-time server push events
-        window.addEventListener('nurtureLiveUpdate', async (e) => {
-            const ev = e.detail;
-            if (ev && ev.type === 'game_updated' && (!ev.payload?.gameId || ev.payload.gameId === gameId)) {
-                try {
-                    const res = await fetch(`/api/games/${gameId}`);
-                    if (res.ok) {
-                        gameData = await res.json();
-                        updateRedeemButtonBanners();
-                        renderTabs();
-                        renderContent();
-                        loadGameLeaderboard();
-                    }
-                } catch (err) {}
-            }
-        });
+        // window.addEventListener('nurtureLiveUpdate', async (e) => {
+        //     const ev = e.detail;
+        //     if (ev && ev.type === 'game_updated' && (!ev.payload?.gameId || ev.payload.gameId === gameId)) {
+        //         try {
+        //             const res = await fetch(`/api/games/${gameId}`);
+        //             if (res.ok) {
+        //                 gameData = await res.json();
+        //                 updateRedeemButtonBanners();
+        //                 renderTabs();
+        //                 renderContent();
+        //                 loadGameLeaderboard();
+        //             }
+        //         } catch (err) {}
+        //     }
+        // });
     </script>
 </body>
 </html>

@@ -66,21 +66,50 @@ const getContributionPoints = (contribution) => {
 
 const app = express();
 
-// Serverless-optimized MongoDB connection (Middleware Pattern)
+// Serverless-optimized MongoDB connection
 const connectDB = async () => {
-    // If already connected (readyState 1) or connecting (readyState 2), skip
     if (mongoose.connection.readyState >= 1) return;
-    
-    // Connect and enforce a 5-second timeout so it never hangs infinitely
-    await mongoose.connect(process.env.MONGODB_URI, { 
-        serverSelectionTimeoutMS: 5000 
+    await mongoose.connect(process.env.MONGODB_URI, {
+        serverSelectionTimeoutMS: 4000,
+        maxPoolSize: 5 // Keep pool small for 256MB Vercel instances
     });
-    console.log("Connected to MongoDB Atlas");
 };
 
+// Lightweight In-Memory Cache (persists across warm Vercel invocations)
+const memCache = new Map();
+const getCached = (key) => {
+    const entry = memCache.get(key);
+    if (entry && Date.now() < entry.expiresAt) return entry.data;
+    return null;
+};
+const setCached = (key, data, ttlSeconds = 45) => {
+    memCache.set(key, { data, expiresAt: Date.now() + ttlSeconds * 1000 });
+};
+const clearGameCache = (gameId = null) => {
+    memCache.delete('all_games');
+    memCache.delete('global_lb');
+    if (gameId) {
+        memCache.delete(`game_${gameId}`);
+        memCache.delete(`game_lb_${gameId}`);
+    }
+};
+
+app.use(cookieParser());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Skip MongoDB connection completely for routes that don't need it or have no session cookie
 app.use(async (req, res, next) => {
+    const p = req.path;
+    if (p === '/api/point-weights' || p === '/auth/discord' || p === '/auth/logout') {
+        return next();
+    }
+    if ((p === '/api/auth/me' || p === '/api/mailbox') && !req.cookies.nurture_session) {
+        return p === '/api/auth/me'
+            ? res.status(200).json({ authenticated: false })
+            : res.status(401).json({ error: 'Unauthorized' });
+    }
     try {
-        // Force the server to wait for the DB before running ANY route
         await connectDB();
         next();
     } catch (err) {
@@ -88,10 +117,6 @@ app.use(async (req, res, next) => {
         res.status(500).json({ error: "Database connection failed" });
     }
 });
-
-app.use(cookieParser());
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Security middleware
 app.use(helmet({
@@ -312,7 +337,7 @@ const syncAppStoreUpdatesBackground = async (games) => {
     isSyncingAppStore = true;
 
     try {
-        const SIX_HOURS = 6 * 60 * 60 * 1000;
+        const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
         const now = Date.now();
 
         // Detect any games accidentally sharing the exact same non-placeholder banner_url
@@ -333,8 +358,8 @@ const syncAppStoreUpdatesBackground = async (games) => {
             const hasDuplicateIcon = g.banner_url && bannerCounts[g.banner_url] > 1;
             if (hasDuplicateIcon) return true;
             const lastChecked = g.app_store_checked_at ? new Date(g.app_store_checked_at).getTime() : 0;
-            return (now - lastChecked) > SIX_HOURS;
-        }).slice(0, 4);
+            return (now - lastChecked) > TWENTY_FOUR_HOURS;
+        }).slice(0, 1);
 
         for (const g of staleGames) {
             try {
@@ -343,7 +368,7 @@ const syncAppStoreUpdatesBackground = async (games) => {
                     ? 'The Seven Deadly Sins Grand Cross'
                     : g.name;
 
-                const res = await axios.get(`https://itunes.apple.com/search?term=${encodeURIComponent(searchTerm)}&entity=software&limit=15`);
+                const res = await axios.get(`https://itunes.apple.com/search?term=${encodeURIComponent(searchTerm)}&entity=software&limit=10`, { timeout: 2500 });
                 const updates = { app_store_checked_at: new Date().toISOString() };
                 let changedVisibleData = false;
 
@@ -405,62 +430,70 @@ const checkUserOrIpBanned = async (user, clientIp) => {
 };
 
 // --- REAL-TIME LIVE EVENT STREAM (DISCORD-STYLE PUSH UPDATES) ---
-const liveClients = new Set();
+// const liveClients = new Set();
 
+// const broadcastLiveEvent = (type, payload = {}) => {
+//     const msg = `data: ${JSON.stringify({ type, payload, timestamp: Date.now() })}\n\n`;
+//     for (const clientRes of liveClients) {
+//         try { clientRes.write(msg); } catch (e) { liveClients.delete(clientRes); }
+//     }
+// };
+
+// app.get('/api/stream', (req, res) => {
+//     res.setHeader('Content-Type', 'text/event-stream');
+//     res.setHeader('Cache-Control', 'no-cache');
+//     res.setHeader('Connection', 'keep-alive');
+//     if (res.flushHeaders) res.flushHeaders();
+
+//     res.write(`data: ${JSON.stringify({ type: 'connected' })}\n\n`);
+//     liveClients.add(res);
+
+//     const keepAlive = setInterval(() => {
+//         try { res.write(': ping\n\n'); } catch (e) { clearInterval(keepAlive); }
+//     }, 25000);
+
+//     req.on('close', () => {
+//         clearInterval(keepAlive);
+//         liveClients.delete(res);
+//     });
+// });
+// No-op stub (SSE stream removed to prevent Vercel Serverless memory exhaustion)
 const broadcastLiveEvent = (type, payload = {}) => {
-    const msg = `data: ${JSON.stringify({ type, payload, timestamp: Date.now() })}\n\n`;
-    for (const clientRes of liveClients) {
-        try { clientRes.write(msg); } catch (e) { liveClients.delete(clientRes); }
-    }
+    if (type === 'game_updated') clearGameCache(payload.gameId);
 };
-
-app.get('/api/stream', (req, res) => {
-    res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('Connection', 'keep-alive');
-    if (res.flushHeaders) res.flushHeaders();
-
-    res.write(`data: ${JSON.stringify({ type: 'connected' })}\n\n`);
-    liveClients.add(res);
-
-    const keepAlive = setInterval(() => {
-        try { res.write(': ping\n\n'); } catch (e) { clearInterval(keepAlive); }
-    }, 25000);
-
-    req.on('close', () => {
-        clearInterval(keepAlive);
-        liveClients.delete(res);
-    });
-});
 
 // --- API ROUTES ---
 app.get('/api/games', async (req, res) => {
     const page = Math.max(1, parseInt(req.query.page) || 1);
-    const limit = Math.min(50, parseInt(req.query.limit) || 20);
+    const limit = Math.min(100, parseInt(req.query.limit) || 20);
     const startIndex = (page - 1) * limit;
 
     try {
-        const allGames = await Game.collection.find({}).toArray();
-        
-        // Automatically tag any untagged legacy games with 'Mobile' at minimum
-        await ensureDefaultMobileTag(allGames);
-        
-        // Trigger non-blocking background check for App Store major updates
-        syncAppStoreUpdatesBackground(allGames);
-        
-        allGames.sort((a, b) => {
-            const aData = hasGameData(a);
-            const bData = hasGameData(b);
-            if (aData && !bData) return -1;
-            if (!aData && bData) return 1;
-            
-            const aName = a.name || '';
-            const bName = b.name || '';
-            return aName.localeCompare(bName);
-        });
+        let allGames = getCached('all_games');
+        if (!allGames) {
+            allGames = await Game.collection.find({}).toArray();
 
-        const paginatedGames = allGames.slice(startIndex, startIndex + limit).map(cleanEmptyArrays);
+            const needsTagCheck = allGames.some(g => !Array.isArray(g.tags) || !g.tags.some(t => t === 'PC' || t === 'Mobile' || t === 'PC+Mobile'));
+            if (needsTagCheck) {
+                await ensureDefaultMobileTag(allGames);
+            }
 
+            syncAppStoreUpdatesBackground(allGames);
+
+            allGames.sort((a, b) => {
+                const aData = hasGameData(a);
+                const bData = hasGameData(b);
+                if (aData && !bData) return -1;
+                if (!aData && bData) return 1;
+                return (a.name || '').localeCompare(b.name || '');
+            });
+
+            setCached('all_games', allGames, 60);
+        }
+
+        const paginatedGames = allGames.slice(startIndex, startIndex + limit).map(g => cleanEmptyArrays({ ...g }));
+
+        res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
         res.json({
             games: paginatedGames,
             pagination: { page, limit, total: allGames.length, pages: Math.ceil(allGames.length / limit) }
@@ -486,7 +519,6 @@ const getGameItemFavoriteCounts = async (gameId) => {
     usersWithFavs.forEach(u => {
         const list = u.starredSubItems && u.starredSubItems[cleanGameId];
         if (Array.isArray(list)) {
-            // Use Set per user so duplicate IDs in a single user document only count once
             [...new Set(list)].forEach(itemId => {
                 counts[itemId] = (counts[itemId] || 0) + 1;
             });
@@ -497,47 +529,56 @@ const getGameItemFavoriteCounts = async (gameId) => {
 
 app.get('/api/games/:id', async (req, res) => {
     try {
-        const game = await Game.collection.findOne({ id: req.params.id });
+        const gameId = req.params.id;
+        const cachedGame = getCached(`game_${gameId}`);
+        if (cachedGame) {
+            res.setHeader('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=120');
+            return res.json(cachedGame);
+        }
+
+        const game = await Game.collection.findOne({ id: gameId });
         if (!game) return res.status(404).json({ error: 'Game not found' });
 
         await ensureDefaultMobileTag([game]);
 
-        // Auto-convert any YouTube link in new_player_guide into new_player_video_id so it always embeds
         if (!game.new_player_video_id && game.new_player_guide) {
             const extractedVid = extractYouTubeId(game.new_player_guide);
             if (extractedVid) {
                 game.new_player_video_id = extractedVid;
-                await Game.collection.updateOne({ id: req.params.id }, { $set: { new_player_video_id: extractedVid } });
+                await Game.collection.updateOne({ id: gameId }, { $set: { new_player_video_id: extractedVid } });
             }
         }
-
-        // 1. Auto-recover any approved coupon contributions that were submitted under 'Game' or 'Coupon'
-        const approvedCouponContribs = await Contribution.collection.find({
-            gameId: req.params.id,
-            status: 'approved',
-            'data.code': { $exists: true,$ne: '' },
-            actionType: 'CREATE'
-        }).toArray();
 
         let coupons = Array.isArray(game.coupons) ? game.coupons : [];
         let modifiedCoupons = false;
 
-        approvedCouponContribs.forEach(c => {
-            const codeUpper = String(c.data.code).trim().toUpperCase();
-            if (codeUpper && !coupons.some(existing => String(existing.code || '').toUpperCase() === codeUpper)) {
-                coupons.push({
-                    _id: c._id,
-                    code: codeUpper,
-                    rewards: c.data.rewards || c.data.url || 'In-game rewards',
-                    submitterUsername: c.submitterUsername,
-                    submitterDiscordId: c.submitterDiscordId,
-                    createdAt: c.createdAt ? new Date(c.createdAt).toISOString() : new Date().toISOString()
-                });
-                modifiedCoupons = true;
-            }
-        });
+        // Only run legacy coupon recovery once per game instead of on every GET request
+        if (!game.coupons_migrated) {
+            const approvedCouponContribs = await Contribution.collection.find({
+                gameId: gameId,
+                status: 'approved',
+                'data.code': { $exists: true, $ne: '' },
+                actionType: 'CREATE'
+            }).toArray();
 
-        // 2. Auto-purge coupons that have been marked expired for over 30 days
+            approvedCouponContribs.forEach(c => {
+                const codeUpper = String(c.data.code).trim().toUpperCase();
+                if (codeUpper && !coupons.some(existing => String(existing.code || '').toUpperCase() === codeUpper)) {
+                    coupons.push({
+                        _id: c._id,
+                        code: codeUpper,
+                        rewards: c.data.rewards || c.data.url || 'In-game rewards',
+                        submitterUsername: c.submitterUsername,
+                        submitterDiscordId: c.submitterDiscordId,
+                        createdAt: c.createdAt ? new Date(c.createdAt).toISOString() : new Date().toISOString()
+                    });
+                    modifiedCoupons = true;
+                }
+            });
+            game.coupons_migrated = true;
+            modifiedCoupons = true;
+        }
+
         const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
         const now = Date.now();
         const filteredCoupons = coupons.filter(c => {
@@ -548,13 +589,14 @@ app.get('/api/games/:id', async (req, res) => {
 
         if (filteredCoupons.length !== coupons.length || modifiedCoupons) {
             coupons = filteredCoupons;
-            await Game.collection.updateOne({ id: req.params.id }, { $set: { coupons } });
+            await Game.collection.updateOne({ id: gameId }, { $set: { coupons, coupons_migrated: true } });
             game.coupons = coupons;
         }
 
-        // 3. Attach public favorite counts for all subnav items in this game
-        game.favoriteCounts = await getGameItemFavoriteCounts(req.params.id);
+        game.favoriteCounts = await getGameItemFavoriteCounts(gameId);
+        setCached(`game_${gameId}`, game, 30);
 
+        res.setHeader('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=120');
         res.json(game);
     } catch (err) {
         console.error("Failed to fetch game:", err);
@@ -816,9 +858,16 @@ app.get('/api/point-weights', (req, res) => {
 // --- LEADERBOARD & MAILBOX API ROUTES ---
 app.get('/api/leaderboard', async (req, res) => {
     try {
-        const allUsers = await User.find({}).sort({ totalPoints: -1 }).select('username discordId avatar totalPoints').lean();
+        let allUsers = getCached('global_lb');
+        if (!allUsers) {
+            allUsers = await User.collection.find(
+                { totalPoints: { $gt: 0 } },
+                { projection: { username: 1, discordId: 1, avatar: 1, totalPoints: 1 } }
+            ).sort({ totalPoints: -1 }).limit(100).toArray();
+            setCached('global_lb', allUsers, 120);
+        }
+
         const top10 = allUsers.slice(0, 10);
-        
         let userRank = null;
         const token = req.cookies.nurture_session;
         if (token) {
@@ -836,6 +885,8 @@ app.get('/api/leaderboard', async (req, res) => {
                 }
             } catch(e) {}
         }
+
+        res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
         res.json({ top10, userRank });
     } catch (err) {
         res.status(500).json({ error: "Failed to fetch leaderboard" });
@@ -844,39 +895,44 @@ app.get('/api/leaderboard', async (req, res) => {
 
 app.get('/api/leaderboard/game/:gameId', async (req, res) => {
     try {
-        const gameId = req.params.gameId;
-        const allUsers = await User.find({}).lean();
-        
-        allUsers.sort((a, b) => {
-            const aPts = (a.gamePoints && a.gamePoints[gameId]) || 0;
-            const bPts = (b.gamePoints && b.gamePoints[gameId]) || 0;
-            return bPts - aPts;
-        });
+        const gameId = validateInput.sanitizeString(req.params.gameId).replace(/[.$]/g, '');
+        const cacheKey = `game_lb_${gameId}`;
+        let sortedUsers = getCached(cacheKey);
 
-        const top10 = allUsers.slice(0, 10).map(u => ({
-            username: u.username,
-            discordId: u.discordId,
-            avatar: u.avatar,
-            points: (u.gamePoints && u.gamePoints[gameId]) || 0
-        }));
+        if (!sortedUsers) {
+            const fieldPath = `gamePoints.${gameId}`;
+            const rawUsers = await User.collection.find(
+                { [fieldPath]: { $gt: 0 } },
+                { projection: { username: 1, discordId: 1, avatar: 1, [fieldPath]: 1 } }
+            ).toArray();
 
+            rawUsers.sort((a, b) => ((b.gamePoints && b.gamePoints[gameId]) || 0) - ((a.gamePoints && a.gamePoints[gameId]) || 0));
+            sortedUsers = rawUsers.map(u => ({
+                username: u.username,
+                discordId: u.discordId,
+                avatar: u.avatar,
+                points: (u.gamePoints && u.gamePoints[gameId]) || 0
+            }));
+            setCached(cacheKey, sortedUsers, 120);
+        }
+
+        const top10 = sortedUsers.slice(0, 10);
         let userRank = null;
         const token = req.cookies.nurture_session;
         if (token) {
             try {
                 const decoded = jwt.verify(token, process.env.JWT_SECRET);
-                const userIdx = allUsers.findIndex(u => u.discordId === decoded.discordId);
+                const userIdx = sortedUsers.findIndex(u => u.discordId === decoded.discordId);
                 if (userIdx !== -1) {
                     userRank = {
                         rank: userIdx + 1,
-                        username: allUsers[userIdx].username,
-                        avatar: allUsers[userIdx].avatar,
-                        discordId: allUsers[userIdx].discordId,
-                        points: (allUsers[userIdx].gamePoints && allUsers[userIdx].gamePoints[gameId]) || 0
+                        ...sortedUsers[userIdx]
                     };
                 }
             } catch(e) {}
         }
+
+        res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
         res.json({ top10, userRank });
     } catch (err) {
         res.status(500).json({ error: "Failed to fetch game leaderboard" });
@@ -1827,18 +1883,27 @@ app.get('/api/suggest/lookup', async (req, res) => {
 });
 
 // --- DYNAMIC OPEN GRAPH EMBED ROUTE FOR GAME PAGES ---
+// Cache HTML templates in memory once so fs.readFileSync never blocks requests
+let cachedGameHtmlTemplate = null;
+let cachedProfileHtmlTemplate = null;
+const isSocialCrawlerBot = (ua = '') => /Discordbot|Twitterbot|Slackbot|facebookexternalhit|LinkedInBot|WhatsApp|TelegramBot|embedly|Pinterest/i.test(ua);
+
 app.get('/games/:id', async (req, res) => {
     try {
-        const gamePath = path.join(process.cwd(), 'public', 'game.html');
-        let html = fs.readFileSync(gamePath, 'utf8');
-        const cleanId = req.params.id.split('?')[0].split('#')[0]; 
-        const game = await Game.collection.findOne({ id: cleanId });
+        if (!cachedGameHtmlTemplate) {
+            cachedGameHtmlTemplate = fs.readFileSync(path.join(process.cwd(), 'public', 'game.html'), 'utf8');
+        }
+        let html = cachedGameHtmlTemplate;
+        const cleanId = req.params.id.split('?')[0].split('#')[0];
+
+        // Only query MongoDB if a social preview bot is scraping Open Graph tags (or if the game is already in RAM cache)
+        const game = getCached(`game_${cleanId}`) || (isSocialCrawlerBot(req.headers['user-agent']) ? await Game.collection.findOne({ id: cleanId }) : null);
 
         const escMeta = (str) => (str || '').toString().replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
         const title = game ? `Nurture | ${escMeta(game.name)} — Guides, Codes, Assets & Mods` : "Nurture | Game Hub";
         const rawDesc = game && game.overview_text 
             ? game.overview_text.replace(/\s+/g, ' ').trim().substring(0, 195) + '...'
-            : `Explore community-curated guides, active redeem codes, raw assets, and mods for ${game ? game.name : 'games'} on Nurture.`;
+            : `Explore community-curated guides, active redeem codes, raw assets, and mods on Nurture.`;
         
         html = html
             .replace(/<title>.*?<\/title>/i, `<title>${title}</title>`)
@@ -1848,18 +1913,26 @@ app.get('/games/:id', async (req, res) => {
             .replace(/content="__OG_URL__"/g, `content="https://${req.get('host')}${req.originalUrl}"`);
         
         res.setHeader('Content-Type', 'text/html');
+        res.setHeader('Cache-Control', 'public, s-maxage=600, stale-while-revalidate=86400');
         res.send(html);
-    } catch (err) { res.sendFile(path.join(process.cwd(), 'public', 'game.html')); }
+    } catch (err) {
+        res.sendFile(path.join(process.cwd(), 'public', 'game.html'));
+    }
 });
 
 app.get('/profile/:id', async (req, res) => {
     try {
-        const profilePath = path.join(process.cwd(), 'public', 'profile.html');
-        let html = fs.readFileSync(profilePath, 'utf8');
+        if (!cachedProfileHtmlTemplate) {
+            cachedProfileHtmlTemplate = fs.readFileSync(path.join(process.cwd(), 'public', 'profile.html'), 'utf8');
+        }
+        let html = cachedProfileHtmlTemplate;
         const cleanId = req.params.id.split('?')[0].split('#')[0];
         
-        let user = await User.collection.findOne({ discordId: cleanId });
-        if (!user) user = await User.collection.findOne({ username: new RegExp(`^${cleanId}$`, 'i') });
+        let user = null;
+        if (isSocialCrawlerBot(req.headers['user-agent'])) {
+            user = await User.collection.findOne({ discordId: cleanId });
+            if (!user) user = await User.collection.findOne({ username: new RegExp(`^${cleanId}$`, 'i') });
+        }
 
         const escMeta = (str) => (str || '').toString().replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
         const title = user ? `Nurture | ${escMeta(user.username)}'s Profile` : "Nurture | User Profile";
@@ -1872,8 +1945,11 @@ app.get('/profile/:id', async (req, res) => {
             .replace(/content="__OG_URL__"/g, `content="https://${req.get('host')}${req.originalUrl}"`);
         
         res.setHeader('Content-Type', 'text/html');
+        res.setHeader('Cache-Control', 'public, s-maxage=600, stale-while-revalidate=86400');
         res.send(html);
-    } catch (err) { res.sendFile(path.join(process.cwd(), 'public', 'profile.html')); }
+    } catch (err) {
+        res.sendFile(path.join(process.cwd(), 'public', 'profile.html'));
+    }
 });
 
 app.get('/auth/discord/callback', async (req, res) => {
