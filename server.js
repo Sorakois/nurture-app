@@ -66,12 +66,56 @@ const getContributionPoints = (contribution) => {
 
 const app = express();
 
-// Serverless-optimized MongoDB connection
+// 1. Permanently terminate any legacy EventSource('/api/stream') clients (HTTP 204 stops browser retries forever)
+app.get('/api/stream', (req, res) => {
+    res.status(204).end();
+});
+
+// 2. Ultra-Fast In-Memory IP Rate Limiter (Runs BEFORE MongoDB or JSON parsing to block spam/bot testing in <0.1ms)
+const ipRateWindows = new Map();
+const RATE_WINDOW_MS = 60 * 1000;
+const MAX_GET_PER_MIN = 45;
+const MAX_POST_PER_MIN = 8;
+
+app.use('/api', (req, res, next) => {
+    if (req.path === '/interactions') return next(); // Never rate-limit Discord's official webhook server
+    const forwarded = req.headers['x-forwarded-for'];
+    const ip = forwarded ? String(forwarded).split(',')[0].trim() : (req.socket?.remoteAddress || 'unknown');
+    const now = Date.now();
+
+    let record = ipRateWindows.get(ip);
+    if (!record || (now - record.start) > RATE_WINDOW_MS) {
+        record = { start: now, getCount: 0, postCount: 0 };
+        ipRateWindows.set(ip, record);
+    }
+
+    if (req.method === 'POST') {
+        record.postCount++;
+        if (record.postCount > MAX_POST_PER_MIN) {
+            return res.status(429).json({ error: 'Rate limit exceeded. Please slow down and wait a minute.' });
+        }
+    } else {
+        record.getCount++;
+        if (record.getCount > MAX_GET_PER_MIN) {
+            return res.status(429).json({ error: 'Too many requests from your IP. Please wait a minute.' });
+        }
+    }
+
+    // Periodically prune old IPs so the Map never grows in memory
+    if (ipRateWindows.size > 500) {
+        for (const [k, v] of ipRateWindows.entries()) {
+            if (now - v.start > RATE_WINDOW_MS) ipRateWindows.delete(k);
+        }
+    }
+    next();
+});
+
+// 3. Serverless-optimized MongoDB connection
 const connectDB = async () => {
     if (mongoose.connection.readyState >= 1) return;
-    await mongoose.connect(process.env.MONGODB_URI, {
+    await mongoose.connect(process.env.MONGODB_URI, { 
         serverSelectionTimeoutMS: 4000,
-        maxPoolSize: 5 // Keep pool small for 256MB Vercel instances
+        maxPoolSize: 4
     });
 };
 
@@ -82,7 +126,7 @@ const getCached = (key) => {
     if (entry && Date.now() < entry.expiresAt) return entry.data;
     return null;
 };
-const setCached = (key, data, ttlSeconds = 45) => {
+const setCached = (key, data, ttlSeconds = 60) => {
     memCache.set(key, { data, expiresAt: Date.now() + ttlSeconds * 1000 });
 };
 const clearGameCache = (gameId = null) => {
@@ -95,13 +139,27 @@ const clearGameCache = (gameId = null) => {
 };
 
 app.use(cookieParser());
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Skip MongoDB connection completely for routes that don't need it or have no session cookie
+// 4. CRITICAL FIX: Skip express.json() & express.urlencoded() on /api/interactions so verifyKeyMiddleware receives a raw Buffer!
+app.use((req, res, next) => {
+    if (req.path === '/api/interactions') return next();
+    express.json({ limit: '10mb' })(req, res, next);
+});
+app.use((req, res, next) => {
+    if (req.path === '/api/interactions') return next();
+    express.urlencoded({ extended: true, limit: '10mb' })(req, res, next);
+});
+
+const isSocialCrawlerBot = (ua = '') => /Discordbot|Twitterbot|Slackbot|facebookexternalhit|LinkedInBot|WhatsApp|TelegramBot|embedly|Pinterest/i.test(ua);
+
+// 5. Only connect to MongoDB when a route actually needs database access
 app.use(async (req, res, next) => {
     const p = req.path;
     if (p === '/api/point-weights' || p === '/auth/discord' || p === '/auth/logout') {
+        return next();
+    }
+    // Normal browsers opening /games/:id or /profile/:id load data via cached API/localStorage—skip DB on HTML shell
+    if ((p.startsWith('/games/') || p.startsWith('/profile/')) && !isSocialCrawlerBot(req.headers['user-agent'])) {
         return next();
     }
     if ((p === '/api/auth/me' || p === '/api/mailbox') && !req.cookies.nurture_session) {
@@ -120,7 +178,7 @@ app.use(async (req, res, next) => {
 
 // Security middleware
 app.use(helmet({
-    contentSecurityPolicy: false, // Let Vercel handle edge security, prevent blocking our own assets
+    contentSecurityPolicy: false,
     crossOriginEmbedderPolicy: false
 }));
 
@@ -1886,7 +1944,6 @@ app.get('/api/suggest/lookup', async (req, res) => {
 // Cache HTML templates in memory once so fs.readFileSync never blocks requests
 let cachedGameHtmlTemplate = null;
 let cachedProfileHtmlTemplate = null;
-const isSocialCrawlerBot = (ua = '') => /Discordbot|Twitterbot|Slackbot|facebookexternalhit|LinkedInBot|WhatsApp|TelegramBot|embedly|Pinterest/i.test(ua);
 
 app.get('/games/:id', async (req, res) => {
     try {

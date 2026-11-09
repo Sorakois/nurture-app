@@ -2542,8 +2542,7 @@
 
         async function loadGameLeaderboard() {
             try {
-                const res = await fetch(`/api/leaderboard/game/${gameId}`);
-                const data = await res.json();
+                const data = await window.fetchWithLocalCache(`/api/leaderboard/game/${gameId}`, `nurture_cache_lb_${gameId}`, 5 * 60 * 1000);
                 const list = document.getElementById('gameLeaderboardList');
                 if (!data.top10 || data.top10.length === 0) {
                     list.innerHTML = '<p style="color:#888; font-size:0.85em; text-align:center;">No contributors yet.</p>';
@@ -3636,10 +3635,8 @@
 
         async function initPage() {
             try {
-                const response = await fetch(`/api/games/${gameId}`);
+                gameData = await window.fetchWithLocalCache(`/api/games/${gameId}`, `nurture_cache_game_${gameId}`, 3 * 60 * 1000);
                 if (!response.ok) throw new Error('Game not found');
-                
-                gameData = await response.json();
 
                 updateRedeemButtonBanners();
 

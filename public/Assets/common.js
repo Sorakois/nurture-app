@@ -297,6 +297,54 @@ window.alert = function(message) {
     window.showCustomAlert(String(message || ''), 'Nurture');
 };
 
+// --- GLOBAL CLICK THROTTLER & LOCALSTORAGE ZERO-REQUEST CACHE ENGINE ---
+document.addEventListener('click', (e) => {
+    const btn = e.target.closest('button, .btn-floral, .social-button, .star-btn, .item-fav-pill');
+    if (!btn) return;
+    const now = Date.now();
+    const lastClick = Number(btn.getAttribute('data-last-click') || 0);
+    if (now - lastClick < 550) {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+    }
+    btn.setAttribute('data-last-click', String(now));
+}, true);
+
+// Fetches from localStorage first on page refresh so refreshes cost 0 Vercel requests
+window.fetchWithLocalCache = async function(url, cacheKey, ttlMs = 5 * 60 * 1000, forceRefresh = false) {
+    if (!forceRefresh) {
+        try {
+            const raw = localStorage.getItem(cacheKey);
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                if (parsed && parsed.timestamp && (Date.now() - parsed.timestamp) < ttlMs) {
+                    return parsed.data;
+                }
+            }
+        } catch (e) {}
+    }
+
+    const res = await fetch(url);
+    if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || `HTTP ${res.status}`);
+    }
+    const data = await res.json();
+    try {
+        localStorage.setItem(cacheKey, JSON.stringify({ timestamp: Date.now(), data }));
+    } catch (e) {}
+    return data;
+};
+
+window.invalidateLocalCache = function(prefix = 'nurture_cache_') {
+    try {
+        Object.keys(localStorage).forEach(k => {
+            if (k.startsWith(prefix)) localStorage.removeItem(k);
+        });
+    } catch (e) {}
+};
+
 // --- UI Render Helpers ---
 function renderLoggedOutUI(container) {
     const profileSvg = `<svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`;
