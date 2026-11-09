@@ -24,8 +24,30 @@
     },
     { "src": "/api/(.*)", "dest": "/server.js" },
     { "src": "/auth/(.*)", "dest": "/server.js" },
-    { "src": "/games/(.*)", "dest": "/server.js" },
-    { "src": "/profile/(.*)", "dest": "/server.js" },
+    {
+      "src": "/games/(.*)",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(Discordbot|Twitterbot|Slackbot|facebookexternalhit|LinkedInBot|WhatsApp|TelegramBot).*"
+        }
+      ],
+      "dest": "/server.js"
+    },
+    {
+      "src": "/profile/(.*)",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(Discordbot|Twitterbot|Slackbot|facebookexternalhit|LinkedInBot|WhatsApp|TelegramBot).*"
+        }
+      ],
+      "dest": "/server.js"
+    },
+    { "src": "/games/(.*)", "dest": "/public/game.html" },
+    { "src": "/profile/(.*)", "dest": "/public/profile.html" },
     { "src": "/", "dest": "/public/index.html" },
     { "src": "/(.*)", "dest": "/public/$1" }
   ]

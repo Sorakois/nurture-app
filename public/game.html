@@ -3635,8 +3635,8 @@
 
         async function initPage() {
             try {
-                gameData = await window.fetchWithLocalCache(`/api/games/${gameId}`, `nurture_cache_game_${gameId}`, 3 * 60 * 1000);
-                if (!response.ok) throw new Error('Game not found');
+                gameData = await window.fetchWithLocalCache(`/api/games/${gameId}`, `nurture_cache_game_${gameId}`, 30 * 60 * 1000);
+                if (!gameData || gameData.error) throw new Error('Game not found');
 
                 updateRedeemButtonBanners();
 

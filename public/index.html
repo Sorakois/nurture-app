@@ -1332,7 +1332,7 @@
 
         async function fetchInitialData(silent = false) {
             try {
-                const lbData = await window.fetchWithLocalCache('/api/leaderboard', 'nurture_cache_lb_global', 5 * 60 * 1000, silent);
+                const lbData = await window.fetchWithLocalCache('/api/leaderboard', 'nurture_cache_lb_global', 30 * 60 * 1000, silent);
                 const lbList = document.getElementById('leaderboardList');
                 
                 if (!lbData.top10 || lbData.top10.length === 0) {
@@ -1370,7 +1370,7 @@
                 isLoading = true;
             }
             try {
-                const data = await window.fetchWithLocalCache('/api/games?limit=100', 'nurture_cache_all_games', 5 * 60 * 1000, silent);
+                const data = await window.fetchWithLocalCache('/api/games?limit=100', 'nurture_cache_all_games', 30 * 60 * 1000, silent);
                 if (data.games) {
                     // Only rebuild the grid DOM if data actually changed
                     if (!silent || JSON.stringify(data.games) !== JSON.stringify(allGames)) {

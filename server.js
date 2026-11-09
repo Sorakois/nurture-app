@@ -529,14 +529,15 @@ app.get('/api/games', async (req, res) => {
     try {
         let allGames = getCached('all_games');
         if (!allGames) {
-            allGames = await Game.collection.find({}).toArray();
+            allGames = await Game.collection.find({}, { projection: { _id: 0, story_master: 0 } }).toArray();
 
             const needsTagCheck = allGames.some(g => !Array.isArray(g.tags) || !g.tags.some(t => t === 'PC' || t === 'Mobile' || t === 'PC+Mobile'));
             if (needsTagCheck) {
                 await ensureDefaultMobileTag(allGames);
             }
 
-            syncAppStoreUpdatesBackground(allGames);
+            // Do not run external Apple HTTP requests during user GET requests
+            // syncAppStoreUpdatesBackground(allGames);
 
             allGames.sort((a, b) => {
                 const aData = hasGameData(a);
@@ -546,7 +547,7 @@ app.get('/api/games', async (req, res) => {
                 return (a.name || '').localeCompare(b.name || '');
             });
 
-            setCached('all_games', allGames, 60);
+            setCached('all_games', allGames, 600);
         }
 
         const paginatedGames = allGames.slice(startIndex, startIndex + limit).map(g => cleanEmptyArrays({ ...g }));
@@ -716,7 +717,7 @@ app.post('/api/games/:id/rate', async (req, res) => {
 
     try {
         const decoded = jwt.verify(sessionToken, process.env.JWT_SECRET);
-        const user = await User.findById(decoded.userId);
+        const user = await User.findById(decoded.userId).select('discordId isBanned totalPoints gamePoints');
         if (!user) return res.status(401).json({ error: "User not found." });
 
         const clientIp = getClientIp(req);
@@ -728,7 +729,7 @@ app.post('/api/games/:id/rate', async (req, res) => {
         const gameId = req.params.id;
         const { f2p, afk, story, gameplay } = req.body;
 
-        const game = await Game.findOne({ id: gameId }).lean();
+        const game = await Game.collection.findOne({ id: gameId }, { projection: { _id: 0, id: 1, ratings: 1, user_ratings: 1 } });
         if (!game) return res.status(404).json({ error: "Game not found." });
 
         let userRatings = game.user_ratings || [];
@@ -814,7 +815,7 @@ app.post('/api/contribute', async (req, res) => {
 
     try {
         const decoded = jwt.verify(sessionToken, process.env.JWT_SECRET);
-        const user = await User.findById(decoded.userId);
+        const user = await User.findById(decoded.userId).select('discordId username isBanned lastActionTimestamp');
         
         if (!user) return res.status(401).json({ error: "User not found." });
         
@@ -913,35 +914,45 @@ app.get('/api/point-weights', (req, res) => {
     res.json(POINT_WEIGHTS);
 });
 
-// --- LEADERBOARD & MAILBOX API ROUTES ---
+// --- LEADERBOARD API ROUTES (STRICTLY MAX 11 USERS QUERIED: TOP 10 + 1 CURRENT USER) ---
 app.get('/api/leaderboard', async (req, res) => {
     try {
-        let allUsers = getCached('global_lb');
-        if (!allUsers) {
-            allUsers = await User.collection.find(
-                { totalPoints: { $gt: 0 } },
-                { projection: { username: 1, discordId: 1, avatar: 1, totalPoints: 1 } }
-            ).sort({ totalPoints: -1 }).limit(100).toArray();
-            setCached('global_lb', allUsers, 120);
+        let top10 = getCached('global_lb');
+        if (!top10) {
+            top10 = await User.collection.find(
+                {},
+                { projection: { _id: 0, username: 1, discordId: 1, avatar: 1, totalPoints: 1 } }
+            ).sort({ totalPoints: -1 }).limit(10).toArray();
+            setCached('global_lb', top10, 600);
         }
 
-        const top10 = allUsers.slice(0, 10);
         let userRank = null;
         const token = req.cookies.nurture_session;
         if (token) {
             try {
                 const decoded = jwt.verify(token, process.env.JWT_SECRET);
-                const userIdx = allUsers.findIndex(u => u.discordId === decoded.discordId);
-                if (userIdx !== -1) {
-                    userRank = {
-                        rank: userIdx + 1,
-                        username: allUsers[userIdx].username,
-                        avatar: allUsers[userIdx].avatar,
-                        discordId: allUsers[userIdx].discordId,
-                        totalPoints: allUsers[userIdx].totalPoints || 0
-                    };
+                const inTop10Idx = top10.findIndex(u => u.discordId === decoded.discordId);
+                if (inTop10Idx !== -1) {
+                    userRank = { rank: inTop10Idx + 1, ...top10[inTop10Idx] };
+                } else {
+                    // Fetch ONLY the 11th user (the caller) + an index count for their rank
+                    const me = await User.collection.findOne(
+                        { discordId: decoded.discordId },
+                        { projection: { _id: 0, username: 1, discordId: 1, avatar: 1, totalPoints: 1 } }
+                    );
+                    if (me) {
+                        const myPts = me.totalPoints || 0;
+                        const higherCount = await User.collection.countDocuments({ totalPoints: { $gt: myPts } });
+                        userRank = {
+                            rank: higherCount + 1,
+                            username: me.username,
+                            avatar: me.avatar,
+                            discordId: me.discordId,
+                            totalPoints: myPts
+                        };
+                    }
                 }
-            } catch(e) {}
+            } catch (e) {}
         }
 
         res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
@@ -954,40 +965,54 @@ app.get('/api/leaderboard', async (req, res) => {
 app.get('/api/leaderboard/game/:gameId', async (req, res) => {
     try {
         const gameId = validateInput.sanitizeString(req.params.gameId).replace(/[.$]/g, '');
+        const fieldPath = `gamePoints.${gameId}`;
         const cacheKey = `game_lb_${gameId}`;
-        let sortedUsers = getCached(cacheKey);
 
-        if (!sortedUsers) {
-            const fieldPath = `gamePoints.${gameId}`;
-            const rawUsers = await User.collection.find(
+        let top10 = getCached(cacheKey);
+        if (!top10) {
+            const rawTop10 = await User.collection.find(
                 { [fieldPath]: { $gt: 0 } },
-                { projection: { username: 1, discordId: 1, avatar: 1, [fieldPath]: 1 } }
-            ).toArray();
+                { projection: { _id: 0, username: 1, discordId: 1, avatar: 1, [fieldPath]: 1 } }
+            ).sort({ [fieldPath]: -1 }).limit(10).toArray();
 
-            rawUsers.sort((a, b) => ((b.gamePoints && b.gamePoints[gameId]) || 0) - ((a.gamePoints && a.gamePoints[gameId]) || 0));
-            sortedUsers = rawUsers.map(u => ({
+            top10 = rawTop10.map(u => ({
                 username: u.username,
                 discordId: u.discordId,
                 avatar: u.avatar,
                 points: (u.gamePoints && u.gamePoints[gameId]) || 0
             }));
-            setCached(cacheKey, sortedUsers, 120);
+            setCached(cacheKey, top10, 600);
         }
 
-        const top10 = sortedUsers.slice(0, 10);
         let userRank = null;
         const token = req.cookies.nurture_session;
         if (token) {
             try {
                 const decoded = jwt.verify(token, process.env.JWT_SECRET);
-                const userIdx = sortedUsers.findIndex(u => u.discordId === decoded.discordId);
-                if (userIdx !== -1) {
-                    userRank = {
-                        rank: userIdx + 1,
-                        ...sortedUsers[userIdx]
-                    };
+                const inTop10Idx = top10.findIndex(u => u.discordId === decoded.discordId);
+                if (inTop10Idx !== -1) {
+                    userRank = { rank: inTop10Idx + 1, ...top10[inTop10Idx] };
+                } else {
+                    // Fetch ONLY the 11th user (the caller) + an index count for their rank
+                    const me = await User.collection.findOne(
+                        { discordId: decoded.discordId },
+                        { projection: { _id: 0, username: 1, discordId: 1, avatar: 1, [fieldPath]: 1 } }
+                    );
+                    if (me) {
+                        const myPts = (me.gamePoints && me.gamePoints[gameId]) || 0;
+                        const higherCount = myPts > 0
+                            ? await User.collection.countDocuments({ [fieldPath]: { $gt: myPts } })
+                            : await User.collection.countDocuments({ [fieldPath]: { $gt: 0 } });
+                        userRank = {
+                            rank: higherCount + 1,
+                            username: me.username,
+                            avatar: me.avatar,
+                            discordId: me.discordId,
+                            points: myPts
+                        };
+                    }
                 }
-            } catch(e) {}
+            } catch (e) {}
         }
 
         res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
@@ -1003,7 +1028,7 @@ app.post('/api/user/star', async (req, res) => {
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
-        const user = await User.collection.findOne({ _id: new mongoose.Types.ObjectId(decoded.userId) });
+        const user = await User.collection.findOne({ _id: new mongoose.Types.ObjectId(decoded.userId) }, { projection: { starredGames: 1 } });
         if (!user) return res.status(401).json({ error: 'User not found' });
 
         const { gameId } = req.body;
@@ -1773,36 +1798,51 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
     }
 });
 
-// --- PUBLIC PROFILE ROUTES ---
+// --- PUBLIC PROFILE ROUTE (ZERO FULL-TABLE SCANS, STRICT FIELD PROJECTIONS) ---
 app.get('/api/profile/:query', async (req, res) => {
     try {
         const query = validateInput.sanitizeString(req.params.query);
-        let user = await User.collection.findOne({ discordId: query });
-        if (!user) user = await User.collection.findOne({ username: new RegExp(`^${query}$`, 'i') });
+        const userProjection = {
+            _id: 0,
+            username: 1,
+            avatar: 1,
+            discordId: 1,
+            totalPoints: 1,
+            gamePoints: 1,
+            starredGames: 1,
+            starredSubItems: 1,
+            canvasNodes: 1
+        };
+
+        let user = await User.collection.findOne({ discordId: query }, { projection: userProjection });
+        if (!user) user = await User.collection.findOne({ username: new RegExp(`^${query}$`, 'i') }, { projection: userProjection });
         if (!user) return res.status(404).json({ error: "User not found" });
 
-        // Calculate leaderboard rank
-        const allUsers = await User.collection.find({}).project({ discordId: 1, totalPoints: 1 }).toArray();
-        allUsers.sort((a, b) => (b.totalPoints || 0) - (a.totalPoints || 0));
-        const rankIdx = allUsers.findIndex(u => u.discordId === user.discordId);
-        const rank = (rankIdx !== -1 && (user.totalPoints || 0) > 0) ? rankIdx + 1 : null;
+        // Calculate rank using countDocuments (0 user documents transferred into RAM)
+        const userPts = user.totalPoints || 0;
+        const rank = userPts > 0
+            ? (await User.collection.countDocuments({ totalPoints: { $gt: userPts } })) + 1
+            : null;
 
-        const contributions = await Contribution.collection.find({ 
-            submitterDiscordId: user.discordId, 
-            status: 'approved' 
-        }).sort({ createdAt: -1 }).toArray();
+        const contributions = await Contribution.collection.find(
+            { submitterDiscordId: user.discordId, status: 'approved' },
+            { projection: { gameId: 1, itemCategory: 1, actionType: 1, targetIdentifier: 1, 'data.commitMessage': 1, 'data.title': 1, 'data.name': 1, 'data.code': 1, createdAt: 1 } }
+        ).sort({ createdAt: -1 }).limit(100).toArray();
 
-        // Join Game Data for Icons and Names
-        const gameIds = [...new Set(contributions.map(c => c.gameId))];
-        const games = await Game.collection.find({ id: { $in: gameIds } }).toArray();
+        // Only fetch id, name, and banner_url for the referenced games (never pull guides/mods/lore)
+        const gameIds = [...new Set(contributions.map(c => c.gameId).filter(Boolean))];
+        const games = gameIds.length > 0
+            ? await Game.collection.find({ id: { $in: gameIds } }, { projection: { _id: 0, id: 1, name: 1, banner_url: 1 } }).toArray()
+            : [];
         const gameMap = {};
         games.forEach(g => { gameMap[g.id] = g; });
 
+        res.setHeader('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=120');
         res.json({
             username: user.username,
             avatar: user.avatar,
             discordId: user.discordId,
-            totalPoints: user.totalPoints || 0,
+            totalPoints: userPts,
             gamePoints: user.gamePoints || {},
             rank,
             starredGames: user.starredGames || [],
@@ -2071,6 +2111,13 @@ app.get('/auth/discord/callback', async (req, res) => {
             maxAge: 365 * 24 * 60 * 60 * 1000 
         });
 
+        res.cookie('nurture_logged_in', '1', {
+         httpOnly: false,
+         secure: process.env.NODE_ENV === 'production',
+         sameSite: 'lax',
+         maxAge: 365 * 24 * 60 * 60 * 1000
+     });
+
         res.redirect('/');
     } catch (error) {
         console.error('OAuth Error:', error.response ? error.response.data : error.message);
@@ -2084,7 +2131,22 @@ app.get('/api/auth/me', async (req, res) => {
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
-        const user = await User.collection.findOne({ _id: new mongoose.Types.ObjectId(decoded.userId) });
+        const user = await User.collection.findOne(
+         { _id: new mongoose.Types.ObjectId(decoded.userId) },
+         {
+             projection: {
+                 username: 1,
+                 discordId: 1,
+                 avatar: 1,
+                 isNurtureMember: 1,
+                 starredGames: 1,
+                 starredSubItems: 1,
+                 settings: 1,
+                 collapsedChangelogId: 1,
+                 copiedCoupons: 1
+             }
+         }
+     );
         
         if (!user) return res.status(401).json({ authenticated: false });
 
@@ -2116,6 +2178,7 @@ app.get('/auth/logout', (req, res) => {
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax'
     });
+    res.clearCookie('nurture_logged_in', { path: '/' });
     res.redirect('/');
 });
 

@@ -631,9 +631,8 @@
 
         async function initProfilePage() {
             try {
-                const res = await fetch(`/api/profile/${encodeURIComponent(profileId)}`);
-                if (!res.ok) throw new Error();
-                profileData = await res.json();
+                profileData = await window.fetchWithLocalCache(`/api/profile/${encodeURIComponent(profileId)}`, `nurture_cache_profile_${profileId}`, 15 * 60 * 1000);
+                if (!profileData || profileData.error) throw new Error();
 
                 document.title = `Nurture | ${profileData.username}'s Profile`;
                 document.getElementById('pageUsername').textContent = profileData.username;
@@ -649,7 +648,7 @@
                 `;
 
                 const gamesRes = await fetch('/api/games?limit=100');
-                const gamesData = await gamesRes.json();
+                const gamesData = await window.fetchWithLocalCache('/api/games?limit=100', 'nurture_cache_all_games', 30 * 60 * 1000);
                 allGames = gamesData.games || [];
                 
                 // 1. Populate "My Games" (Starred Games)

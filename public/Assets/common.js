@@ -501,6 +501,13 @@ function initAuth() {
         return;
     }
 
+    // If visitor has no cached session AND no login flag cookie, do NOT wake up /api/auth/me
+    const hasLoginCookie = document.cookie.includes('nurture_logged_in=1');
+    if (!cachedUserRaw && !hasLoginCookie) {
+        sessionStorage.setItem('nurture_is_guest', 'true');
+        return;
+    }
+
     fetch('/api/auth/me')
         .then(res => res.json())
         .then(data => {
