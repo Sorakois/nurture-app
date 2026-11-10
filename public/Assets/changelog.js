@@ -9,6 +9,9 @@ const SITE_CHANGELOGS = [
         date: "2026-11-08",
         title: "Better Colors/UI, 'My Canvas', NEW LORE SECTION (with STORY MASTER subsection!!!), Better Tagging, ",
         changes: [
+            "[NEW] Beginning to work on Accessbility support",
+            "[NEW] You can now suggest to delete an item",
+            "[UI] Fixed some UI Bugs",
             "[UI] Incorperated sharper colors, sleeker UI and buttons",
             "[NEW] Interactive Graph for Lore",
             "[NEW] New subsections for story website links",

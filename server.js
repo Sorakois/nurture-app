@@ -451,9 +451,9 @@ const syncAppStoreUpdatesBackground = async (games) => {
                             updates.latest_version = appData.version;
                             updates.latest_patch_notes = appData.releaseNotes || 'No specific patch notes provided.';
                             const shots = (Array.isArray(appData.screenshotUrls) && appData.screenshotUrls.length > 0)
-                                ? appData.screenshotUrls.slice(0, 4)
-                                : (Array.isArray(appData.ipadScreenshotUrls) ? appData.ipadScreenshotUrls.slice(0, 4) : []);
-                            if (shots.length > 0) updates.latest_update_images = shots;
+                                ? appData.screenshotUrls.slice(0, 5)
+                                : (Array.isArray(appData.ipadScreenshotUrls) ? appData.ipadScreenshotUrls.slice(0, 5) : []);
+                            if (shots.length > 0) updates.promo_images = shots;
                         }
                     }
                 }
@@ -660,6 +660,149 @@ app.get('/api/games/:id', async (req, res) => {
     } catch (err) {
         console.error("Failed to fetch game:", err);
         res.status(500).json({ error: "Database error" });
+    }
+});
+
+// Helper: Resolves the latest video ID from an official YouTube channel URL, @handle, or UC... ID
+const fetchLatestYouTubeChannelVideoId = async (channelUrlOrId, fallbackGameName = '') => {
+    try {
+        let input = (channelUrlOrId || '').trim();
+
+        // 1. If a direct UC... channel ID was provided, query YouTube's lightweight XML feed
+        const ucMatch = input.match(/\b(UC[a-zA-Z0-9_-]{22})\b/);
+        if (ucMatch) {
+            const xmlRes = await axios.get(`https://www.youtube.com/feeds/videos.xml?channel_id=${ucMatch[1]}`, { timeout: 3500 });
+            const vidMatch = String(xmlRes.data || '').match(/<yt:videoId>([a-zA-Z0-9_-]{11})<\/yt:videoId>/);
+            if (vidMatch) return vidMatch[1];
+        }
+
+        // 2. If a channel URL or @handle is provided, fetch its /videos tab and extract the first videoId
+        if (input) {
+            if (input.startsWith('@')) input = `https://www.youtube.com/${input}`;
+            if (/^https?:\/\/(www\.)?youtube\.com\//i.test(input)) {
+                const targetUrl = input.replace(/\/+$/, '') + '/videos';
+                const pageRes = await axios.get(targetUrl, {
+                    headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
+                    timeout: 3500
+                });
+                const html = String(pageRes.data || '');
+                const vidMatch = html.match(/"videoRenderer":\{"videoId":"([a-zA-Z0-9_-]{11})"/);
+                if (vidMatch) return vidMatch[1];
+            }
+        }
+
+        // 3. Fallback: Search YouTube for the game's official channel latest trailer/video
+        if (fallbackGameName) {
+            const searchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(fallbackGameName + ' official trailer')}&sp=CAI%253D`;
+            const searchRes = await axios.get(searchUrl, {
+                headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
+                timeout: 3500
+            });
+            const vidMatch = String(searchRes.data || '').match(/"videoRenderer":\{"videoId":"([a-zA-Z0-9_-]{11})"/);
+            if (vidMatch) return vidMatch[1];
+        }
+    } catch (e) {}
+    return null;
+};
+
+// --- [i] MODAL MEDIA ENDPOINT: LATEST YOUTUBE CHANNEL VIDEO + PROMOTION MEDIA ---
+app.get('/api/games/:id/media', async (req, res) => {
+    try {
+        const gameId = validateInput.sanitizeString(req.params.id).replace(/[.$]/g, '');
+        const cacheKey = `game_media_${gameId}`;
+        const cached = getCached(cacheKey);
+        if (cached) {
+            res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
+            return res.json(cached);
+        }
+
+        const game = await Game.collection.findOne(
+            { id: gameId },
+            {
+                projection: {
+                    id: 1, name: 1, tags: 1, trailer_id: 1,
+                    youtube_channel_url: 1, latest_video_id: 1,
+                    promo_images: 1, latest_update_images: 1,
+                    media_checked_at: 1
+                }
+            }
+        );
+        if (!game) return res.status(404).json({ error: 'Game not found' });
+
+        const TWELVE_HOURS = 12 * 60 * 60 * 1000;
+        const now = Date.now();
+        const lastChecked = game.media_checked_at ? new Date(game.media_checked_at).getTime() : 0;
+
+        let promoImages = Array.isArray(game.promo_images) && game.promo_images.length > 0
+            ? game.promo_images
+            : (Array.isArray(game.latest_update_images) ? game.latest_update_images : []);
+        let latestVideoId = game.latest_video_id || game.trailer_id || '';
+        const dbUpdates = {};
+
+        // Refresh YouTube latest video & missing store promo screenshots at most once every 12 hours
+        if ((now - lastChecked) > TWELVE_HOURS || promoImages.length === 0 || !latestVideoId) {
+            dbUpdates.media_checked_at = new Date().toISOString();
+
+            // 1. Resolve latest video from official YouTube channel (or fallback search)
+            const fetchedVid = await fetchLatestYouTubeChannelVideoId(game.youtube_channel_url, game.name);
+            if (fetchedVid) {
+                latestVideoId = fetchedVid;
+                dbUpdates.latest_video_id = fetchedVid;
+            }
+
+            // 2. Backfill App Store or Steam promotional screenshots if missing
+            if (promoImages.length === 0 && game.name) {
+                const gTags = Array.isArray(game.tags) ? game.tags : [];
+                const isPcOnly = gTags.includes('PC') && !gTags.includes('Mobile') && !gTags.includes('PC+Mobile');
+
+                if (!isPcOnly) {
+                    try {
+                        const appleRes = await axios.get(`https://itunes.apple.com/search?term=${encodeURIComponent(game.name)}&entity=software&limit=5`, { timeout: 3000 });
+                        const match = findBestAppStoreMatch(appleRes.data?.results || [], game, []);
+                        if (match) {
+                            const shots = (Array.isArray(match.screenshotUrls) && match.screenshotUrls.length > 0)
+                                ? match.screenshotUrls.slice(0, 5)
+                                : (Array.isArray(match.ipadScreenshotUrls) ? match.ipadScreenshotUrls.slice(0, 5) : []);
+                            if (shots.length > 0) {
+                                promoImages = shots;
+                                dbUpdates.promo_images = shots;
+                            }
+                        }
+                    } catch (e) {}
+                }
+
+                if (promoImages.length === 0) {
+                    try {
+                        const steamSearch = await axios.get(`https://store.steampowered.com/api/storesearch/?term=${encodeURIComponent(game.name)}&l=english&cc=US`, { timeout: 3000 });
+                        const firstItem = steamSearch.data?.items && steamSearch.data.items[0];
+                        if (firstItem && firstItem.id) {
+                            const detailRes = await axios.get(`https://store.steampowered.com/api/appdetails?appids=${firstItem.id}&l=english`, { timeout: 3000 });
+                            const sData = detailRes.data && detailRes.data[firstItem.id]?.data;
+                            if (sData && Array.isArray(sData.screenshots)) {
+                                promoImages = sData.screenshots.slice(0, 5).map(s => s.path_full || s.path_thumbnail).filter(Boolean);
+                                if (promoImages.length > 0) dbUpdates.promo_images = promoImages;
+                            }
+                        }
+                    } catch (e) {}
+                }
+            }
+
+            if (Object.keys(dbUpdates).length > 0) {
+                await Game.collection.updateOne({ id: gameId }, { $set: dbUpdates });
+            }
+        }
+
+        const payload = {
+            latest_video_id: latestVideoId || game.trailer_id || null,
+            youtube_channel_url: game.youtube_channel_url || null,
+            promo_images: promoImages
+        };
+
+        setCached(cacheKey, payload, 3600);
+        res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
+        res.json(payload);
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to load game media' });
     }
 });
 
@@ -920,7 +1063,7 @@ app.get('/api/leaderboard', async (req, res) => {
         let top10 = getCached('global_lb');
         if (!top10) {
             top10 = await User.collection.find(
-                {},
+                { totalPoints: { $gt: 0 } },
                 { projection: { _id: 0, username: 1, discordId: 1, avatar: 1, totalPoints: 1 } }
             ).sort({ totalPoints: -1 }).limit(10).toArray();
             setCached('global_lb', top10, 600);
@@ -935,20 +1078,18 @@ app.get('/api/leaderboard', async (req, res) => {
                 if (inTop10Idx !== -1) {
                     userRank = { rank: inTop10Idx + 1, ...top10[inTop10Idx] };
                 } else {
-                    // Fetch ONLY the 11th user (the caller) + an index count for their rank
                     const me = await User.collection.findOne(
-                        { discordId: decoded.discordId },
+                        { discordId: decoded.discordId, totalPoints: { $gt: 0 } },
                         { projection: { _id: 0, username: 1, discordId: 1, avatar: 1, totalPoints: 1 } }
                     );
                     if (me) {
-                        const myPts = me.totalPoints || 0;
-                        const higherCount = await User.collection.countDocuments({ totalPoints: { $gt: myPts } });
+                        const higherCount = await User.collection.countDocuments({ totalPoints: { $gt: me.totalPoints } });
                         userRank = {
                             rank: higherCount + 1,
                             username: me.username,
                             avatar: me.avatar,
                             discordId: me.discordId,
-                            totalPoints: myPts
+                            totalPoints: me.totalPoints
                         };
                     }
                 }
@@ -1059,12 +1200,17 @@ app.post('/api/user/sync', async (req, res) => {
         const decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
         const updates = {};
 
-        // 1. Display Settings (showLb, lbSide, lowSpecMode)
+        // 1. Display & Accessibility Settings (showLb, lbSide, lowSpecMode, themeMode, textScale, dyslexicFont)
         if (req.body.settings && typeof req.body.settings === 'object') {
+            const validThemes = ['dark', 'light', 'contrast'];
+            const validScales = ['sm', 'md', 'lg', 'xl'];
             updates.settings = {
                 showLb: Boolean(req.body.settings.showLb),
                 lbSide: req.body.settings.lbSide === 'left' ? 'left' : 'right',
-                lowSpecMode: Boolean(req.body.settings.lowSpecMode)
+                lowSpecMode: Boolean(req.body.settings.lowSpecMode),
+                themeMode: validThemes.includes(req.body.settings.themeMode) ? req.body.settings.themeMode : 'dark',
+                textScale: validScales.includes(req.body.settings.textScale) ? req.body.settings.textScale : 'md',
+                dyslexicFont: Boolean(req.body.settings.dyslexicFont)
             };
         }
 
@@ -1510,6 +1656,15 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                             if (contribution.data.new_player_video_id !== undefined) updates.new_player_video_id = contribution.data.new_player_video_id;
                             if (contribution.data.trailer_id !== undefined) updates.trailer_id = contribution.data.trailer_id; 
                             
+                            if (contribution.data.youtube_channel_url !== undefined) {
+                                updates.youtube_channel_url = contribution.data.youtube_channel_url;
+                                updates.media_checked_at = null; // Force fresh YouTube channel video pull
+                            }
+                            if (contribution.data.update_banner_url !== undefined) updates.update_banner_url = contribution.data.update_banner_url;
+                            if (Array.isArray(contribution.data.promo_images) && contribution.data.promo_images.length > 0) {
+                                updates.promo_images = contribution.data.promo_images;
+                            }
+                            
                             if (contribution.data.age !== undefined && contribution.data.age !== '') {
                                 updates['ratings.age'] = contribution.data.age;
                             }
@@ -1710,6 +1865,15 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                             
                             if (contribution.data.new_player_video_id !== undefined) updates.new_player_video_id = contribution.data.new_player_video_id;
                             if (contribution.data.trailer_id !== undefined) updates.trailer_id = contribution.data.trailer_id; 
+
+                            if (contribution.data.youtube_channel_url !== undefined) {
+                                updates.youtube_channel_url = contribution.data.youtube_channel_url;
+                                updates.media_checked_at = null; // Force fresh YouTube channel video pull
+                            }
+                            if (contribution.data.update_banner_url !== undefined) updates.update_banner_url = contribution.data.update_banner_url;
+                            if (Array.isArray(contribution.data.promo_images) && contribution.data.promo_images.length > 0) {
+                                updates.promo_images = contribution.data.promo_images;
+                            }
                             
                             if (contribution.data.age !== undefined && contribution.data.age !== '') {
                                 updates['ratings.age'] = contribution.data.age;
@@ -1948,7 +2112,7 @@ app.get('/api/suggest/lookup', async (req, res) => {
                 overview_text: cleanDesc,
                 latest_version: null,
                 last_major_update_date: null,
-                latest_update_images: steamShots
+                promo_images: steamShots
             });
         }
 
@@ -1972,7 +2136,7 @@ app.get('/api/suggest/lookup', async (req, res) => {
             overview_text: appleMatch.description,
             latest_version: appleMatch.version || null,
             last_major_update_date: majorUpdate ? appleMatch.currentVersionReleaseDate : null,
-            latest_update_images: shots
+            promo_images: shots
         });
     } catch (err) {
         console.error("External lookup error:", err);

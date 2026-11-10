@@ -493,6 +493,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 14px;
     background: rgba(20, 16, 30, 0.75);
     border: 1px solid var(--border-vine);
     border-radius: 16px 5px 16px 5px;
@@ -502,58 +503,64 @@ body {
     transition: border-color 0.2s ease;
 }
 
+.floral-setting-card > div:first-child {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
 .floral-setting-card:hover {
     border-color: var(--petal-main);
 }
 
-/* Custom Floral Toggle Checkbox (Containment-Locked so Knob Never Glitches Outside) */
+/* Concentric Capsule Toggle Slider (Knob Can Never Clip Outside Curve) */
 .floral-checkbox {
     appearance: none;
     -webkit-appearance: none;
+    flex: 0 0 46px !important;
     width: 46px !important;
     min-width: 46px !important;
     max-width: 46px !important;
     height: 26px !important;
-    flex-shrink: 0 !important;
     box-sizing: border-box !important;
     margin: 0 !important;
     padding: 0 !important;
-    background: #161221;
+    background: #140f21;
     border: 1.5px solid var(--border-vine);
-    border-radius: 13px 5px 13px 5px;
+    border-radius: 999px !important;
     position: relative;
     overflow: hidden;
     cursor: pointer;
-    transition: background 0.2s ease, border-color 0.2s ease;
+    transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .floral-checkbox::after {
     content: '✿';
     position: absolute;
-    top: 2px;
+    top: 50%;
     left: 3px;
-    width: 19px;
-    height: 19px;
+    width: 18px;
+    height: 18px;
     box-sizing: border-box;
-    font-size: 12px;
+    font-size: 11px;
     line-height: 1;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #887da8;
-    background: #2a233d;
-    border-radius: 9px 3px 9px 3px;
-    transform: translate3d(0, 0, 0);
+    color: #9685bd;
+    background: #2a2140;
+    border-radius: 50% !important;
+    transform: translate3d(0, -50%, 0);
     transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), background 0.2s ease, color 0.2s ease;
 }
 
 .floral-checkbox:checked {
-    background: linear-gradient(135deg, var(--petal-deep), var(--blossom-pink));
+    background: linear-gradient(135deg, var(--petal-deep) 0%, var(--blossom-pink) 100%);
     border-color: var(--pollen-gold);
+    box-shadow: 0 0 10px rgba(255, 209, 71, 0.22);
 }
 
 .floral-checkbox:checked::after {
-    transform: translate3d(18px, 0, 0);
+    transform: translate3d(19px, -50%, 0);
     color: #140e21;
     background: var(--pollen-gold);
 }
@@ -1299,5 +1306,248 @@ body.low-spec-mode * {
         height: 100vh !important;
         background: rgba(11, 8, 18, 0.88) !important;
         z-index: 10000 !important;
+    }
+}
+
+/* ==========================================================================
+   ♿ ACCESSIBILITY SUITE: OPENDYSLEXIC, LIGHT/CONTRAST THEMES, SCALING & FOCUS
+   ========================================================================== */
+@font-face {
+    font-family: 'OpenDyslexic';
+    src: url('https://cdn.jsdelivr.net/gh/antijingoist/open-dyslexic@master/otf/OpenDyslexic-Regular.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'OpenDyslexic';
+    src: url('https://cdn.jsdelivr.net/gh/antijingoist/open-dyslexic@master/otf/OpenDyslexic-Bold.otf') format('opentype');
+    font-weight: bold;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* 1. OpenDyslexic Font Override */
+body.font-dyslexic,
+body.font-dyslexic *,
+body.font-dyslexic *::before,
+body.font-dyslexic *::after,
+body.font-dyslexic button,
+body.font-dyslexic input,
+body.font-dyslexic select,
+body.font-dyslexic textarea,
+body.font-dyslexic h1,
+body.font-dyslexic h2,
+body.font-dyslexic h3,
+body.font-dyslexic .game-title {
+    font-family: 'OpenDyslexic', 'Comic Sans MS', sans-serif !important;
+    letter-spacing: 0.35px !important;
+    word-spacing: 1.5px !important;
+    line-height: 1.55 !important;
+}
+
+/* 2. Text Size Scaling (Small 90%, Default 100%, Large 115%, Extra Large 130%) */
+html[data-text-scale="sm"] { font-size: 90%; }
+html[data-text-scale="md"] { font-size: 100%; }
+html[data-text-scale="lg"] { font-size: 115%; }
+html[data-text-scale="xl"] { font-size: 128%; }
+
+html[data-text-scale="lg"] .grid-item-title,
+html[data-text-scale="lg"] .sub-text,
+html[data-text-scale="lg"] .btn-floral,
+html[data-text-scale="lg"] .social-button {
+    font-size: 1.05rem !important;
+}
+
+html[data-text-scale="xl"] .grid-item-title,
+html[data-text-scale="xl"] .sub-text,
+html[data-text-scale="xl"] .btn-floral,
+html[data-text-scale="xl"] .social-button {
+    font-size: 1.15rem !important;
+}
+
+/* 3. Light Mode ("Daylight Botanical") */
+body.theme-light {
+    --bg-canopy: #f4f0fc;
+    --bg-moss: #eae2f8;
+    --card-bg: #ffffff;
+    --card-bg-hover: #f7f3ff;
+    --petal-light: #3b2378;
+    --petal-main: #5c3db3;
+    --petal-deep: #6846c6;
+    --petal-dark: #2a1859;
+    --pollen-gold: #b87300;
+    --pollen-amber: #945b00;
+    --leaf-sage: #1a7a4c;
+    --border-vine: rgba(104, 70, 198, 0.28);
+    --border-bloom: rgba(92, 61, 179, 0.65);
+    background-color: #f4f0fc !important;
+    color: #1c1236 !important;
+}
+
+body.theme-light .background-container {
+    background:
+        radial-gradient(ellipse 65% 38% at 50% -6%, rgba(255, 209, 71, 0.28) 0%, rgba(168, 139, 250, 0.2) 45%, transparent 75%),
+        linear-gradient(180deg, #f8f5ff 0%, #ede5fc 55%, #e5dcf8 100%) !important;
+}
+
+body.theme-light .banner {
+    background: linear-gradient(180deg, rgba(46, 30, 84, 0.98) 0%, rgba(62, 42, 110, 0.95) 100%) !important;
+}
+
+body.theme-light .grid-item,
+body.theme-light .leaderboard-sidebar,
+body.theme-light .subnav-sidebar,
+body.theme-light .content-area,
+body.theme-light .game-header,
+body.theme-light .hero-showcase,
+body.theme-light .changelog-panel,
+body.theme-light .profile-hero-bar,
+body.theme-light .profile-module-card,
+body.theme-light .canvas-module-card,
+body.theme-light .modal-window {
+    background: linear-gradient(165deg, #ffffff 0%, #f3ecff 100%) !important;
+    color: #1c1236 !important;
+    border-color: rgba(104, 70, 198, 0.35) !important;
+    box-shadow: 0 8px 24px rgba(59, 35, 120, 0.12) !important;
+}
+
+body.theme-light .grid-item-title,
+body.theme-light .game-title,
+body.theme-light .modal-title,
+body.theme-light .module-title,
+body.theme-light .item-title,
+body.theme-light .lb-name,
+body.theme-light h1,
+body.theme-light h2,
+body.theme-light h3 {
+    color: #231447 !important;
+    text-shadow: none !important;
+}
+
+body.theme-light .about-us h1 {
+    background: linear-gradient(135deg, #3b2378 0%, #6846c6 60%, #b87300 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+}
+
+body.theme-light .grid-item-dev,
+body.theme-light .game-dev,
+body.theme-light .item-meta,
+body.theme-light .item-date,
+body.theme-light p {
+    color: #4a3875 !important;
+}
+
+body.theme-light .item-card,
+body.theme-light .lb-row,
+body.theme-light .floral-mail-card,
+body.theme-light .floral-setting-card,
+body.theme-light .rating-box,
+body.theme-light .search-field-shell,
+body.theme-light .floral-input,
+body.theme-light .floral-textarea,
+body.theme-light .floral-select,
+body.theme-light .sub-nav a {
+    background: #f8f5ff !important;
+    color: #1c1236 !important;
+    border-color: rgba(104, 70, 198, 0.32) !important;
+}
+
+body.theme-light .sub-nav a.active {
+    background: linear-gradient(135deg, #6846c6 0%, #4b2fba 100%) !important;
+    color: #ffffff !important;
+}
+
+/* 4. High-Contrast Mode (WCAG AAA Accessibility) */
+body.theme-contrast {
+    --bg-canopy: #000000;
+    --bg-moss: #000000;
+    --card-bg: #050508;
+    --petal-light: #ffffff;
+    --petal-main: #ffd147;
+    --pollen-gold: #ffd147;
+    --border-vine: #ffd147;
+    --border-bloom: #ffffff;
+    background-color: #000000 !important;
+    color: #ffffff !important;
+}
+
+body.theme-contrast .background-container,
+body.theme-contrast .floral-bg-layer {
+    background: #000000 !important;
+    display: none !important;
+}
+
+body.theme-contrast .grid-item,
+body.theme-contrast .leaderboard-sidebar,
+body.theme-contrast .subnav-sidebar,
+body.theme-contrast .content-area,
+body.theme-contrast .game-header,
+body.theme-contrast .hero-showcase,
+body.theme-contrast .changelog-panel,
+body.theme-contrast .profile-hero-bar,
+body.theme-contrast .profile-module-card,
+body.theme-contrast .canvas-module-card,
+body.theme-contrast .modal-window,
+body.theme-contrast .item-card,
+body.theme-contrast .lb-row,
+body.theme-contrast .floral-mail-card,
+body.theme-contrast .floral-setting-card,
+body.theme-contrast .floral-input,
+body.theme-contrast .floral-textarea,
+body.theme-contrast .floral-select,
+body.theme-contrast .search-field-shell {
+    background: #000000 !important;
+    color: #ffffff !important;
+    border: 2px solid #ffd147 !important;
+    box-shadow: none !important;
+}
+
+body.theme-contrast a,
+body.theme-contrast .grid-item-title,
+body.theme-contrast .item-title {
+    color: #ffd147 !important;
+    text-decoration: underline;
+}
+
+/* 5. Skip to Main Content Link & Universal Keyboard Focus Ring */
+.skip-to-content-link {
+    position: fixed;
+    top: -100px;
+    left: 16px;
+    z-index: 100000;
+    background: #ffd147;
+    color: #140e21;
+    font-weight: bold;
+    padding: 10px 18px;
+    border-radius: 12px 4px 12px 4px;
+    border: 2px solid #ffffff;
+    text-decoration: none;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.8);
+    transition: top 0.18s ease;
+}
+
+.skip-to-content-link:focus {
+    top: 14px;
+    outline: 3px solid #ffffff !important;
+}
+
+*:focus-visible {
+    outline: 3px solid #ffd147 !important;
+    outline-offset: 3px !important;
+}
+
+/* OS Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+    .floral-bg-layer {
+        display: none !important;
+    }
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
     }
 }

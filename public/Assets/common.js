@@ -637,9 +637,43 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         </div>
         <div id="settingsModal" class="modal-overlay">
-            <div class="modal-window" style="max-width: 420px;">
+            <div class="modal-window" style="max-width: 480px;">
                 <button class="modal-close" onclick="closeSettingsModal()">×</button>
-                <h2 class="modal-title">🌿 Display Settings</h2>
+                <h2 class="modal-title">Display & Accessibility</h2>
+
+                <label class="floral-setting-card">
+                    <div>
+                        <div style="font-weight:bold; color:#f4f0ff;">Color Theme</div>
+                        <div style="font-size:0.75em; color:#a99ec7;">Switch between Twilight Dark, Light, or High-Contrast</div>
+                    </div>
+                    <select id="selectThemeMode" class="floral-select" style="width: auto; padding: 8px 14px;" onchange="saveSettings()">
+                        <option value="dark">Twilight Dark</option>
+                        <option value="light">Daylight (Light)</option>
+                        <option value="contrast">High Contrast</option>
+                    </select>
+                </label>
+
+                <label class="floral-setting-card">
+                    <div>
+                        <div style="font-weight:bold; color:#f4f0ff;">Text Size</div>
+                        <div style="font-size:0.75em; color:#a99ec7;">Scale text and interface labels across the site</div>
+                    </div>
+                    <select id="selectTextScale" class="floral-select" style="width: auto; padding: 8px 14px;" onchange="saveSettings()">
+                        <option value="sm">Small (90%)</option>
+                        <option value="md" selected>Default (100%)</option>
+                        <option value="lg">Large (115%)</option>
+                        <option value="xl">Extra Large (130%)</option>
+                    </select>
+                </label>
+
+                <label class="floral-setting-card">
+                    <div>
+                        <div style="font-weight:bold; color:#f4f0ff;">OpenDyslexic Font</div>
+                        <div style="font-size:0.75em; color:#a99ec7;">Use weighted dyslexic-friendly typography</div>
+                    </div>
+                    <input type="checkbox" id="toggleDyslexicFont" class="floral-checkbox" onchange="saveSettings()">
+                </label>
+
                 <label class="floral-setting-card">
                     <div>
                         <div style="font-weight:bold; color:#f4f0ff;">Show Leaderboard Panel</div>
@@ -647,6 +681,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                     <input type="checkbox" id="toggleLeaderboard" class="floral-checkbox" checked onchange="saveSettings()">
                 </label>
+
                 <label class="floral-setting-card">
                     <div>
                         <div style="font-weight:bold; color:#f4f0ff;">Leaderboard Position</div>
@@ -657,13 +692,21 @@ document.addEventListener('DOMContentLoaded', () => {
                         <option value="left">Left Side</option>
                     </select>
                 </label>
-                <label class="floral-setting-card" style="margin-bottom:0;">
+
+                <label class="floral-setting-card">
                     <div>
-                        <div style="font-weight:bold; color:#f6c85f;">Low-Spec Mode</div>
-                        <div style="font-size:0.75em; color:#a99ec7;">Disables floating background animations for better performance</div>
+                        <div style="font-weight:bold; color:#f6c85f;">Low-Spec / Reduced Motion</div>
+                        <div style="font-size:0.75em; color:#a99ec7;">Disables floating background animations for performance & motion sensitivity</div>
                     </div>
                     <input type="checkbox" id="toggleLowSpec" class="floral-checkbox" onchange="saveSettings()">
                 </label>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-top:14px; padding-top:12px; border-top:1px solid rgba(168,139,250,0.25);">
+                    <span style="font-size:0.76em; color:#a99ec7;">💡 Tip: Use <b>Tab</b>, <b>Enter</b>, <b>Arrow Keys</b>, or <b>/</b> to navigate by keyboard.</span>
+                    <button type="button" class="btn-floral blossom" style="min-height:34px; padding:6px 12px; font-size:0.78em;" onclick="openAccessibilityReportModal()">
+                        🏳️ Report Issue
+                    </button>
+                </div>
             </div>
         </div>
         <div id="authPromptModal" class="modal-overlay">
@@ -1038,12 +1081,23 @@ async function sendMail() {
     }
 }
 
+function openAccessibilityReportModal() {
+    closeSettingsModal();
+    if (!window.requireAuth('send a report to staff')) return;
+    const subj = document.getElementById('mailSubject');
+    if (subj && !subj.value) subj.value = 'Site / Accessibility Report';
+    openComposeModal();
+}
+
 function saveSettings() {
-    const showLb = document.getElementById('toggleLeaderboard').checked;
-    const lbSide = document.getElementById('selectLbSide').value;
-    const lowSpecEl = document.getElementById('toggleLowSpec');
-    const lowSpecMode = lowSpecEl ? lowSpecEl.checked : false;
-    const settingsObj = { showLb, lbSide, lowSpecMode };
+    const showLb = document.getElementById('toggleLeaderboard')?.checked ?? true;
+    const lbSide = document.getElementById('selectLbSide')?.value || 'right';
+    const lowSpecMode = document.getElementById('toggleLowSpec')?.checked ?? false;
+    const themeMode = document.getElementById('selectThemeMode')?.value || 'dark';
+    const textScale = document.getElementById('selectTextScale')?.value || 'md';
+    const dyslexicFont = document.getElementById('toggleDyslexicFont')?.checked ?? false;
+
+    const settingsObj = { showLb, lbSide, lowSpecMode, themeMode, textScale, dyslexicFont };
     localStorage.setItem('nurture_settings', JSON.stringify(settingsObj));
     applySettings();
     window.syncUserPreferences({ settings: settingsObj });
@@ -1051,8 +1105,15 @@ function saveSettings() {
 
 function applySettings() {
     const raw = localStorage.getItem('nurture_settings');
-    if (!raw) return;
-    const { showLb = true, lbSide = 'right', lowSpecMode = false } = JSON.parse(raw);
+    const parsed = raw ? JSON.parse(raw) : {};
+    const {
+        showLb = true,
+        lbSide = 'right',
+        lowSpecMode = false,
+        themeMode = 'dark',
+        textScale = 'md',
+        dyslexicFont = false
+    } = parsed;
     
     const lbEl = document.getElementById('leaderboardSidebar');
     const railEl = document.getElementById('rightRailColumn') || lbEl;
@@ -1079,6 +1140,12 @@ function applySettings() {
         }
     }
 
+    // Apply Theme (Dark / Light / High Contrast), Dyslexic Font, and Text Scale
+    document.body.classList.toggle('theme-light', themeMode === 'light');
+    document.body.classList.toggle('theme-contrast', themeMode === 'contrast');
+    document.body.classList.toggle('font-dyslexic', Boolean(dyslexicFont));
+    document.documentElement.setAttribute('data-text-scale', textScale || 'md');
+
     // Apply Low-Spec Mode globally
     document.body.classList.toggle('low-spec-mode', Boolean(lowSpecMode));
     if (typeof gsap !== 'undefined') {
@@ -1089,12 +1156,171 @@ function applySettings() {
     const toggle = document.getElementById('toggleLeaderboard');
     const select = document.getElementById('selectLbSide');
     const lowSpecToggle = document.getElementById('toggleLowSpec');
+    const themeSelect = document.getElementById('selectThemeMode');
+    const scaleSelect = document.getElementById('selectTextScale');
+    const dyslexicToggle = document.getElementById('toggleDyslexicFont');
+
     if (toggle) toggle.checked = showLb;
     if (select) select.value = lbSide;
     if (lowSpecToggle) lowSpecToggle.checked = Boolean(lowSpecMode);
+    if (themeSelect) themeSelect.value = themeMode;
+    if (scaleSelect) scaleSelect.value = textScale;
+    if (dyslexicToggle) dyslexicToggle.checked = Boolean(dyslexicFont);
 
-    window.dispatchEvent(new CustomEvent('nurtureSettingsChanged', { detail: { showLb, lbSide, lowSpecMode } }));
+    window.dispatchEvent(new CustomEvent('nurtureSettingsChanged', {
+        detail: { showLb, lbSide, lowSpecMode, themeMode, textScale, dyslexicFont }
+    }));
 }
+
+
+// COMPLETE KEYBOARD NAVIGATION & SCREEN-READER ENGINE
+(function() {
+    let lastFocusedBeforeModal = null;
+
+    function enhanceKeyboardElements(root = document) {
+        const interactiveSelectors = [
+            '.star-btn',
+            '.info-icon',
+            '.item-fav-pill',
+            '.item-edit-zone',
+            '.user-profile-badge',
+            '.changelog-header-bar',
+            '.profile-game-header',
+            '.story-master-banner',
+            '.sm-giant-tome',
+            '.sm-chapter-cover',
+            '.sm-lore-node',
+            '.lb-row',
+            '.grid-item:not(a)'
+        ].join(',');
+
+        root.querySelectorAll(interactiveSelectors).forEach(el => {
+            if (!el.hasAttribute('tabindex')) el.setAttribute('tabindex', '0');
+            if (!el.hasAttribute('role')) el.setAttribute('role', 'button');
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // 1. Inject "Skip to Main Content" link at the very top of <body>
+        const mainTarget = document.getElementById('gameGrid') ||
+                           document.getElementById('dynamicContent') ||
+                           document.querySelector('.profile-page-wrap') ||
+                           document.getElementById('mainWrapper');
+        if (mainTarget && !document.querySelector('.skip-to-content-link')) {
+            if (!mainTarget.id) mainTarget.id = 'mainContent Landmark';
+            mainTarget.setAttribute('role', 'main');
+            const skipLink = document.createElement('a');
+            skipLink.href = `#${mainTarget.id}`;
+            skipLink.className = 'skip-to-content-link';
+            skipLink.textContent = 'Skip to main content';
+            skipLink.onclick = (e) => {
+                e.preventDefault();
+                mainTarget.setAttribute('tabindex', '-1');
+                mainTarget.focus();
+            };
+            document.body.prepend(skipLink);
+        }
+
+        enhanceKeyboardElements();
+
+        // Automatically make dynamically rendered cards/buttons keyboard-focusable
+        const domObserver = new MutationObserver((mutations) => {
+            for (const m of mutations) {
+                if (m.type === 'childList' && m.addedNodes.length > 0) {
+                    enhanceKeyboardElements();
+                    break;
+                }
+                if (m.type === 'attributes' && m.target.classList?.contains('modal-overlay')) {
+                    if (m.target.classList.contains('active')) {
+                        lastFocusedBeforeModal = document.activeElement;
+                        const firstFocusable = m.target.querySelector('input:not([type="hidden"]), textarea, select, button:not(.modal-close), a[href], .modal-close');
+                        if (firstFocusable) setTimeout(() => firstFocusable.focus(), 30);
+                    } else if (lastFocusedBeforeModal && typeof lastFocusedBeforeModal.focus === 'function') {
+                        lastFocusedBeforeModal.focus();
+                        lastFocusedBeforeModal = null;
+                    }
+                }
+            }
+        });
+        domObserver.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+    });
+
+    document.addEventListener('keydown', (e) => {
+        const active = document.activeElement;
+        const isTyping = active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.tagName === 'SELECT' || active.isContentEditable);
+
+        // 1. Press '/' anywhere outside an input to jump straight to Search
+        if (e.key === '/' && !isTyping && !e.ctrlKey && !e.metaKey) {
+            const searchBox = document.getElementById('searchInput') || document.querySelector('.onepage-jump-bar input');
+            if (searchBox) {
+                e.preventDefault();
+                searchBox.focus();
+                return;
+            }
+        }
+
+        // 2. Trap Tab / Shift+Tab inside any active modal
+        const openModal = document.querySelector('.modal-overlay.active');
+        if (e.key === 'Tab' && openModal) {
+            const focusables = Array.from(openModal.querySelectorAll(
+                'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+            )).filter(el => el.offsetParent !== null);
+
+            if (focusables.length > 0) {
+                const first = focusables[0];
+                const last = focusables[focusables.length - 1];
+                if (e.shiftKey && active === first) {
+                    e.preventDefault();
+                    last.focus();
+                } else if (!e.shiftKey && active === last) {
+                    e.preventDefault();
+                    first.focus();
+                }
+            }
+            return;
+        }
+
+        // 3. Activate any focused [role="button"] element with Enter or Space
+        if ((e.key === 'Enter' || e.key === ' ') && !isTyping && active) {
+            const tag = active.tagName;
+            if (tag !== 'BUTTON' && tag !== 'A' && active.getAttribute('role') === 'button') {
+                e.preventDefault();
+                active.click();
+                return;
+            }
+        }
+
+        // 4. Arrow-Key Navigation across Game Grid Cards & Subpage Resource Cards
+        if (!isTyping && ['ArrowRight', 'ArrowLeft', 'ArrowDown', 'ArrowUp'].includes(e.key) && active) {
+            const card = active.closest('.grid-item, .item-card, .sub-nav a, .sm-chapter-cover, .sm-lore-node');
+            if (!card) return;
+
+            let selector = '.grid-item';
+            if (card.classList.contains('item-card')) selector = '.item-card';
+            else if (card.matches('.sub-nav a')) selector = '.sub-nav a';
+            else if (card.classList.contains('sm-chapter-cover')) selector = '.sm-chapter-cover';
+            else if (card.classList.contains('sm-lore-node')) selector = '.sm-lore-node';
+
+            const cards = Array.from(document.querySelectorAll(selector)).filter(el => el.offsetParent !== null);
+            const idx = cards.indexOf(card);
+            if (idx === -1) return;
+
+            e.preventDefault();
+            let nextIdx = idx;
+            if (e.key === 'ArrowRight') nextIdx = Math.min(cards.length - 1, idx + 1);
+            else if (e.key === 'ArrowLeft') nextIdx = Math.max(0, idx - 1);
+            else if (e.key === 'ArrowDown') {
+                const step = selector === '.grid-item' && window.innerWidth > 768 ? 5 : (selector === '.grid-item' ? 2 : 1);
+                nextIdx = Math.min(cards.length - 1, idx + step);
+            } else if (e.key === 'ArrowUp') {
+                const step = selector === '.grid-item' && window.innerWidth > 768 ? 5 : (selector === '.grid-item' ? 2 : 1);
+                nextIdx = Math.max(0, idx - step);
+            }
+
+            if (cards[nextIdx]) cards[nextIdx].focus();
+        }
+    });
+})();
 
 // // --- Real-Time Live Stream Client (No 15s Polling or Micro-Refreshes) ---
 // document.addEventListener('DOMContentLoaded', () => {

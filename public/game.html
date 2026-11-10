@@ -994,28 +994,84 @@
             border-radius: 16px 5px 16px 5px;
         }
 
-        /* === US3: ALL-IN-ONE 1-PAGE HUB VIEW === */
+        /* === US3: REDESIGNED ALL-IN-ONE COMMAND DOCK & SECTIONS === */
         .onepage-jump-bar {
             display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-            flex-wrap: wrap;
-            padding: 12px 16px;
-            margin-bottom: 24px;
-            background: rgba(18, 14, 28, 0.94);
-            border: 1.5px solid rgba(208, 194, 247, 0.4);
-            border-radius: 18px 6px 18px 6px;
+            flex-direction: column;
+            gap: 12px;
+            padding: 14px 18px;
+            margin-bottom: 28px;
+            background: linear-gradient(145deg, rgba(30, 20, 54, 0.96) 0%, rgba(16, 11, 30, 0.98) 100%);
+            border: 1.5px solid rgba(255, 209, 71, 0.48);
+            border-radius: 20px 6px 20px 6px;
             position: sticky;
             top: 12px;
             z-index: 50;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+        }
+
+        .onepage-dock-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .onepage-dock-title {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.82em;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #ffd147;
+        }
+
+        .onepage-nav-pills {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .onepage-pill-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 7px 13px;
+            border-radius: 14px 4px 14px 4px;
+            background: rgba(22, 15, 40, 0.92);
+            border: 1px solid rgba(168, 139, 250, 0.35);
+            color: #f4f0ff;
+            text-decoration: none;
+            font-size: 0.82em;
+            font-weight: bold;
+            transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+        }
+
+        .onepage-pill-link:hover {
+            transform: translateY(-2px);
+            background: linear-gradient(135deg, #6846c6 0%, #3b2378 100%);
+            border-color: #ffd147;
+            color: #ffffff;
+        }
+
+        .onepage-pill-count {
+            background: rgba(255, 209, 71, 0.16);
+            color: #ffd147;
+            border: 1px solid rgba(255, 209, 71, 0.4);
+            padding: 1px 6px;
+            border-radius: 8px 2px 8px 2px;
+            font-size: 0.85em;
         }
 
         .onepage-section-block {
-            padding-top: 18px;
+            padding-top: 22px;
             margin-top: 28px;
-            border-top: 1px solid rgba(157, 142, 199, 0.25);
+            border-top: 1px solid rgba(168, 139, 250, 0.25);
+            scroll-margin-top: 130px;
         }
 
         /* === STORY MASTER: 3D GIANT TOME & CHAPTER COVERS === */
@@ -1860,8 +1916,13 @@
                 <input type="url" id="gsTwitterUrl" class="floral-input" placeholder="(OPTIONAL) Official X / Twitter URL (https://x.com/...)" style="display:none;">
                 
                 
-                <input type="text" id="gsCommit" class="floral-input" placeholder="(Optional) What did you edit/add?">
-                <button class="btn-floral blossom" onclick="submitGameSuggestion()" style="width:100%; margin-top:4px; padding:12px;">Submit Update</button>
+                <input type="text" id="gsCommit" class="floral-input" placeholder="(Optional) What did you edit/add, or why should this be removed?">
+                <div style="display: flex; gap: 10px; margin-top: 4px; flex-wrap: wrap;">
+                    <button type="button" class="btn-floral blossom" onclick="submitGameSuggestion()" style="flex: 2; padding: 12px;">Submit Update</button>
+                    <button type="button" id="gsDeleteItemBtn" class="btn-floral" onclick="submitDeleteItemSuggestion()" style="display: none; flex: 1; padding: 12px; background: linear-gradient(135deg, #b82b46 0%, #6e1426 100%); border-color: #ff8da1;" title="Suggest deleting this item">
+                        Delete
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -2656,18 +2717,24 @@
 
             contentArea.innerHTML = `
                 <div class="onepage-jump-bar">
-                    <div style="display:flex; gap:6px; flex-wrap:wrap;">
-                        <a href="#op-overview" class="filter-btn" style="text-decoration:none; padding:6px 12px;">Overview</a>
-                        <a href="#op-codes" class="filter-btn" style="text-decoration:none; padding:6px 12px;">Codes (${visibleCoupons.length})</a>
-                        <a href="#op-guides" class="filter-btn" style="text-decoration:none; padding:6px 12px;">Guides (${(gameData.guides || []).length})</a>
-                        <a href="#op-mods" class="filter-btn" style="text-decoration:none; padding:6px 12px;">Mods (${(gameData.mods || []).length})</a>
-                        <a href="#op-assets" class="filter-btn" style="text-decoration:none; padding:6px 12px;">Assets (${(gameData.assets || []).length})</a>
-                        <a href="#op-communities" class="filter-btn" style="text-decoration:none; padding:6px 12px;">Communities (${(gameData.communities || []).length})</a>
+                    <div class="onepage-dock-top">
+                        <div class="onepage-dock-title">
+                            <span>⚡ All-In-One Quick Jump</span>
+                        </div>
+                        <input type="text" class="floral-input" placeholder="🔍 Filter any guide, mod, lore, or asset on this page..." style="max-width:320px; padding:7px 14px; font-size:0.85em;" oninput="filterOnePageHub(this.value)">
                     </div>
-                    <input type="text" class="floral-input" placeholder="Quick filter all resources on this page..." style="max-width:260px; padding:7px 12px;" oninput="filterOnePageHub(this.value)">
+                    <div class="onepage-nav-pills">
+                        <a href="#op-overview" class="onepage-pill-link"><span>📖 Overview</span></a>
+                        <a href="#op-codes" class="onepage-pill-link"><span>🎟️ Codes</span><span class="onepage-pill-count">${visibleCoupons.length}</span></a>
+                        <a href="#op-guides" class="onepage-pill-link"><span>📚 Guides</span><span class="onepage-pill-count">${(gameData.guides || []).length}</span></a>
+                        <a href="#op-assets" class="onepage-pill-link"><span>📁 Assets</span><span class="onepage-pill-count">${(gameData.assets || []).length}</span></a>
+                        <a href="#op-communities" class="onepage-pill-link"><span>💬 Communities</span><span class="onepage-pill-count">${(gameData.communities || []).length}</span></a>
+                        <a href="#op-lore" class="onepage-pill-link"><span>📜 Lore</span><span class="onepage-pill-count">${(gameData.lore || []).length}</span></a>
+                        <a href="#op-mods" class="onepage-pill-link"><span>🧩 Mods</span><span class="onepage-pill-count">${(gameData.mods || []).length}</span></a>
+                    </div>
                 </div>
 
-                <div id="op-overview">
+                <div id="op-overview" style="scroll-margin-top: 130px;">
                     <h2 style="margin-top:0;">Overview</h2>
                     <p style="line-height:1.65; color:#e5dcff; white-space:pre-wrap;">${safeStr(gameData.overview_text || 'No overview available yet.')}</p>
                 </div>
@@ -2682,11 +2749,6 @@
                     ${buildSimpleSectionCards(gameData.guides, 'guides', 'author', 'By ')}
                 </div>
 
-                <div id="op-mods" class="onepage-section-block">
-                    <h2>Mods & Mod Wikis</h2>
-                    ${buildSimpleSectionCards(gameData.mods, 'mods', 'version', 'Version: ')}
-                </div>
-
                 <div id="op-assets" class="onepage-section-block">
                     <h2>Raw Assets</h2>
                     ${buildSimpleSectionCards(gameData.assets, 'assets', 'type', 'Format: ')}
@@ -2695,6 +2757,19 @@
                 <div id="op-communities" class="onepage-section-block">
                     <h2>Communities</h2>
                     ${buildSimpleSectionCards(gameData.communities, 'communities', 'platform', 'Platform: ')}
+                </div>
+
+                <div id="op-lore" class="onepage-section-block">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
+                        <h2 style="margin:0;">Lore & Worldbuilding</h2>
+                        <button type="button" class="btn-floral pollen" style="min-height:34px; padding:6px 14px; font-size:0.82em;" onclick="openStoryMasterView()">📖 Open Story Master Tome →</button>
+                    </div>
+                    ${buildSimpleSectionCards(gameData.lore, 'lore', 'author', 'By ')}
+                </div>
+
+                <div id="op-mods" class="onepage-section-block">
+                    <h2>Mods & Mod Wikis</h2>
+                    ${buildSimpleSectionCards(gameData.mods, 'mods', 'version', 'Version: ')}
                 </div>
             `;
         }
@@ -2878,7 +2953,7 @@
                                 <div class="sm-tome-author">Authored by ${safeStr(gameData.developer || 'Unknown Studio')}</div>
                                 <div class="sm-tome-contributors">
                                     <span>👥</span>
-                                    <span>${contribCount}Contributor${contribCount !== 1 ? 's' : ''}</span>
+                                    <span>${contribCount} Contributor${contribCount !== 1 ? 's' : ''}</span>
                                 </div>
                             </div>
                         </div>
@@ -3730,6 +3805,9 @@
             const urlInput = document.getElementById('gsUrl');
             const tagPillsBox = document.getElementById('gsExistingTagPills');
             const platSelect = document.getElementById('gsPlatformSelect');
+            const deleteBtn = document.getElementById('gsDeleteItemBtn');
+            const isDeletableSubItem = itemIndex !== null && !['Overview', 'Platform', 'SubpageTag', 'RedeemCodes', 'RedeemPortal'].includes(category);
+            if (deleteBtn) deleteBtn.style.display = isDeletableSubItem ? 'inline-flex' : 'none';
             
             const targetModInput = document.getElementById('gsTargetMod');
             const modCatInput = document.getElementById('gsModCategory');
@@ -3940,6 +4018,45 @@
                 window.showCustomAlert("Suggestion submitted! It is now awaiting Admin Approval on Discord.", "Suggestion Submitted");
             } catch (e) {
                 window.showCustomAlert("Failed to submit: " + e.message, "Submission Error");
+            }
+        }
+
+        async function submitDeleteItemSuggestion() {
+            if (!currentSuggestTarget) return;
+            const title = document.getElementById('gsTitle').value.trim() || currentSuggestTarget;
+            const commitMessage = document.getElementById('gsCommit').value.trim() || `Suggested removing "${title}".`;
+
+            const confirmed = await window.showCustomConfirm(
+                `Suggest removing "${title}" from ${currentSuggestCategory}? An admin will review this request on Discord.`,
+                'Suggest Item Removal'
+            );
+            if (!confirmed) return;
+
+            const payload = {
+                gameId: gameData.id,
+                itemCategory: currentSuggestCategory,
+                actionType: 'DELETE',
+                targetIdentifier: currentSuggestTarget,
+                data: {
+                    title,
+                    commitMessage
+                }
+            };
+
+            try {
+                const response = await fetch('/api/contribute', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!response.ok) {
+                    const err = await response.json().catch(() => ({}));
+                    throw new Error(err.error || 'Server rejected deletion request');
+                }
+                document.getElementById('gameSuggestModal').classList.remove('active');
+                window.showCustomAlert(`Removal request for "${title}" submitted to admins!`, 'Removal Suggested');
+            } catch (e) {
+                window.showCustomAlert('Failed to submit removal: ' + e.message, 'Submission Error');
             }
         }
 

@@ -352,7 +352,7 @@
             transform: scale(1.12);
         }
 
-        /* === COMPLEMENTARY PURPLE & GOLD FILTER BUTTON === */
+        /* === COMPLEMENTARY PURPLE & GOLD FILTER BUTTON & PC EXPANDABLE BAR === */
         .tags-menu-wrapper {
             position: relative;
             user-select: none;
@@ -387,51 +387,93 @@
         }
 
         .filter-count-badge {
-            background: linear-gradient(135deg, #f6c85f, #d99b26);
-            color: #1a1228;
+            background: linear-gradient(135deg, #ffd147, #e69215);
+            color: #140e21;
             font-size: 0.78em;
             padding: 2px 7px;
             border-radius: 10px 3px 10px 3px;
             font-weight: bold;
         }
 
-        .tags-dropdown-panel {
-            position: absolute;
-            top: calc(100% + 10px);
-            right: 0;
-            width: 320px;
-            background: linear-gradient(165deg, #261f38 0%, #181324 100%);
-            border: 1px solid rgba(208, 194, 247, 0.55);
-            border-radius: 22px 8px 22px 8px;
-            padding: 18px;
-            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8);
-            z-index: 950;
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(-6px);
-            transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s ease;
-            text-align: left;
-        }
-
-        .tags-dropdown-panel.open {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(0);
-        }
-
-        .tags-panel-header {
-            display: flex;
+        /* PC Horizontal Expandable Filter Bar: [Logic] | [Game Platform] [Genre] [Age Rating] */
+        .pc-filter-expand-bar {
+            display: none;
             align-items: center;
-            justify-content: space-between;
-            padding-bottom: 12px;
-            margin-bottom: 12px;
-            border-bottom: 1px solid rgba(157, 142, 199, 0.25);
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            max-width: 780px;
+            width: 100%;
+            margin: -14px auto 22px auto;
+            padding: 12px 16px;
+            background: linear-gradient(165deg, rgba(34, 24, 58, 0.96) 0%, rgba(19, 13, 34, 0.98) 100%);
+            border: 1.5px solid rgba(226, 212, 255, 0.45);
+            border-radius: 20px 6px 20px 6px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.55);
+            box-sizing: border-box;
+            position: relative;
+            z-index: 90;
+        }
+
+        .pc-filter-expand-bar.open {
+            display: flex;
+        }
+
+        .pc-bar-divider {
+            width: 1.5px;
+            height: 26px;
+            background: linear-gradient(180deg, transparent, rgba(255, 209, 71, 0.55), transparent);
+            margin: 0 4px;
+            flex-shrink: 0;
+        }
+
+        .pc-cat-dropdown {
+            position: relative;
+        }
+
+        .pc-cat-trigger {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 8px 14px;
+            border-radius: 14px 4px 14px 4px;
+            background: rgba(18, 12, 32, 0.92);
+            border: 1px solid rgba(168, 139, 250, 0.4);
+            color: #f4f0ff;
+            font-size: 0.84em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.16s ease;
+        }
+
+        .pc-cat-trigger:hover, .pc-cat-dropdown.open .pc-cat-trigger {
+            border-color: #ffd147;
+            background: rgba(52, 36, 90, 0.95);
+            color: #ffffff;
+        }
+
+        .pc-cat-menu {
+            display: none;
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            min-width: 250px;
+            background: linear-gradient(165deg, #261b42 0%, #160f29 100%);
+            border: 1.5px solid rgba(255, 209, 71, 0.55);
+            border-radius: 18px 6px 18px 6px;
+            padding: 14px;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.85);
+            z-index: 960;
+        }
+
+        .pc-cat-dropdown.open .pc-cat-menu {
+            display: block;
         }
 
         .logic-toggle-group {
             display: inline-flex;
             background: #120e1c;
-            border: 1px solid rgba(157, 142, 199, 0.3);
+            border: 1px solid rgba(168, 139, 250, 0.35);
             border-radius: 12px 4px 12px 4px;
             padding: 2px;
         }
@@ -441,34 +483,35 @@
             border: none;
             color: #a99ec7;
             font-family: inherit;
-            font-size: 0.75em;
+            font-size: 0.76em;
             font-weight: bold;
-            padding: 4px 10px;
+            padding: 5px 10px;
             border-radius: 10px 3px 10px 3px;
             cursor: pointer;
             transition: all 0.15s ease;
         }
 
         .logic-btn.active {
-            background: linear-gradient(135deg, #7A6BB5, #523d8a);
-            color: white;
+            background: linear-gradient(135deg, #6846c6, #3b2378);
+            color: #ffd147;
         }
 
         .clear-filters-btn {
-            background: rgba(217, 107, 152, 0.15);
-            color: #f7a1c4;
-            border: 1px solid rgba(217, 107, 152, 0.35);
-            border-radius: 10px 3px 10px 3px;
-            padding: 4px 9px;
+            background: rgba(232, 93, 150, 0.15);
+            color: #ffb3d1;
+            border: 1px solid rgba(232, 93, 150, 0.4);
+            border-radius: 12px 4px 12px 4px;
+            padding: 6px 12px;
             font-family: inherit;
-            font-size: 0.75em;
+            font-size: 0.78em;
             font-weight: bold;
             cursor: pointer;
+            margin-left: auto;
             transition: background 0.15s ease;
         }
 
         .clear-filters-btn:hover {
-            background: #d96b98;
+            background: #e85d96;
             color: white;
         }
 
@@ -508,7 +551,7 @@
         .tag-pill.selected {
             background: linear-gradient(135deg, #684ea8 0%, #433075 100%);
             color: white;
-            border-color: #f6c85f;
+            border-color: #ffd147;
             box-shadow: 0 2px 8px rgba(104, 78, 168, 0.45);
         }
 
@@ -521,6 +564,85 @@
             height: 1px;
             background: linear-gradient(90deg, transparent, rgba(157, 142, 199, 0.35), transparent);
             margin: 14px 0;
+        }
+
+        /* === [i] MODAL 2-SECTION SWITCHER: LATEST VIDEO | PROMOTION MEDIA === */
+        .info-media-switcher {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 12px;
+            padding: 6px 12px;
+            background: rgba(15, 10, 28, 0.88);
+            border: 1px solid rgba(168, 139, 250, 0.3);
+            border-radius: 16px 5px 16px 5px;
+        }
+
+        .info-media-tab {
+            background: transparent;
+            border: 1px solid transparent;
+            color: #b4a3dc;
+            padding: 6px 16px;
+            border-radius: 12px 4px 12px 4px;
+            font-size: 0.84em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.18s ease;
+        }
+
+        .info-media-tab:hover {
+            color: #ffffff;
+            background: rgba(168, 139, 250, 0.14);
+        }
+
+        .info-media-tab.active {
+            background: linear-gradient(135deg, #6846c6 0%, #3b2378 100%);
+            color: #ffd147;
+            border-color: rgba(255, 209, 71, 0.65);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.45);
+        }
+
+        .info-media-divider {
+            width: 1.5px;
+            height: 20px;
+            background: rgba(255, 209, 71, 0.45);
+        }
+
+        .promo-gallery-stage {
+            display: none;
+            width: 100%;
+            margin: 0 auto 12px auto;
+            background: rgba(13, 9, 22, 0.9);
+            border: 1px solid rgba(208, 194, 247, 0.38);
+            border-radius: 16px 5px 16px 5px;
+            padding: 12px;
+            box-sizing: border-box;
+        }
+
+        .promo-gallery-strip {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding-bottom: 6px;
+            scroll-snap-type: x mandatory;
+        }
+
+        .promo-gallery-strip img {
+            height: 185px;
+            width: auto;
+            border-radius: 12px 4px 12px 4px;
+            border: 1px solid rgba(255, 209, 71, 0.35);
+            object-fit: cover;
+            flex-shrink: 0;
+            scroll-snap-align: center;
+            cursor: pointer;
+            transition: transform 0.18s ease, border-color 0.18s ease;
+        }
+
+        .promo-gallery-strip img:hover {
+            transform: scale(1.03);
+            border-color: #ffd147;
         }
 
         /* === HERO SHOWCASE & IWARA-STYLE CHANGELOG === */
@@ -992,52 +1114,79 @@
                         <span id="activeFilterCount" class="filter-count-badge" style="display:none;">0</span>
                         <span style="font-size: 0.72em; color: #ffd147;">▼</span>
                     </button>
+                </div>
+            </div>
 
-                    <div class="tags-dropdown-panel" id="tagsDropdownPanel" onclick="event.stopPropagation()" style="width: 340px;">
-                        <div class="tags-panel-header">
-                            <span style="font-size: 0.78em; color: #a99ec7; font-weight: bold;">Match Logic:</span>
-                            <div class="logic-toggle-group">
-                                <button type="button" id="logicOrBtn" class="logic-btn active" onclick="setFilterLogic('OR')">OR</button>
-                                <button type="button" id="logicAndBtn" class="logic-btn" onclick="setFilterLogic('AND')">AND</button>
-                                <button type="button" id="logicNotBtn" class="logic-btn" onclick="setFilterLogic('NOT')">NOT</button>
-                            </div>
-                            <button type="button" class="clear-filters-btn" onclick="clearAllFilters()">Reset</button>
-                        </div>
+            <!-- PC Horizontal Expandable Filter Bar: [Logic] | [Game Platform] [Genre] [Age Rating] -->
+            <div class="pc-filter-expand-bar" id="pcFilterExpandBar" onclick="event.stopPropagation()">
+                <div style="display:flex; align-items:center; gap:6px;">
+                    <span style="font-size:0.76em; color:#c4b5e8; font-weight:bold;">Logic:</span>
+                    <div class="logic-toggle-group">
+                        <button type="button" class="logic-btn logic-mode-btn active" data-logic="OR" onclick="setFilterLogic('OR')">OR</button>
+                        <button type="button" class="logic-btn logic-mode-btn" data-logic="AND" onclick="setFilterLogic('AND')">AND</button>
+                        <button type="button" class="logic-btn logic-mode-btn" data-logic="NOT" onclick="setFilterLogic('NOT')">NOT</button>
+                    </div>
+                </div>
 
-                        <div class="tags-section-title">🖥️ Game Platform</div>
-                        <div class="tags-pills-grid" id="platformTagsGrid">
-                            <button type="button" class="tag-pill" data-tag="PC" onclick="toggleGenreTag('PC', this)">PC</button>
-                            <button type="button" class="tag-pill" data-tag="Mobile" onclick="toggleGenreTag('Mobile', this)">Mobile</button>
-                            <button type="button" class="tag-pill" data-tag="PC+Mobile" onclick="toggleGenreTag('PC+Mobile', this)">PC+Mobile</button>
-                        </div>
+                <div class="pc-bar-divider"></div>
 
-                        <div class="tags-divider"></div>
-
-                        <div class="tags-section-title">📚 Genre Tags</div>
-                        <div class="tags-pills-grid" id="genreTagsGrid">
-                            <button type="button" class="tag-pill" data-tag="Gacha" onclick="toggleGenreTag('Gacha', this)">Gacha</button>
-                            <button type="button" class="tag-pill" data-tag="RPG" onclick="toggleGenreTag('RPG', this)">RPG</button>
-                            <button type="button" class="tag-pill" data-tag="Action" onclick="toggleGenreTag('Action', this)">Action</button>
-                            <button type="button" class="tag-pill" data-tag="Turn-Based" onclick="toggleGenreTag('Turn-Based', this)">Turn-Based</button>
-                            <button type="button" class="tag-pill" data-tag="Tower Defense" onclick="toggleGenreTag('Tower Defense', this)">Tower Defense</button>
-                            <button type="button" class="tag-pill" data-tag="Rhythm" onclick="toggleGenreTag('Rhythm', this)">Rhythm</button>
-                            <button type="button" class="tag-pill" data-tag="City Builder" onclick="toggleGenreTag('City Builder', this)">City Builder</button>
-                            <button type="button" class="tag-pill" data-tag="Survival & Crafting" onclick="toggleGenreTag('Survival & Crafting', this)">Survival & Crafting</button>
-                            <button type="button" class="tag-pill" data-tag="Simulation" onclick="toggleGenreTag('Simulation', this)">Simulation</button>
-                            <button type="button" class="tag-pill" data-tag="Moddable" onclick="toggleGenreTag('Moddable', this)">Moddable</button>
-                            <button type="button" class="tag-pill" data-tag="Co-op / Multiplayer" onclick="toggleGenreTag('Co-op / Multiplayer', this)">Co-op / Multiplayer</button>
-                        </div>
-
-                        <div class="tags-divider"></div>
-
-                        <div class="tags-section-title">🌿 Age Rating (ESRB)</div>
-                        <div class="tags-pills-grid" id="ageTagsGrid">
-                            <button type="button" class="tag-pill age-pill" data-age="E" onclick="toggleAgeTag('E', this)">E • Everyone</button>
-                            <button type="button" class="tag-pill age-pill" data-age="T" onclick="toggleAgeTag('T', this)">T • Teen</button>
-                            <button type="button" class="tag-pill age-pill" data-age="M" onclick="toggleAgeTag('M', this)">M • Mature 17+</button>
+                <!-- Dropdown 1: Game Platform -->
+                <div class="pc-cat-dropdown" id="pcDropPlatform">
+                    <button type="button" class="pc-cat-trigger" onclick="togglePcCategoryDropdown('pcDropPlatform', event)">
+                        <span>🖥️ Game Platform</span>
+                        <span style="font-size:0.75em; color:#ffd147;">▼</span>
+                    </button>
+                    <div class="pc-cat-menu">
+                        <div class="tags-section-title">Select Platform</div>
+                        <div class="tags-pills-grid">
+                            <button type="button" class="tag-pill filter-genre-pill" data-tag="PC" onclick="toggleGenreTag('PC')">PC</button>
+                            <button type="button" class="tag-pill filter-genre-pill" data-tag="Mobile" onclick="toggleGenreTag('Mobile')">Mobile</button>
+                            <button type="button" class="tag-pill filter-genre-pill" data-tag="PC+Mobile" onclick="toggleGenreTag('PC+Mobile')">PC+Mobile</button>
                         </div>
                     </div>
                 </div>
+
+                <!-- Dropdown 2: Genre Tags -->
+                <div class="pc-cat-dropdown" id="pcDropGenre">
+                    <button type="button" class="pc-cat-trigger" onclick="togglePcCategoryDropdown('pcDropGenre', event)">
+                        <span>📚 Genre</span>
+                        <span style="font-size:0.75em; color:#ffd147;">▼</span>
+                    </button>
+                    <div class="pc-cat-menu" style="min-width: 310px;">
+                        <div class="tags-section-title">Select Genres</div>
+                        <div class="tags-pills-grid">
+                            <button type="button" class="tag-pill filter-genre-pill" data-tag="Gacha" onclick="toggleGenreTag('Gacha')">Gacha</button>
+                            <button type="button" class="tag-pill filter-genre-pill" data-tag="RPG" onclick="toggleGenreTag('RPG')">RPG</button>
+                            <button type="button" class="tag-pill filter-genre-pill" data-tag="Action" onclick="toggleGenreTag('Action')">Action</button>
+                            <button type="button" class="tag-pill filter-genre-pill" data-tag="Turn-Based" onclick="toggleGenreTag('Turn-Based')">Turn-Based</button>
+                            <button type="button" class="tag-pill filter-genre-pill" data-tag="Tower Defense" onclick="toggleGenreTag('Tower Defense')">Tower Defense</button>
+                            <button type="button" class="tag-pill filter-genre-pill" data-tag="Rhythm" onclick="toggleGenreTag('Rhythm')">Rhythm</button>
+                            <button type="button" class="tag-pill filter-genre-pill" data-tag="City Builder" onclick="toggleGenreTag('City Builder')">City Builder</button>
+                            <button type="button" class="tag-pill filter-genre-pill" data-tag="Survival & Crafting" onclick="toggleGenreTag('Survival & Crafting')">Survival & Crafting</button>
+                            <button type="button" class="tag-pill filter-genre-pill" data-tag="Simulation" onclick="toggleGenreTag('Simulation')">Simulation</button>
+                            <button type="button" class="tag-pill filter-genre-pill" data-tag="Moddable" onclick="toggleGenreTag('Moddable')">Moddable</button>
+                            <button type="button" class="tag-pill filter-genre-pill" data-tag="Co-op / Multiplayer" onclick="toggleGenreTag('Co-op / Multiplayer')">Co-op / Multiplayer</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dropdown 3: Age Rating -->
+                <div class="pc-cat-dropdown" id="pcDropAge">
+                    <button type="button" class="pc-cat-trigger" onclick="togglePcCategoryDropdown('pcDropAge', event)">
+                        <span>🌿 Age Rating</span>
+                        <span style="font-size:0.75em; color:#ffd147;">▼</span>
+                    </button>
+                    <div class="pc-cat-menu">
+                        <div class="tags-section-title">ESRB Rating</div>
+                        <div class="tags-pills-grid">
+                            <button type="button" class="tag-pill age-pill filter-age-pill" data-age="E" onclick="toggleAgeTag('E')">E • Everyone</button>
+                            <button type="button" class="tag-pill age-pill filter-age-pill" data-age="T" onclick="toggleAgeTag('T')">T • Teen</button>
+                            <button type="button" class="tag-pill age-pill filter-age-pill" data-age="M" onclick="toggleAgeTag('M')">M • Mature 17+</button>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="button" class="clear-filters-btn" onclick="clearAllFilters()">Reset</button>
             </div>
 
             <div class="grid-container" id="gameGrid" style="padding: 0;"></div>
@@ -1108,8 +1257,26 @@
             <button class="modal-close" id="closeModal">×</button>
             <h2 class="modal-title" id="modalGameTitle">Game Title</h2>
             
+            <!-- 2-Section Media Switcher: Latest Video | Promotion Media -->
+            <div class="info-media-switcher">
+                <button type="button" class="info-media-tab active" id="tabLatestVideoBtn" onclick="switchInfoModalMediaTab('video')">
+                    Latest Video
+                </button>
+                <div class="info-media-divider"></div>
+                <button type="button" class="info-media-tab" id="tabPromoMediaBtn" onclick="switchInfoModalMediaTab('promo')">
+                    Promotion Media <span id="promoMediaCountBadge" style="font-size:0.8em; opacity:0.85;"></span>
+                </button>
+            </div>
+
             <div class="video-container" id="modalVideoContainer" style="display:none;">
                 <iframe id="modalTrailer" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+            </div>
+            <div id="modalNoVideoNotice" style="display:none; text-align:center; padding:18px; color:#a99ec7; font-size:0.88em; background:rgba(15,10,28,0.75); border:1px dashed rgba(168,139,250,0.3); border-radius:14px 4px 14px 4px; margin-bottom:12px;">
+                No channel video linked yet. Click <b>Suggest Data & Tags</b> below to link the official YouTube channel!
+            </div>
+
+            <div class="promo-gallery-stage" id="modalPromoContainer">
+                <div class="promo-gallery-strip" id="modalPromoStrip"></div>
             </div>
 
             <!-- Platform & Genre Tags Bar (Below YouTube Trailer, Above Ratings) -->
@@ -1186,8 +1353,9 @@
             <h2 class="modal-title">Suggest Data & Tag Updates</h2>
             
             <div class="modal-form-stack">
-                <input type="text" id="editTrailer" class="floral-input" placeholder="YouTube Trailer Video ID or URL">
-                
+                <input type="text" id="editTrailer" class="floral-input" placeholder="Fallback Trailer Video ID or URL (Optional)">
+                <input type="url" id="editYoutubeChannel" class="floral-input" placeholder="Official YouTube Channel URL (e.g. https://www.youtube.com/@HonkaiStarRail)">
+
                 <select id="editPlatform" class="floral-select">
                     <option value="Mobile">Platform: Mobile Only</option>
                     <option value="PC">Platform: PC Only</option>
@@ -1400,28 +1568,22 @@
             const d = new Date(game.last_major_update_date);
             document.getElementById('auDate').textContent = !isNaN(d.getTime()) ? formatBadgeDate(d.getTime()) : '';
 
-            // 1. Render Update Banner / App Store Screenshots if available
+            const rawNotes = game.latest_patch_notes || 'No patch notes provided by developer.';
+            const imgRegex = /(https?:\/\/[^\s<>"']+\.(?:png|jpe?g|webp|gif)(?:\?[^\s<>"']*)?)/gi;
+            const attachedNoteImages = [...rawNotes.matchAll(imgRegex)].map(m => m[1]);
+            if (game.update_banner_url) attachedNoteImages.unshift(game.update_banner_url);
+            const uniqueUpdateImgs = [...new Set(attachedNoteImages)];
+
+            // Only show banner container if the update message itself has attached update images
             const bannerBox = document.getElementById('auBannerContainer');
-            const images = Array.isArray(game.latest_update_images) ? game.latest_update_images.filter(Boolean) : [];
             if (bannerBox) {
-                if (images.length > 0) {
+                if (uniqueUpdateImgs.length > 0) {
                     bannerBox.style.display = 'block';
                     bannerBox.innerHTML = `
                         <div style="display:flex; gap:10px; overflow-x:auto; padding-bottom:6px;">
-                            ${images.map(imgUrl => `
-                                <img src="${escapeHtml(imgUrl)}" alt="Update Banner" style="max-height:190px; width:auto; border-radius:14px 4px 14px 4px; border:1px solid rgba(208, 194, 247, 0.4); object-fit:cover; flex-shrink:0;" onerror="this.style.display='none'">
+                            ${uniqueUpdateImgs.map(imgUrl => `
+                                <img src="${escapeHtml(imgUrl)}" alt="Update Attachment" style="max-height:200px; width:auto; border-radius:14px 4px 14px 4px; border:1px solid rgba(255, 209, 71, 0.45); object-fit:cover; flex-shrink:0;" onerror="this.style.display='none'">
                             `).join('')}
-                        </div>
-                    `;
-                } else if (game.banner_url) {
-                    bannerBox.style.display = 'block';
-                    bannerBox.innerHTML = `
-                        <div style="display:flex; align-items:center; gap:14px; background:rgba(18, 14, 28, 0.75); border:1px solid rgba(157, 142, 199, 0.25); padding:10px 14px; border-radius:16px 5px 16px 5px;">
-                            <img src="${escapeHtml(game.banner_url)}" alt="${escapeHtml(game.name)}" style="width:58px; height:58px; border-radius:14px 4px 14px 4px; object-fit:cover; border:1px solid rgba(208, 194, 247, 0.4);">
-                            <div>
-                                <div style="font-weight:bold; color:#f4f0ff;">${escapeHtml(game.name)} — ${game.latest_version ? `v${escapeHtml(game.latest_version)}` : 'Latest Patch'}</div>
-                                <div style="font-size:0.8em; color:#a99ec7;">Official App Store Release Notes</div>
-                            </div>
                         </div>
                     `;
                 } else {
@@ -1430,13 +1592,9 @@
                 }
             }
 
-            // 2. Render patch notes text & convert any direct image URLs inside the notes into <img> banners
-            const rawNotes = game.latest_patch_notes || 'No patch notes provided by developer.';
-            const safeNotes = escapeHtml(rawNotes).replace(
-                /(https?:\/\/[^\s<>"']+\.(?:png|jpe?g|webp|gif)(?:\?[^\s<>"']*)?)/gi,
-                '<img src="$1" alt="Patch Image" style="max-width:100%; border-radius:12px 4px 12px 4px; margin:10px 0; display:block; border:1px solid rgba(208, 194, 247, 0.35);">'
-            );
-            document.getElementById('auNotes').innerHTML = safeNotes;
+            // Strip raw image URLs from text body since they are rendered cleanly in bannerBox above
+            const cleanedText = rawNotes.replace(imgRegex, '').trim() || rawNotes;
+            document.getElementById('auNotes').textContent = cleanedText;
             document.getElementById('appUpdateModal').classList.add('active');
         }
 
@@ -1450,31 +1608,39 @@
             content.innerHTML = '<p style="color:#a99ec7; text-align:center;">Loading recent edits...</p>';
             
             try {
-                const history = await apiCall(`/api/history/game/${gameId}`);
+                const history = await window.fetchWithLocalCache(
+                    `/api/history/game/${encodeURIComponent(gameId)}`,
+                    `nurture_cache_edits_${gameId}`,
+                    3 * 60 * 1000
+                );
                 if (!history || history.length === 0) {
-                    content.innerHTML = '<p style="color:#888;">No recent edits found.</p>';
+                    content.innerHTML = '<p style="color:#a99ec7; text-align:center;">No recent community edits found for this game yet.</p>';
                     return;
                 }
 
                 content.innerHTML = history.map(h => {
                     const date = new Date(h.createdAt || h.date || Date.now()).toLocaleDateString();
-                    const msg = h.data?.commitMessage || 'Updated data.';
-                    const tabMap = { 'Guide': 'guides', 'Asset': 'assets', 'Community': 'communities', 'Mod': 'mods', 'Coupon': 'overview', 'Game': 'overview' };
+                    const actionLabels = { CREATE: 'Added', EDIT: 'Updated', DELETE: 'Removed' };
+                    const friendlyAction = actionLabels[h.actionType] || h.actionType || 'Updated';
+                    const targetTitle = h.targetIdentifier || h.data?.title || h.data?.name || h.data?.code || h.itemCategory;
+                    const msg = h.data?.commitMessage || `${friendlyAction} ${targetTitle}`;
+                    const tabMap = { 'Guide': 'guides', 'Asset': 'assets', 'Community': 'communities', 'Lore': 'lore', 'LoreChapter': 'lore', 'LoreNode': 'lore', 'LoreEdge': 'lore', 'Mod': 'mods', 'Coupon': 'overview', 'Game': 'overview' };
                     const tab = tabMap[h.itemCategory] || 'overview';
-                    const link = `/games/${gameId}?tab=${tab}`;
+                    const link = `/games/${encodeURIComponent(gameId)}?tab=${tab}`;
 
                     return `
                     <a href="${link}" class="floral-mail-card" style="display:block; text-decoration:none; color:white;">
-                        <div style="display:flex; justify-content:space-between; font-size:0.85em; color:#a99ec7; margin-bottom:8px;">
-                            <div><strong style="color:#d0c2f7;">${escapeHtml(h.submitterUsername || 'Unknown')}</strong> • ${h.actionType} in ${h.itemCategory}</div>
+                        <div style="display:flex; justify-content:space-between; font-size:0.85em; color:#a99ec7; margin-bottom:8px; gap:8px; flex-wrap:wrap;">
+                            <div><strong style="color:#ffd147;">${escapeHtml(h.submitterUsername || 'Contributor')}</strong> • ${escapeHtml(friendlyAction)} in <b>${escapeHtml(h.itemCategory)}</b></div>
                             <span>${date}</span>
                         </div>
-                        <div style="color:#e5dcff; font-size:0.95em; border-left: 2px solid #9d8ec7; padding-left: 10px;">${escapeHtml(msg)}</div>
+                        <div style="font-weight:bold; color:#e2d4ff; font-size:0.95em; margin-bottom:4px;">${escapeHtml(targetTitle)}</div>
+                        <div style="color:#c4b5e8; font-size:0.88em; border-left: 2px solid #a88bfa; padding-left: 10px;">${escapeHtml(msg)}</div>
                     </a>
                     `;
                 }).join('');
             } catch (e) {
-                content.innerHTML = '<p style="color:#ff5555;">Failed to load history.</p>';
+                content.innerHTML = '<p style="color:#ff5555; text-align:center;">Failed to load recent edits.</p>';
             }
         }
 
@@ -1586,7 +1752,54 @@
             `;
         }
 
-        function openGameModal(game, cardElement) {
+        let currentInfoMediaTab = 'video'; // 'video' | 'promo'
+        let currentModalPromoImages = [];
+
+        function switchInfoModalMediaTab(tab) {
+            currentInfoMediaTab = tab;
+            document.getElementById('tabLatestVideoBtn')?.classList.toggle('active', tab === 'video');
+            document.getElementById('tabPromoMediaBtn')?.classList.toggle('active', tab === 'promo');
+
+            const videoContainer = document.getElementById('modalVideoContainer');
+            const noVideoNotice = document.getElementById('modalNoVideoNotice');
+            const promoContainer = document.getElementById('modalPromoContainer');
+
+            if (tab === 'video') {
+                if (promoContainer) promoContainer.style.display = 'none';
+                if (currentTrailerId) {
+                    videoContainer.style.display = 'block';
+                    if (noVideoNotice) noVideoNotice.style.display = 'none';
+                } else {
+                    videoContainer.style.display = 'none';
+                    if (noVideoNotice) noVideoNotice.style.display = 'block';
+                }
+            } else {
+                videoContainer.style.display = 'none';
+                if (noVideoNotice) noVideoNotice.style.display = 'none';
+                if (promoContainer) promoContainer.style.display = 'block';
+            }
+        }
+
+        function renderPromoGalleryStrip(images) {
+            currentModalPromoImages = Array.isArray(images) ? images.filter(Boolean) : [];
+            const strip = document.getElementById('modalPromoStrip');
+            const countBadge = document.getElementById('promoMediaCountBadge');
+            if (countBadge) {
+                countBadge.textContent = currentModalPromoImages.length > 0 ? `(${currentModalPromoImages.length})` : '';
+            }
+            if (!strip) return;
+            if (currentModalPromoImages.length === 0) {
+                strip.innerHTML = `<div style="width:100%; text-align:center; padding:24px 10px; color:#a99ec7; font-size:0.88em;">No promotional screenshots available for this game yet.</div>`;
+                return;
+            }
+            strip.innerHTML = currentModalPromoImages.map(url => `
+                <a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" title="Click to view full size">
+                    <img src="${escapeHtml(url)}" alt="Promotional Media" loading="lazy" onerror="this.parentElement.style.display='none'">
+                </a>
+            `).join('');
+        }
+
+        async function openGameModal(game, cardElement) {
             currentGameForModal = game; 
             const rect = cardElement.getBoundingClientRect();
             
@@ -1595,21 +1808,16 @@
 
             modalGameTitle.textContent = game.name || 'Unknown Game';
             
-            const videoContainer = document.getElementById('modalVideoContainer');
-            // Strictly fetch the trailer ID, without autoplaying on modal open
-            const vidId = game.trailer_id;
-            
-            if (vidId) {
-                if (currentTrailerId !== vidId) {
-                    modalTrailer.src = `https://www.youtube-nocookie.com/embed/${vidId}`;
-                    currentTrailerId = vidId;
-                }
-                videoContainer.style.display = 'block';
-            } else {
-                modalTrailer.src = ''; 
-                currentTrailerId = '';
-                videoContainer.style.display = 'none';
-            }
+            // Start with any known video ID & promo images on the game object
+            const initialVidId = game.latest_video_id || game.trailer_id || '';
+            currentTrailerId = initialVidId;
+            modalTrailer.src = initialVidId ? `https://www.youtube-nocookie.com/embed/${initialVidId}` : '';
+
+            const initialPromo = Array.isArray(game.promo_images) && game.promo_images.length > 0
+                ? game.promo_images
+                : (Array.isArray(game.latest_update_images) ? game.latest_update_images : []);
+            renderPromoGalleryStrip(initialPromo);
+            switchInfoModalMediaTab('video');
             
             const tagsBox = document.getElementById('modalTagsContainer');
             if (tagsBox) {
@@ -1632,7 +1840,6 @@
             };
             modalAge.innerHTML = esrbImages[game.ratings?.age] || '<span style="color:#887da8; font-size: 0.82em; background:rgba(157, 142, 199, 0.12); padding:3px 10px; border-radius:10px 3px 10px 3px; border:1px solid rgba(157, 142, 199, 0.2);">N/A</span>';
             
-            // Render integer ratings into visual stars with appended database review counts
             modalF2P.innerHTML = renderStars(game.ratings?.f2p, game.rating_counts?.f2p);
             modalAFK.innerHTML = renderStars(game.ratings?.afk, game.rating_counts?.afk);
             modalStory.innerHTML = renderStars(game.ratings?.story, game.rating_counts?.story);
@@ -1640,6 +1847,29 @@
             modalOverall.innerHTML = renderStars(game.ratings?.overall, game.rating_counts?.total_reviews);
             
             gameModal.classList.add('active');
+
+            // Fetch latest YouTube channel video & store promo screenshots (cached 6h in localStorage)
+            if (game.id) {
+                try {
+                    const mediaData = await window.fetchWithLocalCache(
+                        `/api/games/${encodeURIComponent(game.id)}/media`,
+                        `nurture_cache_media_${game.id}`,
+                        6 * 60 * 60 * 1000
+                    );
+                    if (currentGameForModal && currentGameForModal.id === game.id && mediaData) {
+                        if (mediaData.latest_video_id && mediaData.latest_video_id !== currentTrailerId) {
+                            currentTrailerId = mediaData.latest_video_id;
+                            game.latest_video_id = mediaData.latest_video_id;
+                            modalTrailer.src = `https://www.youtube-nocookie.com/embed/${currentTrailerId}`;
+                            if (currentInfoMediaTab === 'video') switchInfoModalMediaTab('video');
+                        }
+                        if (Array.isArray(mediaData.promo_images) && mediaData.promo_images.length > 0) {
+                            game.promo_images = mediaData.promo_images;
+                            renderPromoGalleryStrip(mediaData.promo_images);
+                        }
+                    }
+                } catch (e) {}
+            }
         }
 
         function closeGameModal() {
@@ -1657,63 +1887,81 @@
                 closeGameModal();
             }
         });
+
         let selectedGenreTags = [];
         let selectedAgeTags = [];
         let filterLogicMode = 'OR';
 
         function toggleTagsMenu(e) {
-            e.stopPropagation();
-            const panel = document.getElementById('tagsDropdownPanel');
+            if (e) e.stopPropagation();
+            // On mobile (<= 768px), open the popup modal window instead of a dropdown
+            if (window.innerWidth <= 768) {
+                const mobModal = document.getElementById('mobileFiltersModal');
+                if (mobModal) mobModal.classList.add('active');
+                return;
+            }
+            const pcBar = document.getElementById('pcFilterExpandBar');
             const btn = document.getElementById('tagsMenuBtn');
-            panel.classList.toggle('open');
-            btn.classList.toggle('open');
+            if (pcBar) pcBar.classList.toggle('open');
+            if (btn) btn.classList.toggle('open');
+        }
+
+        function togglePcCategoryDropdown(dropId, e) {
+            if (e) e.stopPropagation();
+            document.querySelectorAll('.pc-cat-dropdown').forEach(el => {
+                if (el.id !== dropId) el.classList.remove('open');
+            });
+            const target = document.getElementById(dropId);
+            if (target) target.classList.toggle('open');
         }
 
         document.addEventListener('click', () => {
-            const panel = document.getElementById('tagsDropdownPanel');
-            const btn = document.getElementById('tagsMenuBtn');
-            if (panel) panel.classList.remove('open');
-            if (btn) btn.classList.remove('open');
+            document.querySelectorAll('.pc-cat-dropdown.open').forEach(el => el.classList.remove('open'));
         });
+
+        function syncFilterPillsUI() {
+            document.querySelectorAll('.logic-mode-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.getAttribute('data-logic') === filterLogicMode);
+            });
+            document.querySelectorAll('.filter-genre-pill').forEach(btn => {
+                btn.classList.toggle('selected', selectedGenreTags.includes(btn.getAttribute('data-tag')));
+            });
+            document.querySelectorAll('.filter-age-pill').forEach(btn => {
+                btn.classList.toggle('selected', selectedAgeTags.includes(btn.getAttribute('data-age')));
+            });
+            updateFilterBadge();
+        }
 
         function setFilterLogic(mode) {
             filterLogicMode = mode;
-            document.getElementById('logicOrBtn').classList.toggle('active', mode === 'OR');
-            document.getElementById('logicAndBtn').classList.toggle('active', mode === 'AND');
-            const notBtn = document.getElementById('logicNotBtn');
-            if (notBtn) notBtn.classList.toggle('active', mode === 'NOT');
+            syncFilterPillsUI();
             updateGrid(allGames);
         }
 
-        function toggleGenreTag(tag, btnEl) {
+        function toggleGenreTag(tag) {
             if (selectedGenreTags.includes(tag)) {
                 selectedGenreTags = selectedGenreTags.filter(t => t !== tag);
-                btnEl.classList.remove('selected');
             } else {
                 selectedGenreTags.push(tag);
-                btnEl.classList.add('selected');
             }
-            updateFilterBadge();
+            syncFilterPillsUI();
             updateGrid(allGames);
         }
 
-        function toggleAgeTag(age, btnEl) {
+        function toggleAgeTag(age) {
             if (selectedAgeTags.includes(age)) {
                 selectedAgeTags = selectedAgeTags.filter(a => a !== age);
-                btnEl.classList.remove('selected');
             } else {
                 selectedAgeTags.push(age);
-                btnEl.classList.add('selected');
             }
-            updateFilterBadge();
+            syncFilterPillsUI();
             updateGrid(allGames);
         }
 
         function clearAllFilters() {
             selectedGenreTags = [];
             selectedAgeTags = [];
-            document.querySelectorAll('.tag-pill.selected').forEach(el => el.classList.remove('selected'));
-            updateFilterBadge();
+            syncFilterPillsUI();
             updateGrid(allGames);
         }
 
@@ -2189,6 +2437,9 @@
             document.getElementById('editCommit').value = '';
             
             document.getElementById('editInfoModal').classList.add('active');
+
+            const ytChanInput = document.getElementById('editYoutubeChannel');
+            if (ytChanInput) ytChanInput.value = currentGameForModal.youtube_channel_url || '';
         }
 
         async function submitInfoEdit() {
@@ -2219,7 +2470,8 @@
                     platform_tag: selectedPlatform,
                     tags: combinedTags,
                     age: document.getElementById('editAge').value,
-                    commitMessage: commitMsg
+                    commitMessage: commitMsg,
+                    youtube_channel_url: document.getElementById('editYoutubeChannel')?.value.trim() || undefined
                 }
             };
 
