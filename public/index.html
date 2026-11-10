@@ -6,7 +6,7 @@
     <link rel="icon" type="image/x-icon" href="/Assets/nurture_icon.ico">
     <title>Nurture | Meta, Guides, Assets, & Communities</title>
     
-    <link rel="stylesheet" href="/Assets/common.css">
+    <link rel="stylesheet" href="/Assets/common.css?v=3">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 
     <!-- Vercel Analytics -->
@@ -1220,6 +1220,61 @@
         </div>
     </div>
 
+    <!-- Mobile Filter Popup Window (Used Automatically on Mobile Screens) -->
+    <div id="mobileFiltersModal" class="modal-overlay">
+        <div class="modal-window" style="max-width: 440px; text-align: left;">
+            <button class="modal-close" onclick="document.getElementById('mobileFiltersModal').classList.remove('active')">×</button>
+            <h2 class="modal-title">✿ Filter Games</h2>
+
+            <div class="tags-panel-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid rgba(168,139,250,0.25);">
+                <span style="font-size: 0.82em; color: #c4b5e8; font-weight: bold;">Match Logic:</span>
+                <div class="logic-toggle-group">
+                    <button type="button" class="logic-btn logic-mode-btn active" data-logic="OR" onclick="setFilterLogic('OR')">OR</button>
+                    <button type="button" class="logic-btn logic-mode-btn" data-logic="AND" onclick="setFilterLogic('AND')">AND</button>
+                    <button type="button" class="logic-btn logic-mode-btn" data-logic="NOT" onclick="setFilterLogic('NOT')">NOT</button>
+                </div>
+                <button type="button" class="clear-filters-btn" style="margin:0;" onclick="clearAllFilters()">Reset</button>
+            </div>
+
+            <div class="tags-section-title">🖥️ Game Platform</div>
+            <div class="tags-pills-grid">
+                <button type="button" class="tag-pill filter-genre-pill" data-tag="PC" onclick="toggleGenreTag('PC')">PC</button>
+                <button type="button" class="tag-pill filter-genre-pill" data-tag="Mobile" onclick="toggleGenreTag('Mobile')">Mobile</button>
+                <button type="button" class="tag-pill filter-genre-pill" data-tag="PC+Mobile" onclick="toggleGenreTag('PC+Mobile')">PC+Mobile</button>
+            </div>
+
+            <div class="tags-divider"></div>
+
+            <div class="tags-section-title">📚 Genre Tags</div>
+            <div class="tags-pills-grid">
+                <button type="button" class="tag-pill filter-genre-pill" data-tag="Gacha" onclick="toggleGenreTag('Gacha')">Gacha</button>
+                <button type="button" class="tag-pill filter-genre-pill" data-tag="RPG" onclick="toggleGenreTag('RPG')">RPG</button>
+                <button type="button" class="tag-pill filter-genre-pill" data-tag="Action" onclick="toggleGenreTag('Action')">Action</button>
+                <button type="button" class="tag-pill filter-genre-pill" data-tag="Turn-Based" onclick="toggleGenreTag('Turn-Based')">Turn-Based</button>
+                <button type="button" class="tag-pill filter-genre-pill" data-tag="Tower Defense" onclick="toggleGenreTag('Tower Defense')">Tower Defense</button>
+                <button type="button" class="tag-pill filter-genre-pill" data-tag="Rhythm" onclick="toggleGenreTag('Rhythm')">Rhythm</button>
+                <button type="button" class="tag-pill filter-genre-pill" data-tag="City Builder" onclick="toggleGenreTag('City Builder')">City Builder</button>
+                <button type="button" class="tag-pill filter-genre-pill" data-tag="Survival & Crafting" onclick="toggleGenreTag('Survival & Crafting')">Survival & Crafting</button>
+                <button type="button" class="tag-pill filter-genre-pill" data-tag="Simulation" onclick="toggleGenreTag('Simulation')">Simulation</button>
+                <button type="button" class="tag-pill filter-genre-pill" data-tag="Moddable" onclick="toggleGenreTag('Moddable')">Moddable</button>
+                <button type="button" class="tag-pill filter-genre-pill" data-tag="Co-op / Multiplayer" onclick="toggleGenreTag('Co-op / Multiplayer')">Co-op / Multiplayer</button>
+            </div>
+
+            <div class="tags-divider"></div>
+
+            <div class="tags-section-title">🌿 Age Rating (ESRB)</div>
+            <div class="tags-pills-grid">
+                <button type="button" class="tag-pill age-pill filter-age-pill" data-age="E" onclick="toggleAgeTag('E')">E • Everyone</button>
+                <button type="button" class="tag-pill age-pill filter-age-pill" data-age="T" onclick="toggleAgeTag('T')">T • Teen</button>
+                <button type="button" class="tag-pill age-pill filter-age-pill" data-age="M" onclick="toggleAgeTag('M')">M • Mature 17+</button>
+            </div>
+
+            <button type="button" class="btn-floral pollen" style="width:100%; margin-top:18px; padding:11px;" onclick="document.getElementById('mobileFiltersModal').classList.remove('active')">
+                Done
+            </button>
+        </div>
+    </div>
+
     <!-- Game Update Patch Notes Modal (With Update Banner / Screenshots) -->
     <div id="appUpdateModal" class="modal-overlay">
         <div class="modal-window" style="max-width: 640px;">
@@ -1481,7 +1536,7 @@
     </div>
 
     <!-- Shared Logic -->
-    <script src="/Assets/common.js"></script>
+    <script src="/Assets/common.js?v=3"></script>
     <script src="/Assets/changelog.js"></script>
 
     <!-- Page Specific Script -->
