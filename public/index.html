@@ -1312,15 +1312,30 @@
             <button class="modal-close" id="closeModal">×</button>
             <h2 class="modal-title" id="modalGameTitle">Game Title</h2>
             
-            <!-- 2-Section Media Switcher: Latest Video | Promotion Media -->
+            <!-- 3-Section Media Switcher: Latest Video | Official Trailer | Promotion Media -->
             <div class="info-media-switcher">
-                <button type="button" class="info-media-tab active" id="tabLatestVideoBtn" onclick="switchInfoModalMediaTab('video')">
+                <button type="button" class="info-media-tab active" id="tabLatestVideoBtn" onclick="switchInfoModalMediaTab('latest')">
                     Latest Video
+                </button>
+                <div class="info-media-divider"></div>
+                <button type="button" class="info-media-tab" id="tabTrailerVideoBtn" onclick="switchInfoModalMediaTab('trailer')">
+                    Official Trailer
                 </button>
                 <div class="info-media-divider"></div>
                 <button type="button" class="info-media-tab" id="tabPromoMediaBtn" onclick="switchInfoModalMediaTab('promo')">
                     Promotion Media <span id="promoMediaCountBadge" style="font-size:0.8em; opacity:0.85;"></span>
                 </button>
+            </div>
+
+            <div id="modalVideoSubMeta" style="display:none; text-align:center; font-size:0.78em; color:#d0c2f7; margin: -4px 0 8px 0;"></div>
+
+            <div class="video-container" id="modalVideoContainer" style="display:none;">
+                <iframe id="modalTrailer" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+            </div>
+            <div id="modalNoVideoNotice" style="display:none; text-align:center; padding:18px; color:#a99ec7; font-size:0.88em; background:rgba(15,10,28,0.75); border:1px dashed rgba(168,139,250,0.3); border-radius:14px 4px 14px 4px; margin-bottom:12px;"></div>
+
+            <div class="promo-gallery-stage" id="modalPromoContainer">
+                <div class="promo-gallery-strip" id="modalPromoStrip"></div>
             </div>
 
             <div class="video-container" id="modalVideoContainer" style="display:none;">
@@ -1807,31 +1822,73 @@
             `;
         }
 
-        let currentInfoMediaTab = 'video'; // 'video' | 'promo'
+        let currentInfoMediaTab = 'latest'; // 'latest' | 'trailer' | 'promo'
+        let currentLatestVideoId = '';
+        let currentLatestVideoTitle = '';
+        let currentLatestVideoDate = '';
+        let currentOfficialTrailerId = '';
+        let currentChannelUrl = '';
+        let isFetchingLatestMedia = false;
         let currentModalPromoImages = [];
 
         function switchInfoModalMediaTab(tab) {
             currentInfoMediaTab = tab;
-            document.getElementById('tabLatestVideoBtn')?.classList.toggle('active', tab === 'video');
+            document.getElementById('tabLatestVideoBtn')?.classList.toggle('active', tab === 'latest');
+            document.getElementById('tabTrailerVideoBtn')?.classList.toggle('active', tab === 'trailer');
             document.getElementById('tabPromoMediaBtn')?.classList.toggle('active', tab === 'promo');
 
             const videoContainer = document.getElementById('modalVideoContainer');
             const noVideoNotice = document.getElementById('modalNoVideoNotice');
             const promoContainer = document.getElementById('modalPromoContainer');
+            const subMeta = document.getElementById('modalVideoSubMeta');
 
-            if (tab === 'video') {
-                if (promoContainer) promoContainer.style.display = 'none';
-                if (currentTrailerId) {
-                    videoContainer.style.display = 'block';
-                    if (noVideoNotice) noVideoNotice.style.display = 'none';
-                } else {
-                    videoContainer.style.display = 'none';
-                    if (noVideoNotice) noVideoNotice.style.display = 'block';
+            if (tab === 'promo') {
+                videoContainer.style.display = 'none';
+                if (noVideoNotice) noVideoNotice.style.display = 'none';
+                if (subMeta) subMeta.style.display = 'none';
+                if (promoContainer) promoContainer.style.display = 'block';
+                return;
+            }
+
+            if (promoContainer) promoContainer.style.display = 'none';
+            const targetVidId = tab === 'latest' ? currentLatestVideoId : currentOfficialTrailerId;
+
+            if (targetVidId) {
+                const desiredSrc = `https://www.youtube-nocookie.com/embed/${targetVidId}`;
+                if (modalTrailer.getAttribute('src') !== desiredSrc) {
+                    modalTrailer.src = desiredSrc;
+                }
+                videoContainer.style.display = 'block';
+                if (noVideoNotice) noVideoNotice.style.display = 'none';
+
+                if (subMeta) {
+                    if (tab === 'latest' && (currentLatestVideoTitle || currentChannelUrl)) {
+                        const dateStr = currentLatestVideoDate ? ` • ${formatBadgeDate(new Date(currentLatestVideoDate).getTime())}` : '';
+                        const chanLink = currentChannelUrl
+                            ? ` <a href="${escapeHtml(currentChannelUrl)}" target="_blank" rel="noopener noreferrer" style="color:#ffd147; margin-left:6px; text-decoration:underline;">Official Channel ↗</a>`
+                            : '';
+                        subMeta.innerHTML = `<span>${escapeHtml(currentLatestVideoTitle || 'Latest Channel Upload')}${dateStr}</span>${chanLink}`;
+                        subMeta.style.display = 'block';
+                    } else if (tab === 'trailer') {
+                        subMeta.innerHTML = `<span style="color:#a99ec7;">Official Game Trailer</span>`;
+                        subMeta.style.display = 'block';
+                    } else {
+                        subMeta.style.display = 'none';
+                    }
                 }
             } else {
                 videoContainer.style.display = 'none';
-                if (noVideoNotice) noVideoNotice.style.display = 'none';
-                if (promoContainer) promoContainer.style.display = 'block';
+                if (subMeta) subMeta.style.display = 'none';
+                if (noVideoNotice) {
+                    noVideoNotice.style.display = 'block';
+                    if (tab === 'latest' && isFetchingLatestMedia) {
+                        noVideoNotice.innerHTML = `⏳ Fetching latest upload from official YouTube channel...`;
+                    } else if (tab === 'latest') {
+                        noVideoNotice.innerHTML = `No official YouTube channel linked yet. Click <b>Suggest Data & Tags</b> below to link the official YouTube channel!`;
+                    } else {
+                        noVideoNotice.innerHTML = `No official trailer linked yet. Click <b>Suggest Data & Tags</b> below to add a trailer!`;
+                    }
+                }
             }
         }
 
@@ -1863,16 +1920,21 @@
 
             modalGameTitle.textContent = game.name || 'Unknown Game';
             
-            // Start with any known video ID & promo images on the game object
-            const initialVidId = game.latest_video_id || game.trailer_id || '';
-            currentTrailerId = initialVidId;
-            modalTrailer.src = initialVidId ? `https://www.youtube-nocookie.com/embed/${initialVidId}` : '';
+            // Separate Latest Channel Video from Official Trailer (never mix the two)
+            currentOfficialTrailerId = game.trailer_id || '';
+            currentLatestVideoId = (game.latest_video_id && (game.latest_video_id !== game.trailer_id || game.latest_video_title))
+                ? game.latest_video_id
+                : '';
+            currentLatestVideoTitle = game.latest_video_title || '';
+            currentLatestVideoDate = game.latest_video_published || '';
+            currentChannelUrl = game.youtube_channel_url || '';
+            isFetchingLatestMedia = !currentLatestVideoId && Boolean(game.id);
 
             const initialPromo = Array.isArray(game.promo_images) && game.promo_images.length > 0
                 ? game.promo_images
                 : (Array.isArray(game.latest_update_images) ? game.latest_update_images : []);
             renderPromoGalleryStrip(initialPromo);
-            switchInfoModalMediaTab('video');
+            switchInfoModalMediaTab('latest');
             
             const tagsBox = document.getElementById('modalTagsContainer');
             if (tagsBox) {
@@ -1903,27 +1965,40 @@
             
             gameModal.classList.add('active');
 
-            // Fetch latest YouTube channel video & store promo screenshots (cached 6h in localStorage)
+            // Fetch latest YouTube channel upload & store promo screenshots (cached 6h in localStorage under v2 key)
             if (game.id) {
                 try {
                     const mediaData = await window.fetchWithLocalCache(
                         `/api/games/${encodeURIComponent(game.id)}/media`,
-                        `nurture_cache_media_${game.id}`,
+                        `nurture_cache_media_v2_${game.id}`,
                         6 * 60 * 60 * 1000
                     );
+                    isFetchingLatestMedia = false;
                     if (currentGameForModal && currentGameForModal.id === game.id && mediaData) {
-                        if (mediaData.latest_video_id && mediaData.latest_video_id !== currentTrailerId) {
-                            currentTrailerId = mediaData.latest_video_id;
+                        if (mediaData.latest_video_id) {
+                            currentLatestVideoId = mediaData.latest_video_id;
+                            currentLatestVideoTitle = mediaData.latest_video_title || '';
+                            currentLatestVideoDate = mediaData.latest_video_published || '';
                             game.latest_video_id = mediaData.latest_video_id;
-                            modalTrailer.src = `https://www.youtube-nocookie.com/embed/${currentTrailerId}`;
-                            if (currentInfoMediaTab === 'video') switchInfoModalMediaTab('video');
+                            game.latest_video_title = currentLatestVideoTitle;
+                            game.latest_video_published = currentLatestVideoDate;
+                        }
+                        if (mediaData.youtube_channel_url) {
+                            currentChannelUrl = mediaData.youtube_channel_url;
+                            game.youtube_channel_url = mediaData.youtube_channel_url;
                         }
                         if (Array.isArray(mediaData.promo_images) && mediaData.promo_images.length > 0) {
                             game.promo_images = mediaData.promo_images;
                             renderPromoGalleryStrip(mediaData.promo_images);
                         }
+                        switchInfoModalMediaTab(currentInfoMediaTab);
                     }
-                } catch (e) {}
+                } catch (e) {
+                    isFetchingLatestMedia = false;
+                    if (currentGameForModal && currentGameForModal.id === game.id) {
+                        switchInfoModalMediaTab(currentInfoMediaTab);
+                    }
+                }
             }
         }
 
@@ -1931,7 +2006,6 @@
             gameModal.classList.remove('active');
             setTimeout(() => { 
                 modalTrailer.src = ''; 
-                currentTrailerId = '';
             }, 400); 
         }
 

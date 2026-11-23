@@ -739,53 +739,107 @@ app.get('/api/games/:id', async (req, res) => {
     }
 });
 
-// Helper: Resolves the latest video ID from an official YouTube channel URL, @handle, or UC... ID
-const fetchLatestYouTubeChannelVideoId = async (channelUrlOrId, fallbackGameName = '') => {
+// Helper: Extracts a UC... channel ID from any YouTube channel URL or HTML page
+const resolveYouTubeChannelId = async (channelUrlOrHandle, trailerVideoId = '', fallbackGameName = '') => {
+    const ytHeaders = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Cookie': 'CONSENT=YES+cb.20210328-17-p0.en+FX+417'
+    };
+
+    const extractUcIdFromHtml = (html) => {
+        if (!html) return null;
+        const m = html.match(/"externalId":"(UC[a-zA-Z0-9_-]{22})"/) ||
+                  html.match(/channel_id=(UC[a-zA-Z0-9_-]{22})/) ||
+                  html.match(/"channelId":"(UC[a-zA-Z0-9_-]{22})"/) ||
+                  html.match(/\/channel\/(UC[a-zA-Z0-9_-]{22})/);
+        return m ? m[1] : null;
+    };
+
     try {
-        let input = (channelUrlOrId || '').trim();
+        // 1. Check explicit channel URL or @handle if set on the game
+        let input = (channelUrlOrHandle || '').trim();
+        const directUc = input.match(/\b(UC[a-zA-Z0-9_-]{22})\b/);
+        if (directUc) return { channelId: directUc[1], channelUrl: `https://www.youtube.com/channel/${directUc[1]}` };
 
-        // 1. If a direct UC... channel ID was provided, query YouTube's lightweight XML feed
-        const ucMatch = input.match(/\b(UC[a-zA-Z0-9_-]{22})\b/);
-        if (ucMatch) {
-            const xmlRes = await axios.get(`https://www.youtube.com/feeds/videos.xml?channel_id=${ucMatch[1]}`, { timeout: 3500 });
-            const vidMatch = String(xmlRes.data || '').match(/<yt:videoId>([a-zA-Z0-9_-]{11})<\/yt:videoId>/);
-            if (vidMatch) return vidMatch[1];
-        }
-
-        // 2. If a channel URL or @handle is provided, fetch its /videos tab and extract the first videoId
         if (input) {
             if (input.startsWith('@')) input = `https://www.youtube.com/${input}`;
             if (/^https?:\/\/(www\.)?youtube\.com\//i.test(input)) {
-                const targetUrl = input.replace(/\/+$/, '') + '/videos';
-                const pageRes = await axios.get(targetUrl, {
-                    headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
-                    timeout: 3500
-                });
-                const html = String(pageRes.data || '');
-                const vidMatch = html.match(/"videoRenderer":\{"videoId":"([a-zA-Z0-9_-]{11})"/);
-                if (vidMatch) return vidMatch[1];
+                const res = await axios.get(input, { headers: ytHeaders, timeout: 3500 });
+                const ucId = extractUcIdFromHtml(String(res.data || ''));
+                if (ucId) return { channelId: ucId, channelUrl: input };
             }
         }
 
-        // 3. Fallback: Search YouTube for the game's official channel latest trailer/video
+        // 2. Auto-discover the official channel from the uploader of the game's existing trailer_id!
+        if (trailerVideoId && /^[a-zA-Z0-9_-]{11}$/.test(trailerVideoId)) {
+            try {
+                const oembedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(`https://www.youtube.com/watch?v=${trailerVideoId}`)}&format=json`;
+                const oemRes = await axios.get(oembedUrl, { timeout: 3000 });
+                const authorUrl = oemRes.data?.author_url;
+                if (authorUrl) {
+                    const directAuthorUc = authorUrl.match(/\b(UC[a-zA-Z0-9_-]{22})\b/);
+                    if (directAuthorUc) return { channelId: directAuthorUc[1], channelUrl: authorUrl };
+
+                    const chanPage = await axios.get(authorUrl, { headers: ytHeaders, timeout: 3500 });
+                    const ucId = extractUcIdFromHtml(String(chanPage.data || ''));
+                    if (ucId) return { channelId: ucId, channelUrl: authorUrl };
+                }
+            } catch (e) {}
+
+            // Fallback: inspect the watch page of trailer_id for the uploader's channelId
+            try {
+                const watchRes = await axios.get(`https://www.youtube.com/watch?v=${trailerVideoId}`, { headers: ytHeaders, timeout: 3500 });
+                const ucId = extractUcIdFromHtml(String(watchRes.data || ''));
+                if (ucId) return { channelId: ucId, channelUrl: `https://www.youtube.com/channel/${ucId}` };
+            } catch (e) {}
+        }
+
+        // 3. Last resort: Search YouTube specifically for the official Channel (sp=EgIQAg%3D%3D filters to Channels only)
         if (fallbackGameName) {
-            const searchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(fallbackGameName + ' official trailer')}&sp=CAI%253D`;
-            const searchRes = await axios.get(searchUrl, {
-                headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
-                timeout: 3500
-            });
-            const vidMatch = String(searchRes.data || '').match(/"videoRenderer":\{"videoId":"([a-zA-Z0-9_-]{11})"/);
-            if (vidMatch) return vidMatch[1];
+            const searchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(fallbackGameName + ' official')}&sp=EgIQAg%3D%3D`;
+            const searchRes = await axios.get(searchUrl, { headers: ytHeaders, timeout: 3500 });
+            const html = String(searchRes.data || '');
+            const chanMatch = html.match(/"channelRenderer":\{"channelId":"(UC[a-zA-Z0-9_-]{22})"/);
+            if (chanMatch) {
+                return { channelId: chanMatch[1], channelUrl: `https://www.youtube.com/channel/${chanMatch[1]}` };
+            }
+        }
+    } catch (e) {}
+
+    return { channelId: null, channelUrl: null };
+};
+
+// Helper: Reads YouTube's chronological XML feed (newest upload first) for a UC... channel ID
+const fetchLatestVideoFromChannelXml = async (channelId) => {
+    if (!channelId) return null;
+    try {
+        const xmlRes = await axios.get(`https://www.youtube.com/feeds/videos.xml?channel_id=${encodeURIComponent(channelId)}`, { timeout: 3500 });
+        const xml = String(xmlRes.data || '');
+        const entryBlocks = [...xml.matchAll(/<entry>([\s\S]*?)<\/entry>/g)].map(m => m[1]);
+        if (entryBlocks.length === 0) return null;
+
+        const firstEntry = entryBlocks[0];
+        const vidMatch = firstEntry.match(/<yt:videoId>([a-zA-Z0-9_-]{11})<\/yt:videoId>/);
+        const titleMatch = firstEntry.match(/<title>([\s\S]*?)<\/title>/);
+        const pubMatch = firstEntry.match(/<published>([\s\S]*?)<\/published>/);
+
+        if (vidMatch) {
+            return {
+                videoId: vidMatch[1],
+                title: titleMatch ? titleMatch[1].replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'") : '',
+                publishedAt: pubMatch ? pubMatch[1] : null
+            };
         }
     } catch (e) {}
     return null;
 };
 
-// --- [i] MODAL MEDIA ENDPOINT: LATEST YOUTUBE CHANNEL VIDEO + PROMOTION MEDIA ---
+// --- [i] MODAL MEDIA ENDPOINT: LATEST YOUTUBE CHANNEL VIDEO + OFFICIAL TRAILER + PROMO MEDIA ---
 app.get('/api/games/:id/media', async (req, res) => {
     try {
         const gameId = validateInput.sanitizeString(req.params.id).replace(/[.$]/g, '');
-        const cacheKey = `game_media_${gameId}`;
+        const cacheKey = `game_media_v2_${gameId}`;
         const cached = getCached(cacheKey);
         if (cached) {
             res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
@@ -797,7 +851,8 @@ app.get('/api/games/:id/media', async (req, res) => {
             {
                 projection: {
                     id: 1, name: 1, tags: 1, trailer_id: 1,
-                    youtube_channel_url: 1, latest_video_id: 1,
+                    youtube_channel_url: 1, youtube_channel_id: 1,
+                    latest_video_id: 1, latest_video_title: 1, latest_video_published: 1,
                     promo_images: 1, latest_update_images: 1,
                     media_checked_at: 1
                 }
@@ -805,25 +860,49 @@ app.get('/api/games/:id/media', async (req, res) => {
         );
         if (!game) return res.status(404).json({ error: 'Game not found' });
 
-        const TWELVE_HOURS = 12 * 60 * 60 * 1000;
+        const SIX_HOURS = 6 * 60 * 60 * 1000;
         const now = Date.now();
         const lastChecked = game.media_checked_at ? new Date(game.media_checked_at).getTime() : 0;
 
         let promoImages = Array.isArray(game.promo_images) && game.promo_images.length > 0
             ? game.promo_images
             : (Array.isArray(game.latest_update_images) ? game.latest_update_images : []);
-        let latestVideoId = game.latest_video_id || game.trailer_id || '';
+        let latestVideoId = game.latest_video_id || null;
+        let latestVideoTitle = game.latest_video_title || null;
+        let latestVideoPublished = game.latest_video_published || null;
+        let channelId = game.youtube_channel_id || null;
+        let channelUrl = game.youtube_channel_url || null;
+
+        // Force re-sync if never checked with XML feed (!channelId) or if latest_video_id was accidentally set to trailer_id
+        const needsChannelSync = !channelId || !latestVideoId || (latestVideoId === game.trailer_id && !game.latest_video_title);
         const dbUpdates = {};
 
-        // Refresh YouTube latest video & missing store promo screenshots at most once every 12 hours
-        if ((now - lastChecked) > TWELVE_HOURS || promoImages.length === 0 || !latestVideoId) {
+        if ((now - lastChecked) > SIX_HOURS || promoImages.length === 0 || needsChannelSync) {
             dbUpdates.media_checked_at = new Date().toISOString();
 
-            // 1. Resolve latest video from official YouTube channel (or fallback search)
-            const fetchedVid = await fetchLatestYouTubeChannelVideoId(game.youtube_channel_url, game.name);
-            if (fetchedVid) {
-                latestVideoId = fetchedVid;
-                dbUpdates.latest_video_id = fetchedVid;
+            // 1. Discover official YouTube channel ID & fetch its newest XML upload
+            if (!channelId || (now - lastChecked) > SIX_HOURS) {
+                const resolved = await resolveYouTubeChannelId(channelUrl, game.trailer_id, game.name);
+                if (resolved.channelId) {
+                    channelId = resolved.channelId;
+                    dbUpdates.youtube_channel_id = channelId;
+                }
+                if (resolved.channelUrl && !channelUrl) {
+                    channelUrl = resolved.channelUrl;
+                    dbUpdates.youtube_channel_url = channelUrl;
+                }
+            }
+
+            if (channelId) {
+                const latestXml = await fetchLatestVideoFromChannelXml(channelId);
+                if (latestXml && latestXml.videoId) {
+                    latestVideoId = latestXml.videoId;
+                    latestVideoTitle = latestXml.title;
+                    latestVideoPublished = latestXml.publishedAt;
+                    dbUpdates.latest_video_id = latestVideoId;
+                    dbUpdates.latest_video_title = latestVideoTitle;
+                    dbUpdates.latest_video_published = latestVideoPublished;
+                }
             }
 
             // 2. Backfill App Store or Steam promotional screenshots if missing
@@ -869,8 +948,11 @@ app.get('/api/games/:id/media', async (req, res) => {
         }
 
         const payload = {
-            latest_video_id: latestVideoId || game.trailer_id || null,
-            youtube_channel_url: game.youtube_channel_url || null,
+            latest_video_id: latestVideoId || null,
+            latest_video_title: latestVideoTitle || null,
+            latest_video_published: latestVideoPublished || null,
+            trailer_id: game.trailer_id || null,
+            youtube_channel_url: channelUrl || (channelId ? `https://www.youtube.com/channel/${channelId}` : null),
             promo_images: promoImages
         };
 
@@ -1734,6 +1816,7 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                             
                             if (contribution.data.youtube_channel_url !== undefined) {
                                 updates.youtube_channel_url = contribution.data.youtube_channel_url;
+                                updates.youtube_channel_id = null;
                                 updates.media_checked_at = null; // Force fresh YouTube channel video pull
                             }
                             if (contribution.data.update_banner_url !== undefined) updates.update_banner_url = contribution.data.update_banner_url;
