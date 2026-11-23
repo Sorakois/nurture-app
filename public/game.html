@@ -6,7 +6,7 @@
     <link rel="icon" type="image/x-icon" href="/Assets/nurture_icon.ico">
     <title>Nurture | Game Hub</title>
     
-    <link rel="stylesheet" href="/Assets/common.css">
+    <link rel="stylesheet" href="/Assets/common.css?v=3">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 
     <!-- Vercel Analytics -->
@@ -2043,7 +2043,7 @@
     </div>
 
     <!-- Shared Logic -->
-    <script src="/Assets/common.js"></script>
+    <script src="/Assets/common.js?v=4"></script>
 
     <!-- Page Specific Script -->
     <script>
@@ -4013,6 +4013,10 @@
                 if (!response.ok) {
                     const err = await response.json();
                     throw new Error(err.error || 'Server rejected submission');
+                }
+                if (typeof window.invalidateLocalCache === 'function') {
+                    window.invalidateLocalCache(`nurture_cache_game_${gameData.id}`);
+                    window.invalidateLocalCache('nurture_cache_all_games');
                 }
                 document.getElementById('gameSuggestModal').classList.remove('active');
                 window.showCustomAlert("Suggestion submitted! It is now awaiting Admin Approval on Discord.", "Suggestion Submitted");

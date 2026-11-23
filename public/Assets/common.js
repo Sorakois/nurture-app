@@ -312,8 +312,16 @@ document.addEventListener('click', (e) => {
 }, true);
 
 // Fetches from localStorage first on page refresh so refreshes cost 0 Vercel requests
+const isExplicitPageReload = (function() {
+    try {
+        const nav = performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
+        return Boolean(nav && nav.type === 'reload');
+    } catch (e) { return false; }
+})();
+
 window.fetchWithLocalCache = async function(url, cacheKey, ttlMs = 5 * 60 * 1000, forceRefresh = false) {
-    if (!forceRefresh) {
+    const shouldBypassCache = forceRefresh || isExplicitPageReload;
+    if (!shouldBypassCache) {
         try {
             const raw = localStorage.getItem(cacheKey);
             if (raw) {
@@ -325,7 +333,10 @@ window.fetchWithLocalCache = async function(url, cacheKey, ttlMs = 5 * 60 * 1000
         } catch (e) {}
     }
 
-    const res = await fetch(url);
+    const fetchUrl = shouldBypassCache
+        ? `${url}${url.includes('?') ? '&' : '?'}_t=${Date.now()}`
+        : url;
+    const res = await fetch(fetchUrl, shouldBypassCache ? { cache: 'no-store' } : {});
     if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
         throw new Error(errData.error || `HTTP ${res.status}`);
@@ -1020,6 +1031,7 @@ async function loadMailboxMessages() {
     try {
         const res = await fetch('/api/mailbox');
         const mail = await res.json();
+        window.invalidateLocalCache();
         if (!mail || mail.length === 0) {
             container.innerHTML = '<p style="color:#a99ec7; text-align:center; padding: 20px 0;">🌱 Your mailbox is peaceful and empty.</p>';
             return;

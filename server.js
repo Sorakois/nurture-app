@@ -588,74 +588,150 @@ const getGameItemFavoriteCounts = async (gameId) => {
 
 app.get('/api/games/:id', async (req, res) => {
     try {
-        const gameId = req.params.id;
-        const cachedGame = getCached(`game_${gameId}`);
-        if (cachedGame) {
-            res.setHeader('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=120');
-            return res.json(cachedGame);
-        }
-
+        const gameId = decodeURIComponent(req.params.id).trim();
         const game = await Game.collection.findOne({ id: gameId });
         if (!game) return res.status(404).json({ error: 'Game not found' });
 
         await ensureDefaultMobileTag([game]);
 
+        const dbSetUpdates = {};
+
         if (!game.new_player_video_id && game.new_player_guide) {
             const extractedVid = extractYouTubeId(game.new_player_guide);
             if (extractedVid) {
                 game.new_player_video_id = extractedVid;
-                await Game.collection.updateOne({ id: gameId }, { $set: { new_player_video_id: extractedVid } });
+                dbSetUpdates.new_player_video_id = extractedVid;
             }
         }
 
-        let coupons = Array.isArray(game.coupons) ? game.coupons : [];
-        let modifiedCoupons = false;
+        // Move any legacy Lore items accidentally written to game.lores into game.lore
+        if (Array.isArray(game.lores) && game.lores.length > 0) {
+            const existingLore = Array.isArray(game.lore) ? game.lore : [];
+            game.lores.forEach(item => {
+                if (!existingLore.some(l => (l.url && l.url === item.url) || (l.title && l.title === item.title))) {
+                    existingLore.push(item);
+                }
+            });
+            game.lore = existingLore;
+            dbSetUpdates.lore = existingLore;
+        }
 
-        // Only run legacy coupon recovery once per game instead of on every GET request
-        if (!game.coupons_migrated) {
-            const approvedCouponContribs = await Contribution.collection.find({
-                gameId: gameId,
-                status: 'approved',
-                'data.code': { $exists: true, $ne: '' },
-                actionType: 'CREATE'
-            }).toArray();
+        // Reconcile approved CREATE contributions missing from the Game doc (skipping any later approved DELETE)
+        const approvedContribs = await Contribution.collection.find({
+            gameId: gameId,
+            status: 'approved',
+            actionType: { $in: ['CREATE', 'DELETE'] }
+        }).sort({ _id: 1 }).toArray();
 
-            approvedCouponContribs.forEach(c => {
-                const codeUpper = String(c.data.code).trim().toUpperCase();
-                if (codeUpper && !coupons.some(existing => String(existing.code || '').toUpperCase() === codeUpper)) {
-                    coupons.push({
+        const getTimeMs = (doc) => {
+            const raw = doc.submittedAt || doc.createdAt;
+            if (raw) {
+                const ms = new Date(raw).getTime();
+                if (!isNaN(ms)) return ms;
+            }
+            return doc._id && typeof doc._id.getTimestamp === 'function' ? doc._id.getTimestamp().getTime() : 0;
+        };
+
+        const deletedAtByKey = new Map();
+        approvedContribs.forEach(c => {
+            if (c.actionType === 'DELETE') {
+                const k = `${(c.itemCategory || '').toLowerCase()}::${(c.targetIdentifier || c.data?.title || c.data?.code || '').trim().toLowerCase()}`;
+                deletedAtByKey.set(k, Math.max(deletedAtByKey.get(k) || 0, getTimeMs(c)));
+            }
+        });
+
+        const catMap = {
+            guide: 'guides',
+            asset: 'assets',
+            community: 'communities',
+            lore: 'lore',
+            mod: 'mods',
+            coupon: 'coupons'
+        };
+
+        approvedContribs.forEach(c => {
+            if (c.actionType !== 'CREATE' || !c.data || typeof c.data !== 'object') return;
+            const rawCat = (c.itemCategory || '').trim();
+            const cTime = getTimeMs(c);
+            const delKey = `${rawCat.toLowerCase()}::${(c.targetIdentifier || c.data.title || c.data.code || '').trim().toLowerCase()}`;
+            if ((deletedAtByKey.get(delKey) || 0) >= cTime) return;
+
+            if (rawCat === 'SubpageTag' && c.data.tag) {
+                const secKey = (c.data.section || 'guides').toLowerCase();
+                const newTag = String(c.data.tag).trim();
+                if (!game.custom_subtags || typeof game.custom_subtags !== 'object') game.custom_subtags = {};
+                if (!Array.isArray(game.custom_subtags[secKey])) game.custom_subtags[secKey] = [];
+                if (!game.custom_subtags[secKey].some(t => t.toLowerCase() === newTag.toLowerCase())) {
+                    game.custom_subtags[secKey].push(newTag);
+                    dbSetUpdates.custom_subtags = game.custom_subtags;
+                }
+                return;
+            }
+
+            const isCoupon = rawCat.toLowerCase() === 'coupon' || Boolean(c.data.code);
+            const arrKey = isCoupon ? 'coupons' : catMap[rawCat.toLowerCase()];
+            if (!arrKey) return;
+
+            if (!Array.isArray(game[arrKey])) game[arrKey] = [];
+            const arr = game[arrKey];
+            const createdIso = new Date(cTime || Date.now()).toISOString();
+
+            if (isCoupon) {
+                const codeUpper = String(c.data.code || c.data.title || '').trim().toUpperCase();
+                if (codeUpper && !arr.some(existing => String(existing.code || '').toUpperCase() === codeUpper)) {
+                    arr.push({
                         _id: c._id,
                         code: codeUpper,
                         rewards: c.data.rewards || c.data.url || 'In-game rewards',
                         submitterUsername: c.submitterUsername,
                         submitterDiscordId: c.submitterDiscordId,
-                        createdAt: c.createdAt ? new Date(c.createdAt).toISOString() : new Date().toISOString()
+                        createdAt: createdIso
                     });
-                    modifiedCoupons = true;
+                    dbSetUpdates[arrKey] = arr;
                 }
-            });
-            game.coupons_migrated = true;
-            modifiedCoupons = true;
-        }
+            } else {
+                const itemTitle = String(c.data.title || c.data.name || '').trim();
+                const itemUrl = String(c.data.url || c.data.download_url || '').trim();
+                const alreadyExists = arr.some(existing =>
+                    (existing._id && c._id && String(existing._id) === String(c._id)) ||
+                    (itemUrl && (existing.url === itemUrl || existing.download_url === itemUrl)) ||
+                    (itemTitle && (existing.title === itemTitle || existing.name === itemTitle))
+                );
+                if ((itemTitle || itemUrl) && !alreadyExists) {
+                    arr.push({
+                        ...c.data,
+                        _id: c._id,
+                        submitterUsername: c.submitterUsername,
+                        submitterDiscordId: c.submitterDiscordId,
+                        createdAt: createdIso
+                    });
+                    dbSetUpdates[arrKey] = arr;
+                }
+            }
+        });
 
         const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
         const now = Date.now();
-        const filteredCoupons = coupons.filter(c => {
-            if (!c.expiredAt) return true;
-            const expMs = new Date(c.expiredAt).getTime();
-            return !isNaN(expMs) && (now - expMs) <= THIRTY_DAYS_MS;
-        });
+        if (Array.isArray(game.coupons)) {
+            const filteredCoupons = game.coupons.filter(c => {
+                if (!c.expiredAt) return true;
+                const expMs = new Date(c.expiredAt).getTime();
+                return !isNaN(expMs) && (now - expMs) <= THIRTY_DAYS_MS;
+            });
+            if (filteredCoupons.length !== game.coupons.length) {
+                game.coupons = filteredCoupons;
+                dbSetUpdates.coupons = filteredCoupons;
+            }
+        }
 
-        if (filteredCoupons.length !== coupons.length || modifiedCoupons) {
-            coupons = filteredCoupons;
-            await Game.collection.updateOne({ id: gameId }, { $set: { coupons, coupons_migrated: true } });
-            game.coupons = coupons;
+        if (Object.keys(dbSetUpdates).length > 0) {
+            await Game.collection.updateOne({ id: gameId }, { $set: dbSetUpdates });
+            clearGameCache(gameId);
         }
 
         game.favoriteCounts = await getGameItemFavoriteCounts(gameId);
-        setCached(`game_${gameId}`, game, 30);
 
-        res.setHeader('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=120');
+        res.setHeader('Cache-Control', 'private, no-cache, no-store, must-revalidate');
         res.json(game);
     } catch (err) {
         console.error("Failed to fetch game:", err);
@@ -1615,8 +1691,8 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                 });
             }
 
-            // Immediately acknowledge Discord to prevent the 3-second timeout crash
-            res.send({ type: InteractionResponseType.UPDATE_MESSAGE, data: { content: `⏳ **Processing... (<@${interaction.member.user.id}>)**`, components: [] } });
+            // // Immediately acknowledge Discord to prevent the 3-second timeout crash
+            // res.send({ type: InteractionResponseType.UPDATE_MESSAGE, data: { content: `⏳ **Processing... (<@${interaction.member.user.id}>)**`, components: [] } });
 
             const user = await User.findOne({ discordId: contribution.submitterDiscordId });
             const adminAvatar = interaction.member.user.avatar ? `https://cdn.discordapp.com/avatars/${interaction.member.user.id}/${interaction.member.user.avatar}.webp` : 'https://cdn.discordapp.com/embed/avatars/0.webp';
@@ -1762,7 +1838,7 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                 }
                 // Send notification live to user
                 broadcastLiveEvent('game_updated', { gameId: contribution.gameId, discordId: contribution.submitterDiscordId });
-                await axios.patch(`https://discord.com/api/v10/webhooks/${process.env.DISCORD_CLIENT_ID}/${interaction.token}/messages/@original`, { content: `✅ **Approved by <@${interaction.member.user.id}>**` });
+                return res.send({ type: InteractionResponseType.UPDATE_MESSAGE, data: { content: `✅ **Approved by <@${interaction.member.user.id}>**`, components: [] } });
             }
 
             if (action === 'deny') {
@@ -1778,7 +1854,7 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
                     });
                     await user.save();
                 }
-                await axios.patch(`https://discord.com/api/v10/webhooks/${process.env.DISCORD_CLIENT_ID}/${interaction.token}/messages/@original`, { content: `❌ **Denied by <@${interaction.member.user.id}>**` });
+                return res.send({ type: InteractionResponseType.UPDATE_MESSAGE, data: { content: `❌ **Denied by <@${interaction.member.user.id}>**`, components: [] } });
             }
 
             if (action === 'banuser') {
@@ -1954,7 +2030,7 @@ app.post('/api/interactions', verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY
 
                 broadcastLiveEvent('game_updated', { gameId: contribution.gameId, discordId: contribution.submitterDiscordId });
 
-                await axios.patch(`https://discord.com/api/v10/webhooks/${process.env.DISCORD_CLIENT_ID}/${interaction.token}/messages/@original`, { content: `✏️ ✅ **Tweaked & Approved by <@${interaction.member.user.id}>**` });
+                return res.send({ type: InteractionResponseType.UPDATE_MESSAGE, data: { content: `✏️ ✅ **Tweaked & Approved by <@${interaction.member.user.id}>**`, components: [] } });
             } catch (error) {
                 return res.send({ type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE, data: { content: `❌ **Failed to save tweak! Invalid JSON syntax.**\n\`${error.message}\``, flags: 64 } });
             }
